@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="ko">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NP Launcher</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
@@ -15,6 +16,10 @@
 
         a {
             text-decoration: none;
+        }
+
+        button {
+            font: inherit;
         }
 
         #container {
@@ -33,9 +38,7 @@
             position: relative;
             width: 820px;
             height: 320px;
-            ;
             padding: 40px;
-
         }
 
         #right-box {
@@ -49,15 +52,14 @@
             position: absolute;
             justify-content: space-between;
             top: 155px;
-            left: 0px;
+            left: 0;
             width: 74%;
             margin: 0 13%;
             height: 50px;
             z-index: 10;
-
         }
 
-        #center-box>div {
+        #center-box > div {
             width: 30%;
             height: 100%;
             border-radius: 10px;
@@ -66,7 +68,7 @@
             opacity: 0.96;
         }
 
-        #center-box>div:last-child {
+        #center-box > div:last-child {
             width: 68%;
         }
 
@@ -78,45 +80,59 @@
         }
 
         .gallery-img {
+            display: block;
             position: relative;
             width: 100%;
             height: 100%;
-            /* filter: grayscale(100%); */
             transition: 0.2s all ease;
             object-fit: cover;
+            object-position: center;
             border-radius: 10px;
         }
 
-        #gallery-area>div {
+        #gallery-area > div {
             position: relative;
             width: 100px;
             height: 120px;
+            box-sizing: border-box;
             padding: 10px;
             background: #333;
             border-radius: 10px;
         }
 
+        #gallery-area > div > a,
+        #gallery-area > div > .launcher {
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 10px;
+        }
 
-        #gallery-area>div::before {
+        #gallery-area > div::before {
             content: ' ';
             display: block;
             position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+            left: 10px;
+            top: 10px;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
             z-index: 1;
             opacity: 0.2;
             background: #1c1c1c;
+            border-radius: 10px;
         }
 
         .gallery-name {
             position: absolute;
-            width: 120px;
-            padding: 58px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
             text-align: center;
-            bottom: 0px;
-            left: 0;
+            top: 10px;
+            left: 10px;
             font-size: 16px;
             font-weight: 700;
             z-index: 2;
@@ -146,7 +162,7 @@
             padding-top: 8px;
         }
 
-        #footer>div {
+        #footer > div {
             display: inline-flex;
             justify-content: space-between;
         }
@@ -154,10 +170,9 @@
         #footer-left {
             width: 900px;
             display: inline-flex;
-
         }
 
-        #footer-left>div {
+        #footer-left > div {
             display: inline-flex;
             justify-content: space-evenly;
         }
@@ -167,12 +182,12 @@
             padding-right: 16px;
         }
 
-        #footer-right>div {
+        #footer-right > div {
             font-weight: 700;
             color: #262626;
         }
 
-        #footer-right>div:last-child {
+        #footer-right > div:last-child {
             font-weight: 900;
             color: #333;
         }
@@ -183,7 +198,7 @@
             color: #868686;
             background: #262626;
             margin-left: 10px;
-            margin-top: 0px;
+            margin-top: 0;
             text-decoration: underline;
             cursor: pointer;
         }
@@ -195,7 +210,7 @@
             line-height: 50px;
         }
 
-        #search-area>div:first-child {
+        #search-area > div:first-child {
             width: 80px;
             height: 30px;
             border-radius: 10px;
@@ -205,13 +220,13 @@
             text-align: center;
         }
 
-        #search-area>div:first-child>a {
+        #search-area > div:first-child > a {
             color: #868686;
             font-weight: 900;
             font-size: 12px;
         }
 
-        #search-area>div:last-child {
+        #search-area > div:last-child {
             width: 350px;
             height: 30px;
             border-radius: 10px;
@@ -222,7 +237,6 @@
             text-align: center;
             font-weight: 900;
             font-size: 12px;
-
         }
 
         #input-search {
@@ -239,25 +253,19 @@
             font-weight: 400;
         }
 
-        #icon-search {
-            width: 30px;
-            height: 30px;
-            margin-top: 10px;
-        }
-
         #link-area {
             display: inline-flex;
             justify-content: space-evenly;
         }
 
-        #link-area>div img {
+        #link-area > div img {
             width: 20px;
             height: 20px;
             padding: 5px;
-            margin: 10px 0px;
+            margin: 10px 0;
         }
 
-        #link-area>div img:hover {
+        #link-area > div img:hover {
             width: 20px;
             height: 20px;
             background: #dcdcdc;
@@ -266,7 +274,7 @@
         }
 
         .vertical-divider {
-            width: 0px;
+            width: 0;
             height: 20px;
             border-right: 2px solid #333;
             margin-top: 15px;
@@ -279,7 +287,7 @@
             height: 80px;
         }
 
-        #icon-area>div {
+        #icon-area > div {
             width: 80px;
             height: 80px;
             text-align: center;
@@ -297,21 +305,19 @@
             border-radius: 10px;
             transition: 0.2s all ease;
             filter: grayscale(100%);
-
         }
 
         .icon-img:hover {
             display: block;
             width: 50px;
             height: 50px;
-            padding: 0px;
+            padding: 0;
             margin-top: 5px;
             margin-left: 15px;
             border-radius: 10px;
             transition: 0.2s all ease;
             cursor: pointer;
             filter: grayscale(0%);
-
         }
 
         .icon-name {
@@ -339,10 +345,9 @@
             font-weight: 700;
             color: #868686;
             border-radius: 10px;
-            /* text-decoration: underline; */
             transition: 0.2s all ease;
             background: linear-gradient(45deg, #262626 25%, #333 0, #333 50%, #262626 0, #262626 75%, #333 0);
-            background-size: 5px 5px
+            background-size: 5px 5px;
         }
 
         .list-item:hover {
@@ -351,10 +356,10 @@
             transition: 0.2s all ease;
             cursor: pointer;
             background: linear-gradient(45deg, #262626 25%, #1c1c1c 0, #1c1c1c 50%, #262626 0, #262626 75%, #1c1c1c 0);
-            background-size: 5px 5px
+            background-size: 5px 5px;
         }
 
-        .list-view>div {
+        .list-view > div {
             justify-content: flex-start;
         }
 
@@ -384,7 +389,7 @@
             justify-content: space-around;
             width: 320px;
             height: 320px;
-            color: #FFF;
+            color: #fff;
             text-align: center;
             background: linear-gradient(45deg, #262626 25%, #1c1c1c 0, #1c1c1c 50%, #262626 0, #262626 75%, #1c1c1c 0);
             background-size: 5px 5px;
@@ -419,19 +424,7 @@
         }
 
         .gallery-item,
-        .icon-item {
-            display: inline-flex;
-            justify-content: space-between;
-            width: 750px;
-            height: 20px;
-            color: #868686;
-            margin-bottom: 10px;
-            font-size: 10px;
-            padding: 6px 0px 0 10px;
-            margin: 0 20px 10px 20px;
-            border-left: 2px solid #dcdcdc;
-        }
-
+        .icon-item,
         .folder-item {
             display: inline-flex;
             justify-content: space-between;
@@ -440,14 +433,14 @@
             color: #868686;
             margin-bottom: 10px;
             font-size: 10px;
-            padding: 6px 0px 0 10px;
+            padding: 6px 0 0 10px;
             margin: 0 20px 10px 20px;
             border-left: 2px solid #dcdcdc;
         }
 
-        .gallery-item>div>input,
-        .icon-item>div>input,
-        .folder-item>div>input {
+        .gallery-item > div > input,
+        .icon-item > div > input,
+        .folder-item > div > input {
             background: none;
             border: none;
             width: 160px;
@@ -458,34 +451,20 @@
             color: #dcdcdc;
         }
 
-        .gallery-item>div>input::placeholder,
-        .icon-item>div>input::placeholder,
-        .folder-item>div>input::placeholder {
+        .gallery-item > div > input::placeholder,
+        .icon-item > div > input::placeholder,
+        .folder-item > div > input::placeholder {
             font-family: 'Noto Sans KR', sans-serif;
             font-size: 8pt;
             font-weight: 700;
             color: #868686;
         }
 
-        select {
-            font-family: 'Noto Sans KR', sans-serif;
-            font-size: 8pt;
-            font-weight: 700;
-            -moz-appearance: none;
-            -webkit-appearance: none;
-            appearance: none;
-            background: #1c1c1c;
-            border: none;
-            border-bottom: 1px solid #868686;
-            color: #868686;
-            padding-bottom: 1px;
-        }
-
-        select:focus {
-            background: #1c1c1c;
-            outline: none;
-            border: none;
-            border-bottom: 1px solid #868686;
+        .file-item {
+            border: 0;
+            background: #262626;
+            color: #dcdcdc;
+            cursor: pointer;
         }
 
         #btn-preference-cancel,
@@ -502,123 +481,94 @@
             color: #868686;
         }
 
-        .btn-row>div:last-child {
+        .btn-row > div:last-child {
             display: inline-flex;
             flex-direction: row;
             justify-content: flex-end;
         }
 
-        .btn-row>div:last-child>div {
+        .btn-row > div:last-child > div {
             margin-left: 20px;
         }
 
-        .btn-row>div>div {
+        .btn-row > div > div {
             cursor: pointer;
             text-decoration: underline;
             color: #dcdcdc;
         }
     </style>
 </head>
-
 <body>
     <div id="container">
         <div id="left-box">
-            <div class="item-box" id="gallery-area">
-
-            </div>
-            <div class="item-box" id="icon-area">
-
-            </div>
+            <div class="item-box" id="gallery-area"></div>
+            <div class="item-box" id="icon-area"></div>
             <div id="center-box">
                 <div id="link-area">
                     <div>
-                        <a href="https://news.naver.com/"><img src="src/icon/icon-news.svg" alt="뉴스"></a>
+                        <a href="https://news.naver.com/"><img src="src/icon/icon-news.svg" alt="News"></a>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <a href="https://papago.naver.com/"><img src="src/icon/icon-dictionary.svg" alt="사전"></a>
+                        <a href="https://papago.naver.com/"><img src="src/icon/icon-dictionary.svg" alt="Dictionary"></a>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <a href="https://map.kakao.com/"><img src="src/icon/icon-map.svg" alt="지도"></a>
+                        <a href="https://map.kakao.com/"><img src="src/icon/icon-map.svg" alt="Map"></a>
                     </div>
                 </div>
                 <div id="search-area">
-                    <div><a href="http://google.com">Google</a></div>
+                    <div><a href="https://www.google.com">Google</a></div>
                     <div class="vertical-divider"></div>
-                    <div><input type="text" id="input-search" onkeyup="enterkey()" placeholder="Type to search"></div>
+                    <div><input type="text" id="input-search" placeholder="Type to search"></div>
                 </div>
             </div>
-
         </div>
         <div id="right-box">
             <div class="item-box list-view">
-                <div id="folder-area">
-                </div>
+                <div id="folder-area"></div>
             </div>
         </div>
         <div id="footer">
             <div id="footer-left">
                 <div>
-                    <div><a class="launcher-basic footer-btn" data-link="shutdown">시스템 종료</a></div>
-                    <div><a class="launcher-basic footer-btn" data-link="reboot">시스템 재부팅</a></div>
-                    <div><a class="footer-btn" id="btn-preference">런처 설정</a></div>
-
+                    <div><a class="launcher-basic footer-btn" data-link="shutdown">종료</a></div>
+                    <div><a class="launcher-basic footer-btn" data-link="reboot">재부팅</a></div>
+                    <div><a class="footer-btn" id="btn-preference">환경설정</a></div>
                 </div>
-
-                <!--https://learn.microsoft.com/en-us/windows/uwp/launch-resume/launch-settings-app-->
                 <div>
-                    <div><a class="footer-btn" href="ms-settings:easeofaccess-colorfilter-bluelightlink">밝기</a></div>
+                    <div><a class="footer-btn" href="ms-settings:easeofaccess-colorfilter-bluelightlink">화면</a></div>
                     <div><a class="footer-btn" href="ms-settings:sound">소리</a></div>
                     <div><a class="footer-btn" href="ms-settings:mousetouchpad">마우스</a></div>
                 </div>
-
             </div>
-
             <div id="footer-right">
-                <div>Noly-Poly</div>
+                <div>JISU YANG</div>
                 <div>|</div>
-                <div>NP Launcher</div>
+                <div>VV Launcher</div>
             </div>
-
         </div>
     </div>
     <div id="editor">
         <div id="setting-container">
             <div id="setting-category">
-                <div id="btn-preference-gallery" class="select-category" data-category="GALLERY">갤러리</div>
-                <div id="btn-preference-icon" data-category="ICON">아이콘</div>
-                <div id="btn-preference-folder" data-category="FOLDER">폴더</div>
+                <div id="btn-preference-gallery" class="select-category" data-category="GALLERY">Gallery</div>
+                <div id="btn-preference-icon" data-category="ICON">Icons</div>
+                <div id="btn-preference-folder" data-category="FOLDER">Folders</div>
             </div>
-            <div id="setting-row">
-
-            </div>
+            <div id="setting-row"></div>
         </div>
         <div class="btn-row">
             <div>
-                <div id="btn-preference-clear">리셋</div>
+                <div id="btn-preference-clear">초기화</div>
             </div>
             <div>
-                <div id="btn-preference-save">저장하기</div>
-                <div id="btn-preference-cancel">나가기</div>
+                <div id="btn-preference-save">저장</div>
+                <div id="btn-preference-cancel">닫기</div>
             </div>
-
         </div>
     </div>
+    <script src="./preference.js"></script>
+    <script src="./renderer.js"></script>
 </body>
-<script>
-    function enterkey() {
-        if (window.event.keyCode == 13) {
-            let keyword = document.getElementById('input-search').value;
-            let url = 'https://www.google.com/search?q=' + keyword;
-            location.href = url;
-        }
-    }
-</script>
-
-<script type="module" src="./preference.js"></script>
-<script type="module" src="./renderer.js"></script>
-
-
-
 </html>
