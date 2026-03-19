@@ -1,6 +1,6 @@
 {
   "name": "np-launcher",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
   "scripts": {
@@ -20,8 +20,10 @@
     "electron-devtools-installer": "^3.2.0"
   },
   "build": {
+    "artifactName": "${name}-${version}_windows-${arch}.${ext}",
     "win": {
-      "icon": "src/app/NP-Launcher.png"
+      "icon": "src/app/NP-Launcher.png",
+      "signAndEditExecutable": false
     }
   },
   "dependencies": {
