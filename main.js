@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, screen, shell } = require('electron');
+const { app, BrowserWindow, dialog, globalShortcut, ipcMain, screen, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('path');
 const { execFile } = require('node:child_process');
@@ -17,6 +17,20 @@ const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 let mainWindow = null;
 let devWatchers = [];
 let pendingRelaunch = false;
+
+function focusLauncherSearch() {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        return;
+    }
+
+    if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+    }
+
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('np-launcher:focus-search');
+}
 
 function getCategoryData() {
     return CATEGORIES.reduce((accumulator, category) => {
@@ -202,6 +216,9 @@ function setupDevReload() {
 app.whenReady().then(() => {
     createWindow();
     setupDevReload();
+    globalShortcut.register('CommandOrControl+Space', () => {
+        focusLauncherSearch();
+    });
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -279,6 +296,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+    globalShortcut.unregisterAll();
     devWatchers.forEach((watcher) => watcher.close());
     devWatchers = [];
 });

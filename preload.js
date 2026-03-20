@@ -1,6 +1,17 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('npLauncher', {
+    onFocusSearch(handler) {
+        if (typeof handler !== 'function') {
+            return () => {};
+        }
+
+        const listener = () => handler();
+        ipcRenderer.on('np-launcher:focus-search', listener);
+        return () => {
+            ipcRenderer.removeListener('np-launcher:focus-search', listener);
+        };
+    },
     pickPath(kind) {
         return ipcRenderer.invoke('np-launcher:pick-path', kind);
     },
