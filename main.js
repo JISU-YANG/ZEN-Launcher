@@ -14,7 +14,7 @@ const WINDOW_WIDTH = 1150;
 const LAUNCHER_HEIGHT = 420;
 const WEATHER_WIDGET_SPACE = 280;
 const WINDOW_HEIGHT = LAUNCHER_HEIGHT + WEATHER_WIDGET_SPACE;
-const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:'];
+const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
 const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 

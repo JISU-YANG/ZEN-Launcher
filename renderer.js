@@ -2,7 +2,9 @@
     const searchInput = document.getElementById('input-search');
     const refreshButton = document.getElementById('btn-refresh');
     const weatherToggleButton = document.getElementById('btn-weather-toggle');
+    const quickToggleButton = document.getElementById('btn-quick-toggle');
     const weatherWidget = document.getElementById('weather-widget');
+    const quickWidget = document.getElementById('quick-widget');
     const weatherLocation = document.getElementById('weather-location');
     const weatherUpdated = document.getElementById('weather-updated');
     const weatherPill = document.getElementById('weather-pill');
@@ -44,6 +46,7 @@
     };
     let activeSearchEngine = SEARCH_ENGINES.default;
     let isWeatherWidgetOpen = false;
+    let isQuickWidgetOpen = false;
     let weatherCache = null;
     let weatherFetchPromise = null;
     const WEATHER_CODE_MAP = {
@@ -128,7 +131,7 @@
             weatherHumidity.textContent = formatHumidity(payload.current.relative_humidity_2m);
         }
 
-        setWeatherStatus('현재 위치 기반 날씨를 불러왔어요.', 'idle');
+        setWeatherStatus('', 'idle');
     };
     const getBrowserCoordinates = async () => {
         return new Promise((resolve) => {
@@ -213,10 +216,18 @@
             return;
         }
 
+        closeQuickWidget();
         isWeatherWidgetOpen = true;
         weatherWidget.classList.add('open');
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 닫기');
+        weatherToggleButton.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(() => {
+            syncWeatherWidgetPosition();
+        });
         const weatherData = await loadWeatherData();
+        requestAnimationFrame(() => {
+            syncWeatherWidgetPosition();
+        });
         if (!weatherData) {
             if (weatherLocation) {
                 weatherLocation.textContent = '위치를 확인할 수 없음';
@@ -235,6 +246,90 @@
         isWeatherWidgetOpen = false;
         weatherWidget.classList.remove('open');
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 열기');
+        weatherToggleButton.setAttribute('aria-expanded', 'false');
+    };
+    const syncWeatherWidgetArrow = () => {
+        if (!weatherWidget || !weatherToggleButton) {
+            return;
+        }
+
+        const widgetRect = weatherWidget.getBoundingClientRect();
+        const toggleRect = weatherToggleButton.getBoundingClientRect();
+        const arrowCenter = toggleRect.left + (toggleRect.width / 2) - widgetRect.left;
+        const clampedArrowLeft = Math.min(
+            Math.max(arrowCenter - 10, 28),
+            widgetRect.width - 48
+        );
+        weatherWidget.style.setProperty('--weather-widget-arrow-left', `${Math.round(clampedArrowLeft)}px`);
+    };
+    const syncWeatherWidgetPosition = () => {
+        if (!weatherWidget || !weatherToggleButton) {
+            return;
+        }
+
+        const widgetRect = weatherWidget.getBoundingClientRect();
+        const toggleRect = weatherToggleButton.getBoundingClientRect();
+        const toggleCenter = toggleRect.left + (toggleRect.width / 2);
+        const desiredLeft = toggleCenter - 54;
+        const clampedLeft = Math.min(
+            Math.max(desiredLeft, 24),
+            window.innerWidth - 330
+        );
+        const desiredTop = toggleRect.top - widgetRect.height - 10;
+        const clampedTop = Math.max(desiredTop, 24);
+        weatherWidget.style.setProperty('--weather-widget-left', `${Math.round(clampedLeft)}px`);
+        weatherWidget.style.setProperty('--weather-widget-top', `${Math.round(clampedTop)}px`);
+        syncWeatherWidgetArrow();
+    };
+    const syncQuickWidgetPosition = () => {
+        if (!quickWidget || !quickToggleButton) {
+            return;
+        }
+
+        const widgetRect = quickWidget.getBoundingClientRect();
+        const toggleRect = quickToggleButton.getBoundingClientRect();
+        const desiredTop = toggleRect.top - widgetRect.height - 10;
+        const clampedTop = Math.max(desiredTop, 24);
+        quickWidget.style.top = `${Math.round(clampedTop)}px`;
+        syncQuickWidgetArrow();
+    };
+    const syncQuickWidgetArrow = () => {
+        if (!quickWidget || !quickToggleButton) {
+            return;
+        }
+
+        const widgetRect = quickWidget.getBoundingClientRect();
+        const toggleRect = quickToggleButton.getBoundingClientRect();
+        const arrowCenter = toggleRect.left + (toggleRect.width / 2) - widgetRect.left;
+        const clampedArrowLeft = Math.min(
+            Math.max(arrowCenter - 10, 28),
+            widgetRect.width - 48
+        );
+        quickWidget.style.setProperty('--quick-widget-arrow-left', `${Math.round(clampedArrowLeft)}px`);
+    };
+    const openQuickWidget = () => {
+        if (!quickWidget || !quickToggleButton) {
+            return;
+        }
+
+        closeWeatherWidget();
+        isQuickWidgetOpen = true;
+        quickWidget.classList.add('open');
+        quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 닫기');
+        quickToggleButton.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(() => {
+            syncQuickWidgetPosition();
+        });
+    };
+    const closeQuickWidget = () => {
+        if (!quickWidget || !quickToggleButton) {
+            return;
+        }
+
+        isQuickWidgetOpen = false;
+        quickWidget.classList.remove('open');
+        quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 열기');
+        quickToggleButton.setAttribute('aria-expanded', 'false');
     };
     const toggleWeatherWidget = async () => {
         if (isWeatherWidgetOpen) {
@@ -243,6 +338,21 @@
         }
 
         await openWeatherWidget();
+    };
+    const toggleQuickWidget = () => {
+        if (isQuickWidgetOpen) {
+            closeQuickWidget();
+            return;
+        }
+
+        openQuickWidget();
+    };
+    const isPointerInside = (element, event) => {
+        if (!element || !event?.relatedTarget) {
+            return false;
+        }
+
+        return element.contains(event.relatedTarget);
     };
     const updateSearchEngineDisplay = () => {
         if (!searchEngineLink) {
@@ -291,6 +401,9 @@
         if (event.key === 'Escape' && isWeatherWidgetOpen) {
             closeWeatherWidget();
         }
+        if (event.key === 'Escape' && isQuickWidgetOpen) {
+            closeQuickWidget();
+        }
 
         if (event.key === 'F5' && isWeatherWidgetOpen) {
             event.preventDefault();
@@ -298,15 +411,30 @@
         }
     });
 
+    window.addEventListener('resize', () => {
+        if (isWeatherWidgetOpen) {
+            syncWeatherWidgetPosition();
+        }
+        if (isQuickWidgetOpen) {
+            syncQuickWidgetPosition();
+        }
+    });
+
     document.addEventListener('click', (event) => {
-        if (!isWeatherWidgetOpen || !weatherWidget || !weatherToggleButton) {
-            return;
+        if (isWeatherWidgetOpen && weatherWidget && weatherToggleButton) {
+            const clickedInsideWeatherWidget = weatherWidget.contains(event.target);
+            const clickedWeatherToggleButton = weatherToggleButton.contains(event.target);
+            if (!clickedInsideWeatherWidget && !clickedWeatherToggleButton) {
+                closeWeatherWidget();
+            }
         }
 
-        const clickedInsideWidget = weatherWidget.contains(event.target);
-        const clickedToggleButton = weatherToggleButton.contains(event.target);
-        if (!clickedInsideWidget && !clickedToggleButton) {
-            closeWeatherWidget();
+        if (isQuickWidgetOpen && quickWidget && quickToggleButton) {
+            const clickedInsideQuickWidget = quickWidget.contains(event.target);
+            const clickedQuickToggleButton = quickToggleButton.contains(event.target);
+            if (!clickedInsideQuickWidget && !clickedQuickToggleButton) {
+                closeQuickWidget();
+            }
         }
     });
 
@@ -355,6 +483,39 @@
 
     weatherToggleButton?.addEventListener('click', async () => {
         await toggleWeatherWidget();
+    });
+    weatherToggleButton?.addEventListener('mouseenter', async () => {
+        if (!isWeatherWidgetOpen) {
+            await openWeatherWidget();
+        }
+    });
+    weatherToggleButton?.addEventListener('mouseleave', (event) => {
+        if (!isPointerInside(weatherWidget, event)) {
+            closeWeatherWidget();
+        }
+    });
+    quickToggleButton?.addEventListener('click', () => {
+        toggleQuickWidget();
+    });
+    quickToggleButton?.addEventListener('mouseenter', () => {
+        if (!isQuickWidgetOpen) {
+            openQuickWidget();
+        }
+    });
+    quickToggleButton?.addEventListener('mouseleave', (event) => {
+        if (!isPointerInside(quickWidget, event)) {
+            closeQuickWidget();
+        }
+    });
+    weatherWidget?.addEventListener('mouseleave', (event) => {
+        if (!isPointerInside(weatherToggleButton, event)) {
+            closeWeatherWidget();
+        }
+    });
+    quickWidget?.addEventListener('mouseleave', (event) => {
+        if (!isPointerInside(quickToggleButton, event)) {
+            closeQuickWidget();
+        }
     });
 
     refreshButton?.addEventListener('click', async () => {
