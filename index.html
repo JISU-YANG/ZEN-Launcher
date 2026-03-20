@@ -1,14 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NP Launcher</title>
+    <title>ZEN Launcher</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
 
         html,
         body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             font-family: 'Noto Sans KR', sans-serif;
             font-size: 14px;
             font-weight: 700;
@@ -59,7 +63,8 @@
             z-index: 10;
         }
 
-        #center-box > div {
+        #center-box > #link-area,
+        #center-box > #search-area {
             width: 30%;
             height: 100%;
             border-radius: 10px;
@@ -68,13 +73,14 @@
             opacity: 0.96;
         }
 
-        #center-box > div:last-child {
+        #center-box > #search-area {
             width: 68%;
         }
 
         .item-box {
             display: inline-flex;
             justify-content: space-around;
+            align-items: center;
             width: 100%;
             height: 158px;
         }
@@ -90,7 +96,7 @@
             border-radius: 10px;
         }
 
-        #gallery-area > div {
+        #gallery-area > .gallery-entry {
             position: relative;
             width: 100px;
             height: 120px;
@@ -100,8 +106,8 @@
             border-radius: 10px;
         }
 
-        #gallery-area > div > a,
-        #gallery-area > div > .launcher {
+        #gallery-area > .gallery-entry > a,
+        #gallery-area > .gallery-entry > .launcher {
             display: block;
             width: 100%;
             height: 100%;
@@ -109,7 +115,7 @@
             border-radius: 10px;
         }
 
-        #gallery-area > div::before {
+        #gallery-area > .gallery-entry::before {
             content: ' ';
             display: block;
             position: absolute;
@@ -151,35 +157,47 @@
 
         #footer {
             position: fixed;
-            display: inline-flex;
-            justify-items: flex-start;
-            justify-content: space-between;
-            width: 1142px;
+            display: grid;
+            grid-template-columns: minmax(0, calc(100% - 240px)) 240px;
+            align-items: center;
+            left: 0;
+            right: 0;
             height: 32px;
-            left: 8px;
             bottom: 20px;
             background: #1c1c1c;
-            padding-top: 8px;
+            box-sizing: border-box;
+            padding: 0;
         }
 
         #footer > div {
-            display: inline-flex;
-            justify-content: space-between;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
         }
 
         #footer-left {
-            width: 900px;
-            display: inline-flex;
+            width: 100%;
+            min-width: 0;
+            gap: 24px;
+            padding: 0 16px;
         }
 
         #footer-left > div {
-            display: inline-flex;
-            justify-content: space-evenly;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex: 0 0 auto;
+        }
+
+        #footer-left > div:last-child {
+            margin-left: auto;
         }
 
         #footer-right {
-            width: 200px;
-            padding-right: 16px;
+            width: 100%;
+            justify-content: center;
+            gap: 12px;
+            padding: 0 12px;
         }
 
         #footer-right > div {
@@ -193,14 +211,23 @@
         }
 
         .footer-btn {
-            padding: 4px 10px 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 22px;
+            padding: 4px 12px;
             font-size: 10px;
             color: #868686;
             background: #262626;
             margin-left: 10px;
             margin-top: 0;
+            box-sizing: border-box;
             text-decoration: underline;
             cursor: pointer;
+        }
+
+        #footer-left > div > div:first-child .footer-btn {
+            margin-left: 0;
         }
 
         #search-area {
@@ -258,6 +285,31 @@
             justify-content: space-evenly;
         }
 
+        #link-area > div {
+            display: flex;
+            align-items: center;
+        }
+
+        #link-area button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: none;
+            background: transparent;
+            appearance: none;
+        }
+
+        #link-area button.widget-toggle-btn {
+            width: auto;
+            height: auto;
+            margin: 10px 0;
+            border-radius: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
         #link-area > div img {
             width: 20px;
             height: 20px;
@@ -265,12 +317,36 @@
             margin: 10px 0;
         }
 
-        #link-area > div img:hover {
+        #link-area button.widget-toggle-btn img {
+            margin: 0;
+            padding: 0;
+            width: 18px;
+            height: 18px;
+            opacity: 1;
+        }
+
+        #link-area > div a img:hover {
             width: 20px;
             height: 20px;
             background: #dcdcdc;
             border-radius: 30px;
             cursor: pointer;
+        }
+
+        #link-area button.widget-toggle-btn:hover img {
+        }
+
+        #link-area button.widget-toggle-btn[aria-expanded="true"] {
+        }
+
+        #link-area button.widget-toggle-btn[aria-expanded="true"] img {
+        }
+
+        #link-area button:focus-visible img,
+        #link-area a:focus-visible img {
+            outline: 2px solid #f1f1f1;
+            outline-offset: 2px;
+            border-radius: 30px;
         }
 
         .vertical-divider {
@@ -280,6 +356,352 @@
             margin-top: 15px;
         }
 
+        #weather-widget {
+            --weather-widget-left: calc(50% - 575px + 66px);
+            --weather-widget-top: 52px;
+            --weather-widget-arrow-left: 42px;
+            position: fixed;
+            left: var(--weather-widget-left);
+            top: var(--weather-widget-top);
+            width: 310px;
+            min-height: 148px;
+            padding: 18px 18px 16px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at top right, rgba(255, 204, 128, 0.22), transparent 38%),
+                linear-gradient(160deg, rgba(31, 31, 31, 0.98), rgba(18, 18, 18, 0.96));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 22px 45px rgba(0, 0, 0, 0.34);
+            color: #f3f3f3;
+            z-index: 16;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            will-change: opacity;
+            transition:
+                opacity 0.24s ease,
+                visibility 0s linear 0.26s;
+        }
+
+        #weather-widget.open {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        #weather-widget::after {
+            content: '';
+            position: absolute;
+            left: var(--weather-widget-arrow-left);
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: #171717;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transform: rotate(45deg);
+        }
+
+        .weather-widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .weather-widget-title {
+            color: #f3f3f3;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .weather-widget-caption {
+            margin-top: 4px;
+            color: #9f9f9f;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .weather-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 54px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f7d08a;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+
+        .weather-widget-body {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            margin-top: 18px;
+            align-items: end;
+        }
+
+        .weather-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .weather-location {
+            color: #9f9f9f;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .weather-condition {
+            font-size: 24px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .weather-description {
+            color: #b8b8b8;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .weather-temp {
+            font-size: 44px;
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+        }
+
+        .weather-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .weather-meta-card {
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-sizing: border-box;
+        }
+
+        .weather-meta-label {
+            color: #858585;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .weather-meta-value {
+            margin-top: 6px;
+            color: #f0f0f0;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .weather-status {
+            margin-top: 14px;
+            color: #b8b8b8;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .weather-status[data-state="error"] {
+            color: #ffb8b8;
+        }
+
+        .weather-status[data-state="loading"] {
+            color: #f7d08a;
+        }
+
+        #quick-widget {
+            --quick-widget-arrow-left: 64px;
+            position: fixed;
+            left: calc(50% - 575px + 170px);
+            top: 36px;
+            width: 338px;
+            padding: 18px 18px 16px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at top left, rgba(148, 206, 255, 0.18), transparent 40%),
+                linear-gradient(160deg, rgba(31, 31, 31, 0.98), rgba(18, 18, 18, 0.96));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 22px 45px rgba(0, 0, 0, 0.34);
+            color: #f3f3f3;
+            z-index: 16;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            will-change: opacity;
+            transition:
+                opacity 0.24s ease,
+                visibility 0s linear 0.26s;
+        }
+
+        #quick-widget.open {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        #quick-widget::after {
+            content: '';
+            position: absolute;
+            left: var(--quick-widget-arrow-left);
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: #171717;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transform: rotate(45deg);
+        }
+
+        .quick-widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .quick-widget-title {
+            color: #f3f3f3;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .quick-widget-caption {
+            margin-top: 4px;
+            color: #9f9f9f;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .quick-widget-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 64px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #9fd9ff;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .quick-link-button {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+            position: relative;
+            min-height: 86px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #f3f3f3;
+            text-align: left;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .quick-link-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(159, 217, 255, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 28px rgba(0, 0, 0, 0.24);
+        }
+
+        .quick-link-icon {
+            display: flex;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex: 0 0 auto;
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .quick-link-icon img {
+            width: 20px;
+            height: 20px;
+            display: block;
+            opacity: 0.88;
+            transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+        }
+
+        .quick-link-button:hover .quick-link-icon {
+            transform: scale(1.08);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 18px 28px rgba(0, 0, 0, 0.38);
+        }
+
+        .quick-link-button:hover .quick-link-icon img {
+            transform: scale(1.18);
+            filter: brightness(1.95) contrast(1.28);
+            opacity: 1;
+        }
+
+        .quick-link-button:hover .quick-link-label {
+            color: #ffffff;
+        }
+
+        .quick-link-button:hover .quick-link-meta {
+            color: #c8d7e3;
+        }
+
+        .quick-link-label {
+            font-size: 14px;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .quick-link-meta {
+            color: #9f9f9f;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
         #icon-area {
             margin-top: 40px;
             margin-left: 5%;
@@ -287,45 +709,114 @@
             height: 80px;
         }
 
-        #icon-area > div {
+        #icon-area > .icon-entry {
+            position: relative;
             width: 80px;
             height: 80px;
             text-align: center;
             border-radius: 10px;
-            background: #262626;
+            box-sizing: border-box;
+            padding: 8px;
+        }
+
+        #icon-area > .icon-entry > a,
+        #icon-area > .icon-entry > .launcher {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            gap: 4px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: rgba(28, 28, 28, 0.48);
+        }
+
+        .empty-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            text-align: center;
+            color: #7f7f7f;
+            border: 1px dashed rgba(220, 220, 220, 0.16);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .empty-state-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        #gallery-area.is-empty,
+        #icon-area.is-empty {
+            justify-content: center;
+        }
+
+        #folder-area.is-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #gallery-area.is-empty .empty-state {
+            width: 100px;
+            height: 120px;
+            border-radius: 10px;
+        }
+
+        #icon-area.is-empty .empty-state {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+        }
+
+        #folder-area.is-empty .empty-state {
+            width: 130px;
+            min-height: 36px;
+            padding: 8px 10px 10px 10px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #262626 25%, #2d2d2d 0, #2d2d2d 50%, #262626 0, #262626 75%, #2d2d2d 0);
+            background-size: 5px 5px;
         }
 
         .icon-img {
             display: block;
-            width: 40px;
-            height: 40px;
-            padding: 5px;
-            margin-top: 5px;
-            margin-left: 15px;
+            width: 38px;
+            height: 38px;
+            margin: 0;
             border-radius: 10px;
             transition: 0.2s all ease;
             filter: grayscale(100%);
+            object-fit: cover;
         }
 
-        .icon-img:hover {
-            display: block;
-            width: 50px;
-            height: 50px;
-            padding: 0;
-            margin-top: 5px;
-            margin-left: 15px;
-            border-radius: 10px;
-            transition: 0.2s all ease;
+        #icon-area > .icon-entry:hover .icon-img {
+            transform: translateY(-1px) scale(1.08);
             cursor: pointer;
             filter: grayscale(0%);
         }
 
         .icon-name {
+            display: block;
+            max-width: 100%;
             font-size: 10px;
+            line-height: 1.2;
             font-weight: 700;
             color: #868686;
-            margin-top: 5px;
+            margin-top: 0;
             text-decoration: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #icon-area > .icon-entry:hover .icon-name {
+            color: #dcdcdc;
+            text-decoration: underline;
         }
 
         .list-view {
@@ -363,139 +854,805 @@
             justify-content: flex-start;
         }
 
+        #folder-area {
+            width: 100%;
+        }
+
         #editor {
             display: none;
             position: fixed;
             justify-content: space-between;
             flex-direction: column;
-            width: 1100px;
-            height: 360px;
-            left: 8px;
-            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 20px;
+            width: 100%;
+            height: 400px;
             padding: 20px;
+            box-sizing: border-box;
             background: #1c1c1c;
             transition: 0.2s all ease;
             opacity: 0.96;
+            z-index: 20;
         }
 
         #setting-container {
-            display: inline-flex;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;
+            flex: 1;
+        }
+
+        #setting-topbar {
+            display: flex;
             justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 0 8px;
         }
 
         #setting-category {
             display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            width: 320px;
-            height: 320px;
-            color: #fff;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+
+        .setting-category-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex: 0 0 auto;
+            min-width: 84px;
+            height: 34px;
+            padding: 0 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+            color: #dcdcdc;
             text-align: center;
-            background: linear-gradient(45deg, #262626 25%, #1c1c1c 0, #1c1c1c 50%, #262626 0, #262626 75%, #1c1c1c 0);
-            background-size: 5px 5px;
-        }
-
-        #setting-category div {
-            font-size: large;
-            text-decoration: underline;
-            width: 280px;
-            height: 60px;
-            margin: 20px;
-            vertical-align: middle;
-            line-height: 60px;
             cursor: pointer;
+            transition: 0.2s all ease;
+            box-sizing: border-box;
+            appearance: none;
+            white-space: nowrap;
         }
 
-        #setting-category div.select-category {
-            font-size: large;
-            text-decoration: none;
-            background: #1c1c1c;
+        .setting-category-button:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .setting-category-button.select-category {
+            background: #f1f1f1;
+            color: #151515;
+            border-color: rgba(220, 220, 220, 0.3);
+            box-shadow: none;
+        }
+
+        .setting-category-button[data-dirty="true"]::after {
+            content: '';
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f6c65b;
+        }
+
+        .setting-category-button[data-coming-soon="true"] {
+            color: #8d8d8d;
+            border-style: dashed;
+        }
+
+        .setting-category-label {
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .setting-category-caption {
+            display: none;
+        }
+
+        #setting-content {
+            display: flex;
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            flex-direction: column;
+            padding: 0 4px 0 0;
+            position: relative;
+        }
+
+        #setting-status {
+            flex: 0 0 auto;
+            min-width: 96px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #c7c7c7;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            box-sizing: border-box;
+            line-height: 1.2;
+        }
+
+        #setting-status[data-tone="warning"] {
+            background: rgba(246, 198, 91, 0.14);
+            color: #f6c65b;
+        }
+
+        #setting-status[data-tone="success"] {
+            background: rgba(117, 204, 145, 0.16);
+            color: #8ce3a4;
         }
 
         #setting-row {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 0 8px 8px 0;
+        }
+
+        .setting-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0 10px 6px;
+        }
+
+        .setting-item-card,
+        .setting-add-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 96px;
+            padding: 10px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #dcdcdc;
+            cursor: pointer;
+            text-align: left;
+            box-sizing: border-box;
+            appearance: none;
+        }
+
+        .setting-item-card:hover,
+        .setting-add-card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-item-card.select-item {
+            border-color: rgba(241, 241, 241, 0.34);
+            box-shadow: inset 0 0 0 1px rgba(241, 241, 241, 0.08);
+        }
+
+        .setting-item-card-index {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 10px;
+            background: #111;
+            color: #f0f0f0;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .setting-item-card-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
             display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            height: 24px;
+            padding: 0 8px;
+            border: 1px solid rgba(255, 140, 140, 0.2);
+            border-radius: 999px;
+            background: rgba(255, 110, 110, 0.08);
+            color: #ffb6b6;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            appearance: none;
+            box-sizing: border-box;
+        }
+
+        .setting-item-card-delete:hover {
+            background: rgba(255, 110, 110, 0.14);
+            border-color: rgba(255, 140, 140, 0.32);
+        }
+
+        .setting-item-card-name {
+            color: #f1f1f1;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.3;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .setting-item-card-meta {
+            color: #8d8d8d;
+            font-size: 10px;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .setting-card-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 58px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .setting-card-preview.gallery-preview {
+            background: transparent;
+            height: 74px;
+            padding: 0;
+        }
+
+        .setting-preview-gallery-shell {
+            position: relative;
+            width: 62px;
+            height: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+            background: #333;
+            border-radius: 10px;
+        }
+
+        .setting-preview-gallery-media {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(28, 28, 28, 0.5);
+        }
+
+        .setting-preview-gallery-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .setting-preview-gallery-name {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #dcdcdc;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: underline;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
+
+        .setting-card-preview.icon-preview {
+            background: transparent;
+        }
+
+        .setting-preview-icon-shell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 56px;
+            min-height: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background: rgba(28, 28, 28, 0.48);
+        }
+
+        .setting-preview-icon-media {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .setting-preview-icon-media img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .setting-preview-icon-name {
+            max-width: 100%;
+            color: #868686;
+            font-size: 9px;
+            line-height: 1.2;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .setting-card-preview.folder-preview {
+            justify-content: flex-start;
+            padding: 0 10px;
+            color: #cfcfcf;
+            font-size: 10px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #262626 25%, #2d2d2d 0, #2d2d2d 50%, #262626 0, #262626 75%, #2d2d2d 0);
+            background-size: 5px 5px;
+            box-sizing: border-box;
+        }
+
+        .setting-card-preview-empty {
+            color: #777;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+
+        .setting-add-card {
+            align-items: center;
+            justify-content: center;
+            border-style: dashed;
+            color: #bdbdbd;
+            text-align: center;
+        }
+
+        .setting-add-card-title {
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .setting-add-card-meta {
+            color: #8d8d8d;
+            font-size: 10px;
+        }
+
+        #slot-editor {
+            position: absolute;
+            right: 12px;
+            top: 42px;
+            width: 330px;
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(18, 18, 18, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 18px 32px rgba(0, 0, 0, 0.34);
+            display: none;
+            z-index: 20;
+            box-sizing: border-box;
+        }
+
+        #slot-editor.open {
+            display: block;
+        }
+
+        .slot-editor-header {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .setting-col {
-            display: inline-flex;
-            flex-direction: column;
-        }
-
-        .gallery-item,
-        .icon-item,
-        .folder-item {
-            display: inline-flex;
-            justify-content: space-between;
-            width: 750px;
-            height: 20px;
-            color: #868686;
             margin-bottom: 10px;
-            font-size: 10px;
-            padding: 6px 0 0 10px;
-            margin: 0 20px 10px 20px;
-            border-left: 2px solid #dcdcdc;
         }
 
-        .gallery-item > div > input,
-        .icon-item > div > input,
-        .folder-item > div > input {
-            background: none;
-            border: none;
-            width: 160px;
-            border-bottom: 1px solid #868686;
-            font-size: 10px;
-            font-family: 'Noto Sans KR', sans-serif;
-            font-weight: 700;
-            color: #dcdcdc;
+        .slot-editor-title {
+            color: #f1f1f1;
+            font-size: 13px;
+            font-weight: 900;
         }
 
-        .gallery-item > div > input::placeholder,
-        .icon-item > div > input::placeholder,
-        .folder-item > div > input::placeholder {
-            font-family: 'Noto Sans KR', sans-serif;
-            font-size: 8pt;
+        .slot-editor-close {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #f1f1f1;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .slot-editor-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .setting-field-label {
+            color: #9f9f9f;
+            font-size: 10px;
             font-weight: 700;
-            color: #868686;
+        }
+
+        .setting-field input {
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.18);
+            color: #f1f1f1;
+            font-size: 12px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            box-sizing: border-box;
+        }
+
+        .setting-field input::placeholder {
+            color: #6f6f6f;
+            font-size: 11px;
+            font-weight: 400;
         }
 
         .file-item {
-            border: 0;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            align-self: center;
+            min-width: 78px;
+            height: 30px;
+            padding: 0 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
             background: #262626;
-            color: #dcdcdc;
+            color: #f1f1f1;
             cursor: pointer;
+            box-sizing: border-box;
+            text-align: center;
+            line-height: 1;
+            appearance: none;
+            font-size: 11px;
+            font-weight: 700;
         }
 
-        #btn-preference-cancel,
-        #btn-preference-save {
+        .slot-editor-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .slot-editor-actions > div {
+            display: flex;
+            gap: 8px;
+        }
+
+        .slot-secondary-button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 64px;
+            height: 30px;
+            padding: 0 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+            color: #f1f1f1;
             cursor: pointer;
+            appearance: none;
+            box-sizing: border-box;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .slot-secondary-button.danger-button {
+            color: #ffb6b6;
+            border-color: rgba(255, 140, 140, 0.2);
+            background: rgba(255, 110, 110, 0.06);
         }
 
         .btn-row {
-            display: inline-flex;
-            flex-direction: row;
+            display: flex;
             justify-content: space-between;
-            width: 100%;
-            margin: 4px 0;
-            color: #868686;
+            align-items: center;
+            margin-top: 10px;
         }
 
-        .btn-row > div:last-child {
+        .btn-row > div {
+            display: flex;
+            gap: 8px;
+        }
+
+        .setting-action-button {
             display: inline-flex;
-            flex-direction: row;
-            justify-content: flex-end;
-        }
-
-        .btn-row > div:last-child > div {
-            margin-left: 20px;
-        }
-
-        .btn-row > div > div {
+            justify-content: center;
+            align-items: center;
+            min-width: 84px;
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.04);
+            color: #f1f1f1;
+            font-size: 11px;
+            font-weight: 900;
             cursor: pointer;
-            text-decoration: underline;
-            color: #dcdcdc;
+            transition: 0.2s all ease;
+            box-sizing: border-box;
+            text-align: center;
+            line-height: 1;
+            appearance: none;
         }
+
+        .setting-action-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .setting-action-button.primary-button {
+            background: #f1f1f1;
+            color: #151515;
+            border-color: #f1f1f1;
+        }
+
+        .setting-action-button.primary-button:hover {
+            background: #ffffff;
+        }
+
+        .setting-action-button.danger-button {
+            color: #ffb6b6;
+            border-color: rgba(255, 140, 140, 0.2);
+            background: rgba(255, 110, 110, 0.06);
+        }
+
+        .setting-category-button:focus-visible,
+        .setting-item-card:focus-visible,
+        .setting-add-card:focus-visible,
+        .setting-action-button:focus-visible,
+        .file-item:focus-visible,
+        .slot-secondary-button:focus-visible,
+        .setting-field input:focus-visible {
+            outline: 2px solid #f1f1f1;
+            outline-offset: 2px;
+        }
+
+        #shutdown-scheduler {
+            --shutdown-widget-left: calc(50% - 575px + 286px);
+            --shutdown-widget-top: 52px;
+            --shutdown-widget-arrow-left: 42px;
+            position: fixed;
+            left: var(--shutdown-widget-left);
+            top: var(--shutdown-widget-top);
+            width: 320px;
+            padding: 16px;
+            border-radius: 18px;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at top left, rgba(255, 214, 163, 0.16), transparent 36%),
+                linear-gradient(160deg, rgba(28, 28, 28, 0.98), rgba(17, 17, 17, 0.97));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 22px 42px rgba(0, 0, 0, 0.34);
+            color: #f3f3f3;
+            z-index: 18;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        #shutdown-scheduler.open {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        #shutdown-scheduler::after {
+            content: '';
+            position: absolute;
+            left: var(--shutdown-widget-arrow-left);
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: #171717;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transform: rotate(45deg);
+        }
+
+        .shutdown-scheduler-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .shutdown-scheduler-title {
+            color: #f3f3f3;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .shutdown-scheduler-caption {
+            margin-top: 4px;
+            color: #9f9f9f;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .shutdown-scheduler-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffd28f;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            box-sizing: border-box;
+        }
+
+        .shutdown-scheduler-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .shutdown-scheduler-label {
+            color: #bdbdbd;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .shutdown-scheduler-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shutdown-scheduler-input {
+            flex: 1;
+            height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #f3f3f3;
+            font-size: 16px;
+            font-weight: 800;
+            box-sizing: border-box;
+            appearance: textfield;
+        }
+
+        .shutdown-scheduler-input::-webkit-outer-spin-button,
+        .shutdown-scheduler-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .shutdown-scheduler-unit {
+            color: #f3f3f3;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .shutdown-scheduler-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .shutdown-preset-button,
+        .shutdown-scheduler-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            cursor: pointer;
+            appearance: none;
+            box-sizing: border-box;
+            font-weight: 800;
+        }
+
+        .shutdown-preset-button {
+            min-width: 54px;
+            height: 28px;
+            padding: 0 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #d7d7d7;
+            font-size: 10px;
+        }
+
+        .shutdown-preset-button:hover {
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .shutdown-scheduler-status {
+            min-height: 18px;
+            margin-top: 14px;
+            color: #b8b8b8;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .shutdown-scheduler-status[data-state="error"] {
+            color: #ffb8b8;
+        }
+
+        .shutdown-scheduler-status[data-state="success"] {
+            color: #ffd28f;
+        }
+
+        .shutdown-scheduler-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .shutdown-scheduler-actions > div {
+            display: flex;
+            gap: 8px;
+        }
+
+        .shutdown-scheduler-action {
+            min-width: 76px;
+            height: 32px;
+            padding: 0 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f1f1f1;
+            font-size: 11px;
+        }
+
+        .shutdown-scheduler-action.primary {
+            background: #f1f1f1;
+            border-color: #f1f1f1;
+            color: #151515;
+        }
+
+        .shutdown-scheduler-action.danger {
+            color: #ffb6b6;
+            border-color: rgba(255, 140, 140, 0.2);
+            background: rgba(255, 110, 110, 0.08);
+        }
+
     </style>
 </head>
 <body>
@@ -506,16 +1663,90 @@
             <div id="center-box">
                 <div id="link-area">
                     <div>
-                        <a href="https://news.naver.com/"><img src="src/icon/icon-news.svg" alt="News"></a>
+                        <button id="btn-weather-toggle" class="widget-toggle-btn" type="button" aria-label="날씨 위젯 열기" aria-expanded="false">
+                            <img src="src/icon/icon-weather.svg" alt="Weather">
+                        </button>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <a href="https://papago.naver.com/"><img src="src/icon/icon-dictionary.svg" alt="Dictionary"></a>
+                        <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 링크 위젯 열기" aria-expanded="false">
+                            <img src="src/icon/icon-quicklink.svg" alt="Quick Link">
+                        </button>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <a href="https://map.kakao.com/"><img src="src/icon/icon-map.svg" alt="Map"></a>
+                        <button id="btn-schedule-shutdown" class="widget-toggle-btn" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false">
+                            <img src="src/icon/icon-schedule-shutdown.svg" alt="Shutdown Timer">
+                        </button>
                     </div>
+                </div>
+                <div id="quick-widget" aria-label="빠른 도구 위젯">
+                    <div class="quick-widget-header">
+                        <div>
+                            <div class="quick-widget-title">Quick Tools</div>
+                            <div class="quick-widget-caption">Windows 기본 도구를 바로 실행합니다.</div>
+                        </div>
+                        <div class="quick-widget-pill">TOOLS</div>
+                    </div>
+                    <div class="quick-grid">
+                        <button class="launcher-basic quick-link-button" data-link="calc.exe" type="button">
+                            <span class="quick-link-label">계산기</span>
+                            <span class="quick-link-icon"><img src="src/icon/icon-tool-calculator.svg" alt=""></span>
+                            <span class="quick-link-meta">빠른 계산</span>
+                        </button>
+                        <button class="launcher-basic quick-link-button" data-link="ms-clock:" type="button">
+                            <span class="quick-link-label">시계</span>
+                            <span class="quick-link-icon"><img src="src/icon/icon-tool-clock.svg" alt=""></span>
+                            <span class="quick-link-meta">알람과 타이머</span>
+                        </button>
+                        <button class="launcher-basic quick-link-button" data-link="notepad.exe" type="button">
+                            <span class="quick-link-label">메모장</span>
+                            <span class="quick-link-icon"><img src="src/icon/icon-tool-notepad.svg" alt=""></span>
+                            <span class="quick-link-meta">빠른 텍스트 작성</span>
+                        </button>
+                        <button class="launcher-basic quick-link-button" data-link="SnippingTool.exe" type="button">
+                            <span class="quick-link-label">캡처도구</span>
+                            <span class="quick-link-icon"><img src="src/icon/icon-tool-snipping.svg" alt=""></span>
+                            <span class="quick-link-meta">화면 캡처</span>
+                        </button>
+                        <button class="launcher-basic quick-link-button" data-link="mspaint.exe" type="button">
+                            <span class="quick-link-label">그림판</span>
+                            <span class="quick-link-icon"><img src="src/icon/icon-tool-paint.svg" alt=""></span>
+                            <span class="quick-link-meta">빠른 이미지 편집</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="weather-widget" aria-live="polite">
+                    <div class="weather-widget-header">
+                        <div>
+                            <div class="weather-widget-title">Weather</div>
+                            <div class="weather-widget-caption" id="weather-updated">현재 위치와 날씨 정보를 불러옵니다.</div>
+                        </div>
+                        <div class="weather-pill" id="weather-pill">LIVE</div>
+                    </div>
+                    <div class="weather-widget-body">
+                        <div class="weather-summary">
+                            <div class="weather-location" id="weather-location">현재 위치 확인 중</div>
+                            <div class="weather-condition" id="weather-condition">날씨 위젯</div>
+                            <div class="weather-description" id="weather-description">현재 위치 기반으로 실시간 날씨를 보여줍니다.</div>
+                        </div>
+                        <div class="weather-temp" id="weather-temperature">--°</div>
+                    </div>
+                    <div class="weather-meta">
+                        <div class="weather-meta-card">
+                            <div class="weather-meta-label">체감</div>
+                            <div class="weather-meta-value" id="weather-feels-like">--°</div>
+                        </div>
+                        <div class="weather-meta-card">
+                            <div class="weather-meta-label">바람</div>
+                            <div class="weather-meta-value" id="weather-wind">--</div>
+                        </div>
+                        <div class="weather-meta-card">
+                            <div class="weather-meta-label">습도</div>
+                            <div class="weather-meta-value" id="weather-humidity">--</div>
+                        </div>
+                    </div>
+                    <div class="weather-status" id="weather-status" data-state="loading">날씨 위젯을 열면 현재 위치와 기온을 확인합니다.</div>
                 </div>
                 <div id="search-area">
                     <div><a href="https://www.google.com">Google</a></div>
@@ -533,7 +1764,7 @@
             <div id="footer-left">
                 <div>
                     <div><a class="launcher-basic footer-btn" data-link="shutdown">종료</a></div>
-                    <div><a class="launcher-basic footer-btn" data-link="reboot">재부팅</a></div>
+                    <div><a class="launcher-basic footer-btn" data-link="reboot">재시작</a></div>
                     <div><a class="footer-btn" id="btn-preference">환경설정</a></div>
                 </div>
                 <div>
@@ -545,16 +1776,50 @@
             <div id="footer-right">
                 <div>JISU YANG</div>
                 <div>|</div>
-                <div>VV Launcher</div>
+                <div>ZEN Launcher</div>
+            </div>
+        </div>
+    </div>
+    <div id="shutdown-scheduler" aria-label="예약 종료 설정">
+        <div class="shutdown-scheduler-header">
+            <div>
+                <div class="shutdown-scheduler-title">예약 종료</div>
+                <div class="shutdown-scheduler-caption">원하는 시간을 분 단위로 정하고 종료를 예약할 수 있습니다.</div>
+            </div>
+            <div class="shutdown-scheduler-pill">POWER</div>
+        </div>
+        <div class="shutdown-scheduler-field">
+            <div class="shutdown-scheduler-label">종료까지 남은 시간</div>
+            <div class="shutdown-scheduler-input-row">
+                <input id="shutdown-minutes" class="shutdown-scheduler-input" type="number" min="1" max="10080" step="1" value="60">
+                <span class="shutdown-scheduler-unit">분</span>
+            </div>
+        </div>
+        <div class="shutdown-scheduler-presets">
+            <button class="shutdown-preset-button" type="button" data-minutes="30">30분</button>
+            <button class="shutdown-preset-button" type="button" data-minutes="60">60분</button>
+            <button class="shutdown-preset-button" type="button" data-minutes="120">120분</button>
+        </div>
+        <div id="shutdown-scheduler-status" class="shutdown-scheduler-status" data-state="idle">예약 종료 또는 예약 취소를 선택할 수 있습니다.</div>
+        <div class="shutdown-scheduler-actions">
+            <div>
+                <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
+            </div>
+            <div>
+                <button id="btn-shutdown-scheduler-close" class="shutdown-scheduler-action" type="button">닫기</button>
+                <button id="btn-shutdown-schedule-apply" class="shutdown-scheduler-action primary" type="button">예약하기</button>
             </div>
         </div>
     </div>
     <div id="editor">
         <div id="setting-container">
-            <div id="setting-category">
-                <div id="btn-preference-gallery" class="select-category" data-category="GALLERY">Gallery</div>
-                <div id="btn-preference-icon" data-category="ICON">Icons</div>
-                <div id="btn-preference-folder" data-category="FOLDER">Folders</div>
+            <div id="setting-topbar">
+                <div id="setting-category">
+                    <button id="btn-preference-gallery" data-tab="gallery" data-category="GALLERY" type="button">Gallery</button>
+                    <button id="btn-preference-icon" data-tab="icon" data-category="ICON" type="button">Icons</button>
+                    <button id="btn-preference-folder" data-tab="folder" data-category="FOLDER" type="button">Folders</button>
+                    <button id="btn-preference-theme" data-tab="theme" data-coming-soon="true" data-label="테마" type="button">테마</button>
+                </div>
             </div>
             <div id="setting-row"></div>
         </div>
