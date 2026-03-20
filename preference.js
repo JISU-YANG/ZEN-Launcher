@@ -352,11 +352,22 @@ class ZenLauncherPreferences {
         button.className = 'setting-item-card';
         button.dataset.itemIndex = `${index}`;
 
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'setting-item-card-delete';
+        deleteButton.textContent = '삭제';
+        deleteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.#deleteItemAt(category, index);
+        });
+
         if (index === this.#activeItemIndex) {
             button.classList.add('select-item');
         }
 
         button.append(
+            deleteButton,
             this.#createStaticElement('div', 'setting-item-card-index', `${index + 1}`),
             this.#createPreviewElement(category, item),
             this.#createStaticElement('div', 'setting-item-card-name', item.name || this.#summarizeLink(item.link)),
@@ -621,14 +632,18 @@ class ZenLauncherPreferences {
 
     #deleteActiveItem() {
         const category = ZenLauncherPreferences.activeCategory;
+        this.#deleteItemAt(category, this.#activeItemIndex);
+    }
+
+    #deleteItemAt(category, index) {
         const items = [...(this.#drafts.get(category) || [])];
-        if (this.#activeItemIndex < 0 || this.#activeItemIndex >= items.length) {
+        if (index < 0 || index >= items.length) {
             return;
         }
 
-        items.splice(this.#activeItemIndex, 1);
+        items.splice(index, 1);
         this.#drafts.set(category, items);
-        this.#activeItemIndex = items.length === 0 ? -1 : Math.min(this.#activeItemIndex, items.length - 1);
+        this.#activeItemIndex = items.length === 0 ? -1 : Math.min(index, items.length - 1);
         this.#statusOverride = null;
         this.#renderCategoryButtons();
         this.#renderCategoryItems(category);
