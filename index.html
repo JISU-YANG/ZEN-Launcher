@@ -63,7 +63,8 @@
             z-index: 10;
         }
 
-        #center-box > div {
+        #center-box > #link-area,
+        #center-box > #search-area {
             width: 30%;
             height: 100%;
             border-radius: 10px;
@@ -72,7 +73,7 @@
             opacity: 0.96;
         }
 
-        #center-box > div:last-child {
+        #center-box > #search-area {
             width: 68%;
         }
 
@@ -284,6 +285,21 @@
             justify-content: space-evenly;
         }
 
+        #link-area > div {
+            display: flex;
+            align-items: center;
+        }
+
+        #link-area button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: none;
+            background: transparent;
+            appearance: none;
+        }
+
         #link-area > div img {
             width: 20px;
             height: 20px;
@@ -299,11 +315,178 @@
             cursor: pointer;
         }
 
+        #link-area button:focus-visible img,
+        #link-area a:focus-visible img {
+            outline: 2px solid #f1f1f1;
+            outline-offset: 2px;
+            border-radius: 30px;
+        }
+
         .vertical-divider {
             width: 0;
             height: 20px;
             border-right: 2px solid #333;
             margin-top: 15px;
+        }
+
+        #weather-widget {
+            display: none;
+            position: fixed;
+            left: calc(50% - 575px + 126px);
+            top: 20px;
+            width: 310px;
+            min-height: 148px;
+            padding: 18px 18px 16px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at top right, rgba(255, 204, 128, 0.22), transparent 38%),
+                linear-gradient(160deg, rgba(31, 31, 31, 0.98), rgba(18, 18, 18, 0.96));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 22px 45px rgba(0, 0, 0, 0.34);
+            color: #f3f3f3;
+            z-index: 16;
+            opacity: 0;
+            transform: translateY(14px) scale(0.98);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            overflow: hidden;
+        }
+
+        #weather-widget.open {
+            display: block;
+            opacity: 1;
+            transform: translateY(-6px) scale(1);
+            pointer-events: auto;
+        }
+
+        #weather-widget::after {
+            content: '';
+            position: absolute;
+            left: 42px;
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: #171717;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transform: rotate(45deg);
+        }
+
+        .weather-widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .weather-location {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 0.01em;
+        }
+
+        .weather-updated {
+            margin-top: 4px;
+            color: #969696;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .weather-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 54px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f7d08a;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+
+        .weather-widget-body {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            margin-top: 16px;
+            align-items: end;
+        }
+
+        .weather-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .weather-condition {
+            font-size: 24px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .weather-description {
+            color: #b8b8b8;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .weather-temp {
+            font-size: 44px;
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+        }
+
+        .weather-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .weather-meta-card {
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-sizing: border-box;
+        }
+
+        .weather-meta-label {
+            color: #858585;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .weather-meta-value {
+            margin-top: 6px;
+            color: #f0f0f0;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .weather-status {
+            margin-top: 14px;
+            color: #b8b8b8;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .weather-status[data-state="error"] {
+            color: #ffb8b8;
+        }
+
+        .weather-status[data-state="loading"] {
+            color: #f7d08a;
         }
 
         #icon-area {
@@ -1031,7 +1214,9 @@
             <div id="center-box">
                 <div id="link-area">
                     <div>
-                        <a href="https://news.naver.com/"><img src="src/icon/icon-news.svg" alt="News"></a>
+                        <button id="btn-weather-toggle" type="button" aria-label="날씨 위젯 열기">
+                            <img src="src/icon/icon-weather.svg" alt="Weather">
+                        </button>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
@@ -1041,6 +1226,37 @@
                     <div>
                         <a href="https://map.kakao.com/"><img src="src/icon/icon-map.svg" alt="Map"></a>
                     </div>
+                </div>
+                <div id="weather-widget" aria-live="polite">
+                    <div class="weather-widget-header">
+                        <div>
+                            <div class="weather-location" id="weather-location">현재 위치 확인 중</div>
+                            <div class="weather-updated" id="weather-updated">위치와 날씨 정보를 불러오는 중입니다.</div>
+                        </div>
+                        <div class="weather-pill" id="weather-pill">LIVE</div>
+                    </div>
+                    <div class="weather-widget-body">
+                        <div class="weather-summary">
+                            <div class="weather-condition" id="weather-condition">날씨 위젯</div>
+                            <div class="weather-description" id="weather-description">현재 위치 기반으로 실시간 날씨를 보여줍니다.</div>
+                        </div>
+                        <div class="weather-temp" id="weather-temperature">--°</div>
+                    </div>
+                    <div class="weather-meta">
+                        <div class="weather-meta-card">
+                            <div class="weather-meta-label">체감</div>
+                            <div class="weather-meta-value" id="weather-feels-like">--°</div>
+                        </div>
+                        <div class="weather-meta-card">
+                            <div class="weather-meta-label">바람</div>
+                            <div class="weather-meta-value" id="weather-wind">--</div>
+                        </div>
+                        <div class="weather-meta-card">
+                            <div class="weather-meta-label">습도</div>
+                            <div class="weather-meta-value" id="weather-humidity">--</div>
+                        </div>
+                    </div>
+                    <div class="weather-status" id="weather-status" data-state="loading">날씨 위젯을 열면 현재 위치와 기온을 확인합니다.</div>
                 </div>
                 <div id="search-area">
                     <div><a href="https://www.google.com">Google</a></div>
@@ -1081,7 +1297,6 @@
                     <button id="btn-preference-gallery" data-tab="gallery" data-category="GALLERY" type="button">Gallery</button>
                     <button id="btn-preference-icon" data-tab="icon" data-category="ICON" type="button">Icons</button>
                     <button id="btn-preference-folder" data-tab="folder" data-category="FOLDER" type="button">Folders</button>
-                    <button id="btn-preference-quicklink" data-tab="quicklink" data-coming-soon="true" data-label="빠른 링크" type="button">빠른 링크</button>
                     <button id="btn-preference-theme" data-tab="theme" data-coming-soon="true" data-label="테마" type="button">테마</button>
                 </div>
             </div>
@@ -1101,3 +1316,4 @@
     <script src="./renderer.js"></script>
 </body>
 </html>
+

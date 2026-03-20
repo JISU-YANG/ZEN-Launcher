@@ -1,7 +1,20 @@
-window.addEventListener('DOMContentLoaded', () => {
+﻿window.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('input-search');
     const refreshButton = document.getElementById('btn-refresh');
+    const weatherToggleButton = document.getElementById('btn-weather-toggle');
+    const weatherWidget = document.getElementById('weather-widget');
+    const weatherLocation = document.getElementById('weather-location');
+    const weatherUpdated = document.getElementById('weather-updated');
+    const weatherPill = document.getElementById('weather-pill');
+    const weatherCondition = document.getElementById('weather-condition');
+    const weatherDescription = document.getElementById('weather-description');
+    const weatherTemperature = document.getElementById('weather-temperature');
+    const weatherFeelsLike = document.getElementById('weather-feels-like');
+    const weatherWind = document.getElementById('weather-wind');
+    const weatherHumidity = document.getElementById('weather-humidity');
+    const weatherStatus = document.getElementById('weather-status');
     const searchEngineLink = document.querySelector('#search-area > div:first-child > a');
+    const WEATHER_CACHE_DURATION = 10 * 60 * 1000;
     const SEARCH_ENGINES = {
         default: {
             label: 'Google',
@@ -30,6 +43,207 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
     let activeSearchEngine = SEARCH_ENGINES.default;
+    let isWeatherWidgetOpen = false;
+    let weatherCache = null;
+    let weatherFetchPromise = null;
+    const WEATHER_CODE_MAP = {
+        0: { title: '맑음', description: '하늘이 깨끗하게 열려 있어요.' },
+        1: { title: '대체로 맑음', description: '햇살이 중심이고 구름이 조금 있어요.' },
+        2: { title: '부분 흐림', description: '해와 구름이 번갈아 보이는 날씨예요.' },
+        3: { title: '흐림', description: '구름층이 두껍게 깔려 있어요.' },
+        45: { title: '안개', description: '시야가 뿌옇고 공기가 축축해요.' },
+        48: { title: '짙은 안개', description: '짙은 안개로 시야가 제한돼요.' },
+        51: { title: '이슬비', description: '가늘고 약한 비가 이어지고 있어요.' },
+        53: { title: '가벼운 비', description: '우산이 있으면 편안한 정도의 비예요.' },
+        55: { title: '비', description: '비가 비교적 또렷하게 내리고 있어요.' },
+        56: { title: '어는 이슬비', description: '노면이 미끄러울 수 있어요.' },
+        57: { title: '강한 어는 이슬비', description: '빙판 가능성이 있어 주의가 필요해요.' },
+        61: { title: '약한 비', description: '가볍게 젖을 정도의 비예요.' },
+        63: { title: '보통 비', description: '우산이 꼭 필요한 비예요.' },
+        65: { title: '강한 비', description: '빗줄기가 굵고 선명해요.' },
+        66: { title: '약한 진눈깨비', description: '비와 눈이 함께 섞여 내려요.' },
+        67: { title: '강한 진눈깨비', description: '차갑고 거센 진눈깨비예요.' },
+        71: { title: '약한 눈', description: '눈발이 가볍게 흩날리고 있어요.' },
+        73: { title: '눈', description: '눈이 꾸준히 내리고 있어요.' },
+        75: { title: '강한 눈', description: '짧은 시간에도 많이 쌓일 수 있어요.' },
+        77: { title: '싸락눈', description: '작은 얼음 알갱이 형태의 눈이에요.' },
+        80: { title: '소나기', description: '짧고 빠르게 비가 지나가고 있어요.' },
+        81: { title: '강한 소나기', description: '순간적으로 비가 세게 쏟아져요.' },
+        82: { title: '폭우성 소나기', description: '짧지만 강도가 높은 비예요.' },
+        85: { title: '눈 소나기', description: '짧게 눈이 몰아치듯 내려요.' },
+        86: { title: '강한 눈 소나기', description: '강한 눈발이 갑자기 지나가고 있어요.' },
+        95: { title: '뇌우', description: '천둥 번개를 동반한 날씨예요.' },
+        96: { title: '우박 가능 뇌우', description: '천둥과 함께 우박 가능성이 있어요.' },
+        99: { title: '강한 우박성 뇌우', description: '매우 거친 날씨라 주의가 필요해요.' }
+    };
+    const setWeatherStatus = (message, state = 'idle') => {
+        if (!weatherStatus) {
+            return;
+        }
+
+        weatherStatus.dataset.state = state;
+        weatherStatus.textContent = message;
+    };
+    const formatDegrees = (value) => `${Math.round(value)}°`;
+    const formatWind = (value) => `${Math.round(value)} km/h`;
+    const formatHumidity = (value) => `${Math.round(value)}%`;
+    const formatUpdatedTime = (date = new Date()) =>
+        new Intl.DateTimeFormat('ko-KR', {
+            hour: 'numeric',
+            minute: '2-digit'
+        }).format(date);
+    const getWeatherSummary = (weatherCode, isDay) => {
+        const fallback = isDay
+            ? { title: '오늘 날씨', description: '현재 위치의 날씨 정보를 확인했어요.' }
+            : { title: '밤 날씨', description: '현재 위치 기준의 야간 날씨예요.' };
+        return WEATHER_CODE_MAP[weatherCode] || fallback;
+    };
+    const renderWeather = (payload) => {
+        const summary = getWeatherSummary(payload.current.weather_code, payload.current.is_day);
+        if (weatherLocation) {
+            weatherLocation.textContent = payload.locationLabel;
+        }
+        if (weatherUpdated) {
+            weatherUpdated.textContent = `${payload.locationSource} 기준 ${formatUpdatedTime(new Date(payload.fetchedAt))} 업데이트`;
+        }
+        if (weatherPill) {
+            weatherPill.textContent = payload.current.is_day ? 'DAY' : 'NIGHT';
+        }
+        if (weatherCondition) {
+            weatherCondition.textContent = summary.title;
+        }
+        if (weatherDescription) {
+            weatherDescription.textContent = summary.description;
+        }
+        if (weatherTemperature) {
+            weatherTemperature.textContent = formatDegrees(payload.current.temperature_2m);
+        }
+        if (weatherFeelsLike) {
+            weatherFeelsLike.textContent = formatDegrees(payload.current.apparent_temperature);
+        }
+        if (weatherWind) {
+            weatherWind.textContent = formatWind(payload.current.wind_speed_10m);
+        }
+        if (weatherHumidity) {
+            weatherHumidity.textContent = formatHumidity(payload.current.relative_humidity_2m);
+        }
+
+        setWeatherStatus('현재 위치 기반 날씨를 불러왔어요.', 'idle');
+    };
+    const getBrowserCoordinates = async () => {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(null);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    });
+                },
+                () => {
+                    resolve(null);
+                },
+                {
+                    enableHighAccuracy: false,
+                    timeout: 5000,
+                    maximumAge: 10 * 60 * 1000
+                }
+            );
+        });
+    };
+    const reverseGeocode = async (latitude, longitude, fallbackLabel) => {
+        try {
+            const label = await window.zenLauncher.reverseGeocode(latitude, longitude);
+            if (!label) {
+                return fallbackLabel;
+            }
+
+            return label;
+        } catch (_error) {
+            return fallbackLabel;
+        }
+    };
+    const loadWeatherData = async ({ force = false } = {}) => {
+        const isCacheValid = weatherCache && Date.now() - weatherCache.fetchedAt < WEATHER_CACHE_DURATION;
+        if (!force && isCacheValid) {
+            renderWeather(weatherCache);
+            return weatherCache;
+        }
+
+        if (weatherFetchPromise) {
+            return weatherFetchPromise;
+        }
+
+        setWeatherStatus('현재 위치와 날씨를 불러오는 중입니다.', 'loading');
+        weatherFetchPromise = (async () => {
+            try {
+                const browserCoordinates = await getBrowserCoordinates();
+                const location = await window.zenLauncher.resolveLocation(browserCoordinates);
+                const locationLabel = await reverseGeocode(
+                    location.latitude,
+                    location.longitude,
+                    location.locationLabel || '현재 위치'
+                );
+                const currentWeather = await window.zenLauncher.fetchWeather(location.latitude, location.longitude);
+
+                weatherCache = {
+                    current: currentWeather,
+                    fetchedAt: Date.now(),
+                    locationLabel,
+                    locationSource: location.locationSource
+                };
+                renderWeather(weatherCache);
+                return weatherCache;
+            } catch (error) {
+                setWeatherStatus(error.message || '날씨 정보를 불러오지 못했습니다.', 'error');
+                return null;
+            } finally {
+                weatherFetchPromise = null;
+            }
+        })();
+
+        return weatherFetchPromise;
+    };
+    const openWeatherWidget = async () => {
+        if (!weatherWidget || !weatherToggleButton) {
+            return;
+        }
+
+        isWeatherWidgetOpen = true;
+        weatherWidget.classList.add('open');
+        weatherToggleButton.setAttribute('aria-label', '날씨 위젯 닫기');
+        const weatherData = await loadWeatherData();
+        if (!weatherData) {
+            if (weatherLocation) {
+                weatherLocation.textContent = '위치를 확인할 수 없음';
+            }
+            if (weatherUpdated) {
+                weatherUpdated.textContent = '네트워크 또는 위치 권한을 확인해주세요.';
+            }
+            return;
+        }
+    };
+    const closeWeatherWidget = () => {
+        if (!weatherWidget || !weatherToggleButton) {
+            return;
+        }
+
+        isWeatherWidgetOpen = false;
+        weatherWidget.classList.remove('open');
+        weatherToggleButton.setAttribute('aria-label', '날씨 위젯 열기');
+    };
+    const toggleWeatherWidget = async () => {
+        if (isWeatherWidgetOpen) {
+            closeWeatherWidget();
+            return;
+        }
+
+        await openWeatherWidget();
+    };
     const updateSearchEngineDisplay = () => {
         if (!searchEngineLink) {
             return;
@@ -62,7 +276,7 @@ window.addEventListener('DOMContentLoaded', () => {
         searchInput.select();
     };
 
-    const detachFocusListener = window.npLauncher.onFocusSearch(focusSearchInput);
+    const detachFocusListener = window.zenLauncher.onFocusSearch(focusSearchInput);
 
     document.addEventListener('keydown', (event) => {
         if (!event.ctrlKey || event.code !== 'Space' || event.repeat) {
@@ -73,6 +287,29 @@ window.addEventListener('DOMContentLoaded', () => {
         focusSearchInput();
     });
 
+    document.addEventListener('keydown', async (event) => {
+        if (event.key === 'Escape' && isWeatherWidgetOpen) {
+            closeWeatherWidget();
+        }
+
+        if (event.key === 'F5' && isWeatherWidgetOpen) {
+            event.preventDefault();
+            await loadWeatherData({ force: true });
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!isWeatherWidgetOpen || !weatherWidget || !weatherToggleButton) {
+            return;
+        }
+
+        const clickedInsideWidget = weatherWidget.contains(event.target);
+        const clickedToggleButton = weatherToggleButton.contains(event.target);
+        if (!clickedInsideWidget && !clickedToggleButton) {
+            closeWeatherWidget();
+        }
+    });
+
     document.addEventListener('click', async (event) => {
         const trigger = event.target.closest('.launcher, .launcher-basic');
         if (!trigger) {
@@ -80,11 +317,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            await window.npLauncher.run(trigger.dataset.link || '');
+            await window.zenLauncher.run(trigger.dataset.link || '');
         } catch (error) {
-            await window.npLauncher.showMessage({
+            await window.zenLauncher.showMessage({
                 type: 'error',
-                message: error.message || '대상을 실행하지 못했습니다.'
+                message: error.message || '??곸쓣 ?ㅽ뻾?섏? 紐삵뻽?듬땲??'
             });
         }
     });
@@ -102,11 +339,11 @@ window.addEventListener('DOMContentLoaded', () => {
         const url = activeSearchEngine.buildSearchUrl(keyword);
 
         try {
-            await window.npLauncher.openExternal(url);
+            await window.zenLauncher.openExternal(url);
         } catch (error) {
-            await window.npLauncher.showMessage({
+            await window.zenLauncher.showMessage({
                 type: 'error',
-                message: error.message || '검색 페이지를 열지 못했습니다.'
+                message: error.message || '寃???섏씠吏瑜??댁? 紐삵뻽?듬땲??'
             });
         }
     });
@@ -116,8 +353,12 @@ window.addEventListener('DOMContentLoaded', () => {
         updateSearchEngineDisplay();
     });
 
+    weatherToggleButton?.addEventListener('click', async () => {
+        await toggleWeatherWidget();
+    });
+
     refreshButton?.addEventListener('click', async () => {
-        await window.npLauncher.reloadWindow();
+        await window.zenLauncher.reloadWindow();
     });
 
     updateSearchEngineDisplay();
@@ -126,3 +367,4 @@ window.addEventListener('DOMContentLoaded', () => {
         detachFocusListener();
     });
 });
+

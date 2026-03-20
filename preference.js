@@ -57,7 +57,7 @@ class ZenLauncherPreferences {
         });
 
         ElementPath.clearButton?.addEventListener('click', async () => {
-            const response = await window.npLauncher.showMessage({
+            const response = await window.zenLauncher.showMessage({
                 type: 'warning',
                 message: '저장된 모든 항목을 초기화할까요?',
                 buttons: ['취소', '전체 초기화'],
@@ -69,7 +69,7 @@ class ZenLauncherPreferences {
                 return;
             }
 
-            await window.npLauncher.clearData();
+            await window.zenLauncher.clearData();
 
             Object.values(ZenLauncherPreferences.Category).forEach((category) => {
                 this.#savedData.set(category, []);
@@ -94,7 +94,7 @@ class ZenLauncherPreferences {
         this.#getTabButtons().forEach((button) => {
             this.#makeAccessibleButton(button, async () => {
                 if (button.dataset.comingSoon === 'true') {
-                    await window.npLauncher.showMessage({
+                    await window.zenLauncher.showMessage({
                         type: 'info',
                         message: `${button.dataset.label || button.textContent} 탭은 추후 추가할 예정입니다.`
                     });
@@ -245,7 +245,7 @@ class ZenLauncherPreferences {
 
     async #closeEditor() {
         if (this.#hasDirtyCategories()) {
-            const response = await window.npLauncher.showMessage({
+            const response = await window.zenLauncher.showMessage({
                 type: 'warning',
                 message: '저장하지 않은 변경이 있습니다. 닫으면 입력 중인 내용이 사라집니다.',
                 buttons: ['계속 편집', '버리고 닫기'],
@@ -293,7 +293,7 @@ class ZenLauncherPreferences {
         }
 
         for (const category of dirtyCategories) {
-            const savedItems = await window.npLauncher.saveCategoryData(
+            const savedItems = await window.zenLauncher.saveCategoryData(
                 category,
                 this.#drafts.get(category) || []
             );
@@ -546,7 +546,7 @@ class ZenLauncherPreferences {
             picker.textContent = pickerLabel;
             picker.style.marginTop = '4px';
             picker.addEventListener('click', async () => {
-                const selectedPath = await window.npLauncher.pickPath(
+                const selectedPath = await window.zenLauncher.pickPath(
                     category === ZenLauncherPreferences.Category.FOLDER ? 'folder' : 'file'
                 );
 
@@ -874,6 +874,6 @@ class ZenLauncherPreferences {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
-    const data = await window.npLauncher.loadData();
+    const data = await window.zenLauncher.loadData();
     new ZenLauncherPreferences(data);
 });
