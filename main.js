@@ -14,6 +14,7 @@ const WINDOW_WIDTH = 1150;
 const LAUNCHER_HEIGHT = 420;
 const WEATHER_WIDGET_SPACE = 280;
 const WINDOW_HEIGHT = LAUNCHER_HEIGHT + WEATHER_WIDGET_SPACE;
+const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
 const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
 const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
@@ -257,6 +258,7 @@ function createWindow() {
         frame: false,
         transparent: true,
         resizable: false,
+        icon: APP_ICON_PATH,
         x: Math.round((displayWidth - WINDOW_WIDTH) / 2),
         y: Math.max(0, launcherY - WEATHER_WIDGET_SPACE),
         webPreferences: {
@@ -352,6 +354,10 @@ function setupDevReload() {
 }
 
 app.whenReady().then(() => {
+    if (process.platform === 'win32') {
+        app.setAppUserModelId('com.jisuyang.zenlauncher');
+    }
+
     createWindow();
     setupDevReload();
     globalShortcut.register('CommandOrControl+Space', () => {
