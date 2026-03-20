@@ -1,10 +1,18 @@
 ﻿window.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('input-search');
     const refreshButton = document.getElementById('btn-refresh');
+    const scheduleShutdownButton = document.getElementById('btn-schedule-shutdown');
     const weatherToggleButton = document.getElementById('btn-weather-toggle');
     const quickToggleButton = document.getElementById('btn-quick-toggle');
     const weatherWidget = document.getElementById('weather-widget');
     const quickWidget = document.getElementById('quick-widget');
+    const shutdownScheduler = document.getElementById('shutdown-scheduler');
+    const shutdownMinutesInput = document.getElementById('shutdown-minutes');
+    const shutdownSchedulerStatus = document.getElementById('shutdown-scheduler-status');
+    const shutdownScheduleApplyButton = document.getElementById('btn-shutdown-schedule-apply');
+    const shutdownCancelButton = document.getElementById('btn-shutdown-cancel');
+    const shutdownSchedulerCloseButton = document.getElementById('btn-shutdown-scheduler-close');
+    const shutdownPresetButtons = Array.from(document.querySelectorAll('.shutdown-preset-button'));
     const weatherLocation = document.getElementById('weather-location');
     const weatherUpdated = document.getElementById('weather-updated');
     const weatherPill = document.getElementById('weather-pill');
@@ -47,6 +55,7 @@
     let activeSearchEngine = SEARCH_ENGINES.default;
     let isWeatherWidgetOpen = false;
     let isQuickWidgetOpen = false;
+    let isShutdownSchedulerOpen = false;
     let weatherCache = null;
     let weatherFetchPromise = null;
     const WEATHER_CODE_MAP = {
@@ -86,6 +95,14 @@
 
         weatherStatus.dataset.state = state;
         weatherStatus.textContent = message;
+    };
+    const setShutdownSchedulerStatus = (message, state = 'idle') => {
+        if (!shutdownSchedulerStatus) {
+            return;
+        }
+
+        shutdownSchedulerStatus.dataset.state = state;
+        shutdownSchedulerStatus.textContent = message;
     };
     const formatDegrees = (value) => `${Math.round(value)}°`;
     const formatWind = (value) => `${Math.round(value)} km/h`;
@@ -347,6 +364,83 @@
 
         openQuickWidget();
     };
+    const getScheduledShutdownMinutes = () => {
+        if (!shutdownMinutesInput) {
+            return 60;
+        }
+
+        const minutes = Number.parseInt(shutdownMinutesInput.value, 10);
+        return minutes;
+    };
+    const closeShutdownScheduler = () => {
+        if (!shutdownScheduler || !scheduleShutdownButton) {
+            return;
+        }
+
+        isShutdownSchedulerOpen = false;
+        shutdownScheduler.classList.remove('open');
+        scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 열기');
+        scheduleShutdownButton.setAttribute('aria-expanded', 'false');
+    };
+    const syncShutdownSchedulerArrow = () => {
+        if (!shutdownScheduler || !scheduleShutdownButton) {
+            return;
+        }
+
+        const widgetRect = shutdownScheduler.getBoundingClientRect();
+        const toggleRect = scheduleShutdownButton.getBoundingClientRect();
+        const arrowCenter = toggleRect.left + (toggleRect.width / 2) - widgetRect.left;
+        const clampedArrowLeft = Math.min(
+            Math.max(arrowCenter - 10, 28),
+            widgetRect.width - 48
+        );
+        shutdownScheduler.style.setProperty('--shutdown-widget-arrow-left', `${Math.round(clampedArrowLeft)}px`);
+    };
+    const syncShutdownSchedulerPosition = () => {
+        if (!shutdownScheduler || !scheduleShutdownButton) {
+            return;
+        }
+
+        const widgetRect = shutdownScheduler.getBoundingClientRect();
+        const toggleRect = scheduleShutdownButton.getBoundingClientRect();
+        const toggleCenter = toggleRect.left + (toggleRect.width / 2);
+        const desiredLeft = toggleCenter - 54;
+        const clampedLeft = Math.min(
+            Math.max(desiredLeft, 24),
+            window.innerWidth - 340
+        );
+        const desiredTop = toggleRect.top - widgetRect.height - 10;
+        const clampedTop = Math.max(desiredTop, 24);
+        shutdownScheduler.style.setProperty('--shutdown-widget-left', `${Math.round(clampedLeft)}px`);
+        shutdownScheduler.style.setProperty('--shutdown-widget-top', `${Math.round(clampedTop)}px`);
+        syncShutdownSchedulerArrow();
+    };
+    const openShutdownScheduler = () => {
+        if (!shutdownScheduler || !scheduleShutdownButton) {
+            return;
+        }
+
+        closeWeatherWidget();
+        closeQuickWidget();
+        isShutdownSchedulerOpen = true;
+        shutdownScheduler.classList.add('open');
+        scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 닫기');
+        scheduleShutdownButton.setAttribute('aria-expanded', 'true');
+        setShutdownSchedulerStatus('예약 종료 또는 예약 취소를 선택할 수 있습니다.', 'idle');
+        requestAnimationFrame(() => {
+            syncShutdownSchedulerPosition();
+            shutdownMinutesInput?.focus({ preventScroll: true });
+            shutdownMinutesInput?.select();
+        });
+    };
+    const toggleShutdownScheduler = () => {
+        if (isShutdownSchedulerOpen) {
+            closeShutdownScheduler();
+            return;
+        }
+
+        openShutdownScheduler();
+    };
     const isPointerInside = (element, event) => {
         if (!element || !event?.relatedTarget) {
             return false;
@@ -404,6 +498,9 @@
         if (event.key === 'Escape' && isQuickWidgetOpen) {
             closeQuickWidget();
         }
+        if (event.key === 'Escape' && isShutdownSchedulerOpen) {
+            closeShutdownScheduler();
+        }
 
         if (event.key === 'F5' && isWeatherWidgetOpen) {
             event.preventDefault();
@@ -417,6 +514,9 @@
         }
         if (isQuickWidgetOpen) {
             syncQuickWidgetPosition();
+        }
+        if (isShutdownSchedulerOpen) {
+            syncShutdownSchedulerPosition();
         }
     });
 
@@ -436,6 +536,14 @@
                 closeQuickWidget();
             }
         }
+
+        if (isShutdownSchedulerOpen && shutdownScheduler && scheduleShutdownButton) {
+            const clickedInsideScheduler = shutdownScheduler.contains(event.target);
+            const clickedSchedulerButton = scheduleShutdownButton.contains(event.target);
+            if (!clickedInsideScheduler && !clickedSchedulerButton) {
+                closeShutdownScheduler();
+            }
+        }
     });
 
     document.addEventListener('click', async (event) => {
@@ -445,7 +553,8 @@
         }
 
         try {
-            await window.zenLauncher.run(trigger.dataset.link || '');
+            const target = trigger.dataset.link || '';
+            await window.zenLauncher.run(target);
         } catch (error) {
             await window.zenLauncher.showMessage({
                 type: 'error',
@@ -516,6 +625,79 @@
         if (!isPointerInside(quickToggleButton, event)) {
             closeQuickWidget();
         }
+    });
+    scheduleShutdownButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        toggleShutdownScheduler();
+    });
+    scheduleShutdownButton?.addEventListener('mouseenter', () => {
+        if (!isShutdownSchedulerOpen) {
+            openShutdownScheduler();
+        }
+    });
+    scheduleShutdownButton?.addEventListener('mouseleave', (event) => {
+        if (!isPointerInside(shutdownScheduler, event)) {
+            closeShutdownScheduler();
+        }
+    });
+    shutdownScheduler?.addEventListener('mouseleave', (event) => {
+        if (!isPointerInside(scheduleShutdownButton, event)) {
+            closeShutdownScheduler();
+        }
+    });
+    shutdownPresetButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            if (!shutdownMinutesInput) {
+                return;
+            }
+
+            shutdownMinutesInput.value = button.dataset.minutes || '60';
+            shutdownMinutesInput.focus({ preventScroll: true });
+            shutdownMinutesInput.select();
+        });
+    });
+    shutdownScheduleApplyButton?.addEventListener('click', async () => {
+        const minutes = getScheduledShutdownMinutes();
+        if (!Number.isInteger(minutes) || minutes < 1 || minutes > 10080) {
+            setShutdownSchedulerStatus('예약 종료 시간은 1분부터 10080분까지 입력할 수 있습니다.', 'error');
+            shutdownMinutesInput?.focus({ preventScroll: true });
+            shutdownMinutesInput?.select();
+            return;
+        }
+
+        try {
+            await window.zenLauncher.run(`schedule-shutdown:${minutes}`);
+            setShutdownSchedulerStatus(`${minutes}분 후 종료가 예약되었습니다.`, 'success');
+        } catch (error) {
+            setShutdownSchedulerStatus(error.message || '예약 종료를 설정하지 못했습니다.', 'error');
+        }
+    });
+    shutdownCancelButton?.addEventListener('click', async () => {
+        try {
+            await window.zenLauncher.run('cancel-schedule-shutdown');
+            setShutdownSchedulerStatus('예약 종료를 취소했습니다.', 'success');
+        } catch (error) {
+            setShutdownSchedulerStatus(error.message || '예약 종료를 취소하지 못했습니다.', 'error');
+        }
+    });
+    shutdownSchedulerCloseButton?.addEventListener('click', () => {
+        closeShutdownScheduler();
+    });
+    scheduleShutdownButton?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        toggleShutdownScheduler();
+    });
+    shutdownMinutesInput?.addEventListener('keydown', async (event) => {
+        if (event.key !== 'Enter') {
+            return;
+        }
+
+        event.preventDefault();
+        await shutdownScheduleApplyButton?.click();
     });
 
     refreshButton?.addEventListener('click', async () => {

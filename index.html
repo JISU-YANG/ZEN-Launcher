@@ -1444,6 +1444,215 @@
             outline-offset: 2px;
         }
 
+        #shutdown-scheduler {
+            --shutdown-widget-left: calc(50% - 575px + 286px);
+            --shutdown-widget-top: 52px;
+            --shutdown-widget-arrow-left: 42px;
+            position: fixed;
+            left: var(--shutdown-widget-left);
+            top: var(--shutdown-widget-top);
+            width: 320px;
+            padding: 16px;
+            border-radius: 18px;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at top left, rgba(255, 214, 163, 0.16), transparent 36%),
+                linear-gradient(160deg, rgba(28, 28, 28, 0.98), rgba(17, 17, 17, 0.97));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 22px 42px rgba(0, 0, 0, 0.34);
+            color: #f3f3f3;
+            z-index: 18;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        }
+
+        #shutdown-scheduler.open {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        #shutdown-scheduler::after {
+            content: '';
+            position: absolute;
+            left: var(--shutdown-widget-arrow-left);
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: #171717;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transform: rotate(45deg);
+        }
+
+        .shutdown-scheduler-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .shutdown-scheduler-title {
+            color: #f3f3f3;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .shutdown-scheduler-caption {
+            margin-top: 4px;
+            color: #9f9f9f;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .shutdown-scheduler-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffd28f;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            box-sizing: border-box;
+        }
+
+        .shutdown-scheduler-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .shutdown-scheduler-label {
+            color: #bdbdbd;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .shutdown-scheduler-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shutdown-scheduler-input {
+            flex: 1;
+            height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #f3f3f3;
+            font-size: 16px;
+            font-weight: 800;
+            box-sizing: border-box;
+            appearance: textfield;
+        }
+
+        .shutdown-scheduler-input::-webkit-outer-spin-button,
+        .shutdown-scheduler-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .shutdown-scheduler-unit {
+            color: #f3f3f3;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .shutdown-scheduler-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .shutdown-preset-button,
+        .shutdown-scheduler-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            cursor: pointer;
+            appearance: none;
+            box-sizing: border-box;
+            font-weight: 800;
+        }
+
+        .shutdown-preset-button {
+            min-width: 54px;
+            height: 28px;
+            padding: 0 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #d7d7d7;
+            font-size: 10px;
+        }
+
+        .shutdown-preset-button:hover {
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .shutdown-scheduler-status {
+            min-height: 18px;
+            margin-top: 14px;
+            color: #b8b8b8;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .shutdown-scheduler-status[data-state="error"] {
+            color: #ffb8b8;
+        }
+
+        .shutdown-scheduler-status[data-state="success"] {
+            color: #ffd28f;
+        }
+
+        .shutdown-scheduler-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .shutdown-scheduler-actions > div {
+            display: flex;
+            gap: 8px;
+        }
+
+        .shutdown-scheduler-action {
+            min-width: 76px;
+            height: 32px;
+            padding: 0 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f1f1f1;
+            font-size: 11px;
+        }
+
+        .shutdown-scheduler-action.primary {
+            background: #f1f1f1;
+            border-color: #f1f1f1;
+            color: #151515;
+        }
+
+        .shutdown-scheduler-action.danger {
+            color: #ffb6b6;
+            border-color: rgba(255, 140, 140, 0.2);
+            background: rgba(255, 110, 110, 0.08);
+        }
+
     </style>
 </head>
 <body>
@@ -1466,7 +1675,9 @@
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <a href="https://map.kakao.com/"><img src="src/icon/icon-map.svg" alt="Map"></a>
+                        <button id="btn-schedule-shutdown" class="widget-toggle-btn" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false">
+                            <img src="src/icon/icon-schedule-shutdown.svg" alt="Shutdown Timer">
+                        </button>
                     </div>
                 </div>
                 <div id="quick-widget" aria-label="빠른 도구 위젯">
@@ -1566,6 +1777,37 @@
                 <div>JISU YANG</div>
                 <div>|</div>
                 <div>ZEN Launcher</div>
+            </div>
+        </div>
+    </div>
+    <div id="shutdown-scheduler" aria-label="예약 종료 설정">
+        <div class="shutdown-scheduler-header">
+            <div>
+                <div class="shutdown-scheduler-title">예약 종료</div>
+                <div class="shutdown-scheduler-caption">원하는 시간을 분 단위로 정하고 종료를 예약할 수 있습니다.</div>
+            </div>
+            <div class="shutdown-scheduler-pill">POWER</div>
+        </div>
+        <div class="shutdown-scheduler-field">
+            <div class="shutdown-scheduler-label">종료까지 남은 시간</div>
+            <div class="shutdown-scheduler-input-row">
+                <input id="shutdown-minutes" class="shutdown-scheduler-input" type="number" min="1" max="10080" step="1" value="60">
+                <span class="shutdown-scheduler-unit">분</span>
+            </div>
+        </div>
+        <div class="shutdown-scheduler-presets">
+            <button class="shutdown-preset-button" type="button" data-minutes="30">30분</button>
+            <button class="shutdown-preset-button" type="button" data-minutes="60">60분</button>
+            <button class="shutdown-preset-button" type="button" data-minutes="120">120분</button>
+        </div>
+        <div id="shutdown-scheduler-status" class="shutdown-scheduler-status" data-state="idle">예약 종료 또는 예약 취소를 선택할 수 있습니다.</div>
+        <div class="shutdown-scheduler-actions">
+            <div>
+                <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
+            </div>
+            <div>
+                <button id="btn-shutdown-scheduler-close" class="shutdown-scheduler-action" type="button">닫기</button>
+                <button id="btn-shutdown-schedule-apply" class="shutdown-scheduler-action primary" type="button">예약하기</button>
             </div>
         </div>
     </div>

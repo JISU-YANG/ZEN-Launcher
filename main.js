@@ -163,6 +163,19 @@ async function openExternalUrl(target) {
     await shell.openExternal(target);
 }
 
+async function runSystemCommand(file, args, errorMessage) {
+    await new Promise((resolve, reject) => {
+        execFile(file, args, (error) => {
+            if (error) {
+                reject(new Error(`${errorMessage}: ${error.message}`));
+                return;
+            }
+
+            resolve();
+        });
+    });
+}
+
 async function runTarget(target) {
     if (typeof target !== 'string' || !target.trim()) {
         throw new Error('\uC2E4\uD589\uD560 \uB300\uC0C1\uC774 \uBE44\uC5B4 \uC788\uC2B5\uB2C8\uB2E4.');
@@ -181,22 +194,50 @@ async function runTarget(target) {
         return;
     }
 
+    if (normalizedTarget === 'cancel-schedule-shutdown') {
+        await runSystemCommand(
+            'shutdown',
+            ['/a'],
+            '\uC608\uC57D \uC885\uB8CC\uB97C \uCDE8\uC18C\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+        );
+        return;
+    }
+
+    if (normalizedTarget.startsWith('schedule-shutdown:')) {
+        const rawMinutes = normalizedTarget.slice('schedule-shutdown:'.length);
+        const minutes = Number.parseInt(rawMinutes, 10);
+        if (!Number.isInteger(minutes) || minutes < 1 || minutes > 10080) {
+            throw new Error('\uC608\uC57D \uC885\uB8CC \uC2DC\uAC04\uC740 1\uBD84\uBD80\uD130 10080\uBD84\uAE4C\uC9C0 \uC124\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');
+        }
+
+        await runSystemCommand(
+            'shutdown',
+            ['/s', '/t', `${minutes * 60}`],
+            '\uC608\uC57D \uC885\uB8CC\uB97C \uC124\uC815\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+        );
+        return;
+    }
+
+    if (normalizedTarget === 'schedule-shutdown') {
+        await runSystemCommand(
+            'shutdown',
+            ['/s', '/t', '3600'],
+            '\uC608\uC57D \uC885\uB8CC\uB97C \uC124\uC815\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+        );
+        return;
+    }
+
     if (isAllowedExternalUrl(normalizedTarget)) {
         await openExternalUrl(normalizedTarget);
         return;
     }
 
     if (targetExtension === '.exe') {
-        await new Promise((resolve, reject) => {
-            execFile(normalizedTarget, (error) => {
-                if (error) {
-                    reject(new Error(`\uC2E4\uD589 \uD30C\uC77C\uC744 \uC5F4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4: ${error.message}`));
-                    return;
-                }
-
-                resolve();
-            });
-        });
+        await runSystemCommand(
+            normalizedTarget,
+            [],
+            '\uC2E4\uD589 \uD30C\uC77C\uC744 \uC5F4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+        );
         return;
     }
 
