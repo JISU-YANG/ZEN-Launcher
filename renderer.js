@@ -58,6 +58,7 @@
     let isShutdownSchedulerOpen = false;
     let weatherCache = null;
     let weatherFetchPromise = null;
+    let widgetSyncFrame = 0;
     const WEATHER_CODE_MAP = {
         0: { title: '맑음', description: '하늘이 깨끗하게 열려 있어요.' },
         1: { title: '대체로 맑음', description: '햇살이 중심이고 구름이 조금 있어요.' },
@@ -150,6 +151,25 @@
 
         setWeatherStatus('', 'idle');
     };
+    const scheduleWidgetPositionSync = () => {
+        if (widgetSyncFrame) {
+            return;
+        }
+
+        widgetSyncFrame = window.requestAnimationFrame(() => {
+            widgetSyncFrame = 0;
+
+            if (isWeatherWidgetOpen) {
+                syncWeatherWidgetPosition();
+            }
+            if (isQuickWidgetOpen) {
+                syncQuickWidgetPosition();
+            }
+            if (isShutdownSchedulerOpen) {
+                syncShutdownSchedulerPosition();
+            }
+        });
+    };
     const getBrowserCoordinates = async () => {
         return new Promise((resolve) => {
             if (!navigator.geolocation) {
@@ -233,18 +253,15 @@
             return;
         }
 
+        closeShutdownScheduler();
         closeQuickWidget();
         isWeatherWidgetOpen = true;
         weatherWidget.classList.add('open');
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 닫기');
         weatherToggleButton.setAttribute('aria-expanded', 'true');
-        requestAnimationFrame(() => {
-            syncWeatherWidgetPosition();
-        });
+        scheduleWidgetPositionSync();
         const weatherData = await loadWeatherData();
-        requestAnimationFrame(() => {
-            syncWeatherWidgetPosition();
-        });
+        scheduleWidgetPositionSync();
         if (!weatherData) {
             if (weatherLocation) {
                 weatherLocation.textContent = '위치를 확인할 수 없음';
@@ -329,14 +346,13 @@
             return;
         }
 
+        closeShutdownScheduler();
         closeWeatherWidget();
         isQuickWidgetOpen = true;
         quickWidget.classList.add('open');
         quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 닫기');
         quickToggleButton.setAttribute('aria-expanded', 'true');
-        requestAnimationFrame(() => {
-            syncQuickWidgetPosition();
-        });
+        scheduleWidgetPositionSync();
     };
     const closeQuickWidget = () => {
         if (!quickWidget || !quickToggleButton) {
@@ -427,8 +443,8 @@
         scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 닫기');
         scheduleShutdownButton.setAttribute('aria-expanded', 'true');
         setShutdownSchedulerStatus('예약 종료 또는 예약 취소를 선택할 수 있습니다.', 'idle');
+        scheduleWidgetPositionSync();
         requestAnimationFrame(() => {
-            syncShutdownSchedulerPosition();
             shutdownMinutesInput?.focus({ preventScroll: true });
             shutdownMinutesInput?.select();
         });
@@ -482,16 +498,13 @@
 
     const detachFocusListener = window.zenLauncher.onFocusSearch(focusSearchInput);
 
-    document.addEventListener('keydown', (event) => {
-        if (!event.ctrlKey || event.code !== 'Space' || event.repeat) {
+    document.addEventListener('keydown', async (event) => {
+        if (event.ctrlKey && event.code === 'Space' && !event.repeat) {
+            event.preventDefault();
+            focusSearchInput();
             return;
         }
 
-        event.preventDefault();
-        focusSearchInput();
-    });
-
-    document.addEventListener('keydown', async (event) => {
         if (event.key === 'Escape' && isWeatherWidgetOpen) {
             closeWeatherWidget();
         }
@@ -509,18 +522,10 @@
     });
 
     window.addEventListener('resize', () => {
-        if (isWeatherWidgetOpen) {
-            syncWeatherWidgetPosition();
-        }
-        if (isQuickWidgetOpen) {
-            syncQuickWidgetPosition();
-        }
-        if (isShutdownSchedulerOpen) {
-            syncShutdownSchedulerPosition();
-        }
+        scheduleWidgetPositionSync();
     });
 
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', async (event) => {
         if (isWeatherWidgetOpen && weatherWidget && weatherToggleButton) {
             const clickedInsideWeatherWidget = weatherWidget.contains(event.target);
             const clickedWeatherToggleButton = weatherToggleButton.contains(event.target);
@@ -544,9 +549,7 @@
                 closeShutdownScheduler();
             }
         }
-    });
 
-    document.addEventListener('click', async (event) => {
         const trigger = event.target.closest('.launcher, .launcher-basic');
         if (!trigger) {
             return;
@@ -707,6 +710,9 @@
     updateSearchEngineDisplay();
 
     window.addEventListener('beforeunload', () => {
+        if (widgetSyncFrame) {
+            window.cancelAnimationFrame(widgetSyncFrame);
+        }
         detachFocusListener();
     });
 });

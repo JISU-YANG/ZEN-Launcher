@@ -1,4 +1,4 @@
-class ElementPath {
+﻿class ElementPath {
     static openButton = document.getElementById('btn-preference');
     static cancelButton = document.getElementById('btn-preference-cancel');
     static clearButton = document.getElementById('btn-preference-clear');
@@ -25,6 +25,7 @@ class ZenLauncherPreferences {
 
     #savedData = new Map();
     #drafts = new Map();
+    #dirtyCategories = new Set();
     #statusOverride = null;
     #activeItemIndex = -1;
 
@@ -41,6 +42,8 @@ class ZenLauncherPreferences {
 
         this.#prepareEditorStructure();
         this.#bindEvents();
+        this.#bindEditorGridEvents();
+        this.#syncAllDirtyCategories();
         this.#renderCategoryButtons();
         this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
         this.#renderLauncherItems();
@@ -75,6 +78,7 @@ class ZenLauncherPreferences {
                 this.#savedData.set(category, []);
                 this.#drafts.set(category, []);
             });
+            this.#syncAllDirtyCategories();
 
             this.#activeItemIndex = -1;
             this.#statusOverride = {
@@ -258,6 +262,7 @@ class ZenLauncherPreferences {
             }
 
             this.#resetDraftsFromSaved();
+            this.#syncAllDirtyCategories();
             this.#statusOverride = {
                 tone: 'neutral',
                 message: '변경 취소됨'
@@ -300,6 +305,7 @@ class ZenLauncherPreferences {
             const normalizedItems = savedItems.map((item) => this.#normalizeItem(item, category));
             this.#savedData.set(category, normalizedItems);
             this.#drafts.set(category, normalizedItems.map((item) => ({ ...item })));
+            this.#updateDirtyState(category);
         }
 
         this.#statusOverride = {
@@ -322,7 +328,7 @@ class ZenLauncherPreferences {
 
             const category = ZenLauncherPreferences.Category[button.dataset.category];
             const isActive = category === ZenLauncherPreferences.activeCategory;
-            const isDirty = this.#isCategoryDirty(category);
+            const isDirty = this.#dirtyCategories.has(category);
 
             button.classList.toggle('select-category', isActive);
             button.dataset.dirty = isDirty ? 'true' : 'false';
@@ -333,34 +339,36 @@ class ZenLauncherPreferences {
         const items = this.#drafts.get(category) || [];
         const grid = document.createElement('div');
         grid.className = 'setting-grid';
+        grid.dataset.category = category;
+        const fragment = document.createDocumentFragment();
 
         items.forEach((item, index) => {
-            grid.appendChild(this.#createItemCard(category, item, index));
+            fragment.appendChild(this.#createItemCard(category, item, index));
         });
 
         if (items.length < ZenLauncherPreferences.MaxCount[category]) {
-            grid.appendChild(this.#createAddCard(category));
+            fragment.appendChild(this.#createAddCard(category));
         }
 
+        grid.appendChild(fragment);
         ElementPath.editorContext.replaceChildren(grid);
         this.#closeItemEditor();
     }
 
     #createItemCard(category, item, index) {
-        const button = document.createElement('button');
-        button.type = 'button';
+        const button = document.createElement('div');
         button.className = 'setting-item-card';
+        button.dataset.action = 'edit-item';
         button.dataset.itemIndex = `${index}`;
+        button.setAttribute('role', 'button');
+        button.tabIndex = 0;
 
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.className = 'setting-item-card-delete';
         deleteButton.textContent = '삭제';
-        deleteButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            this.#deleteItemAt(category, index);
-        });
+        deleteButton.dataset.action = 'delete-item';
+        deleteButton.dataset.itemIndex = `${index}`;
 
         if (index === this.#activeItemIndex) {
             button.classList.add('select-item');
@@ -374,12 +382,6 @@ class ZenLauncherPreferences {
             this.#createStaticElement('div', 'setting-item-card-meta', this.#getItemMetaText(category, item))
         );
 
-        button.addEventListener('click', () => {
-            this.#activeItemIndex = index;
-            this.#renderCategoryItems(category);
-            this.#openItemEditor(category, index);
-        });
-
         return button;
     }
 
@@ -387,6 +389,7 @@ class ZenLauncherPreferences {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'setting-add-card';
+        button.dataset.action = 'add-item';
         button.append(
             this.#createStaticElement('div', 'setting-add-card-title', '+ 항목 추가'),
             this.#createStaticElement(
@@ -395,10 +398,6 @@ class ZenLauncherPreferences {
                 `${ZenLauncherPreferences.MaxCount[category] - (this.#drafts.get(category)?.length || 0)}개 더 추가 가능`
             )
         );
-
-        button.addEventListener('click', () => {
-            this.#addItem(category);
-        });
 
         return button;
     }
@@ -582,6 +581,7 @@ class ZenLauncherPreferences {
         };
 
         this.#drafts.set(category, items);
+        this.#updateDirtyState(category);
         this.#statusOverride = null;
         this.#renderCategoryButtons();
         this.#refreshStatus();
@@ -622,6 +622,7 @@ class ZenLauncherPreferences {
 
         items.push(this.#normalizeItem({}, category));
         this.#drafts.set(category, items);
+        this.#updateDirtyState(category);
         this.#activeItemIndex = items.length - 1;
         this.#statusOverride = null;
         this.#renderCategoryButtons();
@@ -643,6 +644,7 @@ class ZenLauncherPreferences {
 
         items.splice(index, 1);
         this.#drafts.set(category, items);
+        this.#updateDirtyState(category);
         this.#activeItemIndex = items.length === 0 ? -1 : Math.min(index, items.length - 1);
         this.#statusOverride = null;
         this.#renderCategoryButtons();
@@ -656,6 +658,60 @@ class ZenLauncherPreferences {
         this.#activeItemIndex = -1;
     }
 
+    #bindEditorGridEvents() {
+        ElementPath.editorContext?.addEventListener('click', (event) => {
+            const actionTarget = event.target.closest('[data-action]');
+            if (!actionTarget || !ElementPath.editorContext?.contains(actionTarget)) {
+                return;
+            }
+
+            const grid = actionTarget.closest('.setting-grid');
+            const category = grid?.dataset.category;
+            if (!category) {
+                return;
+            }
+
+            const action = actionTarget.dataset.action;
+            const index = Number.parseInt(actionTarget.dataset.itemIndex || '-1', 10);
+
+            if (action === 'delete-item') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.#deleteItemAt(category, index);
+                return;
+            }
+
+            if (action === 'edit-item') {
+                this.#activeItemIndex = index;
+                this.#renderCategoryItems(category);
+                this.#openItemEditor(category, index);
+                return;
+            }
+
+            if (action === 'add-item') {
+                this.#addItem(category);
+            }
+        });
+
+        ElementPath.editorContext?.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+
+            const actionTarget = event.target.closest('[data-action]');
+            if (!actionTarget || !ElementPath.editorContext?.contains(actionTarget)) {
+                return;
+            }
+
+            if (actionTarget.tagName === 'BUTTON') {
+                return;
+            }
+
+            event.preventDefault();
+            actionTarget.click();
+        });
+    }
+
     #renderLauncherItems() {
         this.#savedData.forEach((items, category) => {
             const listArea = document.getElementById(`${category}-area`);
@@ -664,20 +720,27 @@ class ZenLauncherPreferences {
             }
 
             listArea.replaceChildren();
-            const elements = items
-                .map((item) => this.#createLauncherItem(item, category))
-                .filter(Boolean);
+            const fragment = document.createDocumentFragment();
+            let elementCount = 0;
 
-            listArea.classList.toggle('is-empty', elements.length === 0);
+            items.forEach((item) => {
+                const element = this.#createLauncherItem(item, category);
+                if (!element) {
+                    return;
+                }
 
-            if (elements.length === 0) {
+                fragment.appendChild(element);
+                elementCount += 1;
+            });
+
+            listArea.classList.toggle('is-empty', elementCount === 0);
+
+            if (elementCount === 0) {
                 listArea.appendChild(this.#createEmptyState(category));
                 return;
             }
 
-            elements.forEach((element) => {
-                listArea.appendChild(element);
-            });
+            listArea.appendChild(fragment);
         });
     }
 
@@ -741,7 +804,7 @@ class ZenLauncherPreferences {
             return;
         }
 
-        const dirtyCount = Object.values(ZenLauncherPreferences.Category).filter((category) => this.#isCategoryDirty(category)).length;
+        const dirtyCount = this.#dirtyCategories.size;
         let tone = 'neutral';
         let message = '저장됨';
 
@@ -758,13 +821,50 @@ class ZenLauncherPreferences {
     }
 
     #hasDirtyCategories() {
-        return Object.values(ZenLauncherPreferences.Category).some((category) => this.#isCategoryDirty(category));
+        return this.#dirtyCategories.size > 0;
     }
 
     #isCategoryDirty(category) {
         const draftItems = this.#drafts.get(category) || [];
         const savedItems = this.#savedData.get(category) || [];
-        return JSON.stringify(draftItems) !== JSON.stringify(savedItems);
+        return !this.#areItemsEqual(draftItems, savedItems);
+    }
+
+    #areItemsEqual(leftItems, rightItems) {
+        if (leftItems.length !== rightItems.length) {
+            return false;
+        }
+
+        for (let index = 0; index < leftItems.length; index += 1) {
+            const left = leftItems[index];
+            const right = rightItems[index];
+
+            if (
+                left?.name !== right?.name ||
+                left?.link !== right?.link ||
+                left?.img !== right?.img
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    #updateDirtyState(category) {
+        if (this.#isCategoryDirty(category)) {
+            this.#dirtyCategories.add(category);
+            return;
+        }
+
+        this.#dirtyCategories.delete(category);
+    }
+
+    #syncAllDirtyCategories() {
+        this.#dirtyCategories.clear();
+        Object.values(ZenLauncherPreferences.Category).forEach((category) => {
+            this.#updateDirtyState(category);
+        });
     }
 
     #resetDraftsFromSaved() {
@@ -828,7 +928,7 @@ class ZenLauncherPreferences {
             return this.#summarizeLink(item.link);
         }
 
-        return /^https?:\/\//i.test(item.link) ? '웹 링크' : '로컬 실행';
+        return /^https?:\/\//i.test(item.link) ? '외부 링크' : '로컬 실행';
     }
 
     #summarizeLink(link) {
