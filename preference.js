@@ -43,7 +43,7 @@ class NPLauncher {
 
     #bindEvents() {
         ElementPath.openButton?.addEventListener('click', () => {
-            ElementPath.editorElement.style.display = 'inline-flex';
+            this.#openEditor();
         });
 
         ElementPath.cancelButton?.addEventListener('click', () => {
@@ -97,6 +97,14 @@ class NPLauncher {
                 this.#renderEditor(category);
             });
         });
+
+    }
+
+    #openEditor(category = NPLauncher.activeCategory) {
+        NPLauncher.activeCategory = category;
+        this.#renderCategoryButtons();
+        this.#renderEditor(category);
+        ElementPath.editorElement.style.display = 'inline-flex';
     }
 
     #renderCategoryButtons() {
@@ -118,6 +126,13 @@ class NPLauncher {
         const listItem = this.#data.get(category) || [];
         const column = document.createElement('div');
         column.className = 'setting-col';
+
+        if (listItem.length === 0) {
+            const tip = document.createElement('div');
+            tip.className = 'editor-tip';
+            tip.textContent = `${this.#getCategoryLabel(category)} 항목이 아직 없습니다. 아래 입력칸에 이름과 경로 또는 URL을 적고 저장하면 바로 런처에 표시됩니다.`;
+            column.appendChild(tip);
+        }
 
         for (let index = 0; index < NPLauncher.MaxCount[category]; index += 1) {
             const item = listItem[index] || {};
@@ -219,12 +234,19 @@ class NPLauncher {
             }
 
             listArea.replaceChildren();
+            const elements = listItems
+                .map((item) => this.#createLauncherItem(item, category))
+                .filter(Boolean);
 
-            listItems.forEach((item) => {
-                const element = this.#createLauncherItem(item, category);
-                if (element) {
-                    listArea.appendChild(element);
-                }
+            listArea.classList.toggle('is-empty', elements.length === 0);
+
+            if (elements.length === 0) {
+                listArea.appendChild(this.#createEmptyState(category));
+                return;
+            }
+
+            elements.forEach((element) => {
+                listArea.appendChild(element);
             });
         });
     }
@@ -243,6 +265,7 @@ class NPLauncher {
         }
 
         const wrapper = document.createElement('div');
+        wrapper.className = `${category}-entry`;
         const isHttpLink = /^https?:\/\//i.test(item.link);
 
         let container;
@@ -268,6 +291,18 @@ class NPLauncher {
 
         wrapper.appendChild(container);
         return wrapper;
+    }
+
+    #createEmptyState(category) {
+        const state = document.createElement('div');
+        state.className = 'empty-state';
+
+        const title = document.createElement('div');
+        title.className = 'empty-state-title';
+        title.textContent = category === NPLauncher.Category.FOLDER ? 'EMPTY FOLDER' : 'EMPTY';
+
+        state.appendChild(title);
+        return state;
     }
 
     #getCategoryLabel(category) {
