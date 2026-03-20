@@ -246,7 +246,7 @@ ipcMain.handle('np-launcher:clear-data', async () => {
 ipcMain.handle('np-launcher:show-message', async (_event, options) => {
     const result = await dialog.showMessageBox({
         type: typeof options?.type === 'string' ? options.type : 'info',
-        title: 'NP-Launcher',
+        title: 'ZEN Launcher',
         message: typeof options?.message === 'string' ? options.message : '',
         buttons: Array.isArray(options?.buttons) && options.buttons.length > 0 ? options.buttons : ['\uD655\uC778'],
         defaultId: Number.isInteger(options?.defaultId) ? options.defaultId : 0,

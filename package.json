@@ -1,5 +1,6 @@
 {
-  "name": "np-launcher",
+  "name": "zen-launcher",
+  "productName": "ZEN Launcher",
   "version": "1.2.0",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
@@ -22,7 +23,7 @@
   "build": {
     "artifactName": "${name}-${version}_windows-${arch}.${ext}",
     "win": {
-      "icon": "src/app/NP-Launcher.png",
+      "icon": "src/app/ZEN-Launcher.png",
       "signAndEditExecutable": false
     }
   },

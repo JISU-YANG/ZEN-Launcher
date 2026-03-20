@@ -1,8 +1,8 @@
-# NP-Launcher: 빠른 실행을 위한 개인용 런처
+# ZEN Launcher: 빠른 실행을 위한 개인용 런처
 
-NP-Launcher는 자주 사용하는 프로그램, 웹사이트, 폴더, 시스템 기능을 한 화면에서 빠르게 실행할 수 있도록 만든 Electron 기반 런처입니다.
+ZEN Launcher는 자주 사용하는 프로그램, 웹사이트, 폴더, 시스템 기능을 한 화면에서 빠르게 실행할 수 있도록 만든 Electron 기반 런처입니다.
 
-![NP-Launcher Thumbnail](./doc/thumbnail-01.png)
+![ZEN Launcher Thumbnail](./doc/thumbnail-01.png)
 
 [프로젝트 회고 보기](https://jisulog.com/docs/essay/project-review/2023-np-launcher)
 
@@ -54,7 +54,7 @@ npm start
 
 ### v1.0 (2023-03-15)
 
-- NP-Launcher 최초 공개 버전입니다.
+- ZEN Launcher 최초 공개 버전입니다.
 
 ## 라이선스
 
