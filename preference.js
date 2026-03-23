@@ -284,17 +284,19 @@ class ZenLauncherPreferences {
                 display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,0.03);
                 border:1px solid rgba(255,255,255,0.06); box-sizing:border-box;
             }
+            .program-picker-control { display:flex; align-items:stretch; gap:8px; min-width:0; }
+            .program-picker-control .program-picker-card { flex:1 1 auto; min-width:0; justify-content:center; }
             .program-picker-card.empty { border-style:dashed; color:#9b9b9b; }
             .program-picker-name { color:#f1f1f1; font-size:11px; font-weight:800; word-break:break-word; }
             .program-picker-meta { color:#9b9b9b; font-size:9px; line-height:1.4; word-break:break-all; }
             .program-picker-actions { display:flex; gap:8px; flex-wrap:nowrap; }
             .program-browser {
-                position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:18px;
+                position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding:118px 18px 18px;
                 background:transparent; z-index:60; box-sizing:border-box;
             }
             .program-browser.open { display:flex; }
             .program-browser-panel {
-                display:flex; flex-direction:column; width:min(1180px, calc(100vw - 36px)); height:min(820px, calc(100vh - 24px)); border-radius:18px;
+                display:flex; flex-direction:column; width:min(1180px, calc(100vw - 36px)); height:min(820px, calc(100vh - 136px)); border-radius:18px;
                 background:#1b1b1b; border:1px solid rgba(255,255,255,0.08); box-shadow:none; overflow:hidden;
                 padding:14px; box-sizing:border-box;
             }
@@ -611,7 +613,7 @@ class ZenLauncherPreferences {
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.className = 'setting-item-card-delete';
-        deleteButton.textContent = '삭제';
+        deleteButton.setAttribute('aria-label', '삭제');
         deleteButton.dataset.action = 'delete-item';
         deleteButton.dataset.itemIndex = `${index}`;
 
@@ -678,7 +680,7 @@ class ZenLauncherPreferences {
                 image.alt = item.name || '';
                 media.appendChild(image);
             } else {
-                media.appendChild(this.#createStaticElement('div', 'setting-card-preview-empty', 'GALLERY'));
+                media.appendChild(this.#createStaticElement('div', 'setting-card-preview-empty', ''));
             }
 
             const label = this.#createStaticElement(
@@ -883,7 +885,7 @@ class ZenLauncherPreferences {
         const directButton = document.createElement('button');
         directButton.type = 'button';
         directButton.className = `setting-mode-chip${this.#currentEditorMode === 'direct' ? ' active' : ''}`;
-        directButton.textContent = '링크 추가';
+        directButton.textContent = '링크';
         directButton.addEventListener('click', () => {
             this.#setCurrentEditorMode('direct');
         });
@@ -891,7 +893,7 @@ class ZenLauncherPreferences {
         const programButton = document.createElement('button');
         programButton.type = 'button';
         programButton.className = `setting-mode-chip${this.#currentEditorMode === 'program' ? ' active' : ''}`;
-        programButton.textContent = '프로그램 설정';
+        programButton.textContent = '프로그램';
         programButton.addEventListener('click', () => {
             this.#setCurrentEditorMode('program');
         });
@@ -929,8 +931,8 @@ class ZenLauncherPreferences {
             );
         }
 
-        const actions = document.createElement('div');
-        actions.className = 'program-picker-actions';
+        const control = document.createElement('div');
+        control.className = 'program-picker-control';
 
         const browseButton = document.createElement('button');
         browseButton.type = 'button';
@@ -940,8 +942,8 @@ class ZenLauncherPreferences {
             this.#openProgramBrowser(category, index);
         });
 
-        actions.append(browseButton);
-        wrapper.append(card, actions);
+        control.append(card, browseButton);
+        wrapper.append(control);
         return wrapper;
     }
 
@@ -1048,7 +1050,23 @@ class ZenLauncherPreferences {
         this.#refreshStatus();
     }
 
-    #deleteActiveItem() {
+    async #confirmDelete() {
+        const response = await window.zenLauncher.showMessage({
+            type: 'warning',
+            message: '이 항목을 삭제할까요?',
+            detail: '삭제하면 빈 슬롯으로 바뀝니다.',
+            buttons: ['취소', '삭제']
+        });
+
+        return response === 1;
+    }
+
+    async #deleteActiveItem() {
+        const shouldDelete = await this.#confirmDelete();
+        if (!shouldDelete) {
+            return;
+        }
+
         const category = ZenLauncherPreferences.activeCategory;
         this.#deleteItemAt(category, this.#activeItemIndex);
         this.#closeItemEditor();
@@ -1098,6 +1116,10 @@ class ZenLauncherPreferences {
             if (action === 'delete-item') {
                 event.preventDefault();
                 event.stopPropagation();
+                const shouldDelete = await this.#confirmDelete();
+                if (!shouldDelete) {
+                    return;
+                }
                 this.#deleteItemAt(category, index);
                 return;
             }
@@ -1400,9 +1422,7 @@ class ZenLauncherPreferences {
         count.textContent = `${filteredPrograms.length}개`;
         status.textContent = this.#programScanLoading
             ? '스캔 중입니다.'
-            : (this.#programScanCache.length > 0
-                ? `선택하면 바로 적용됩니다. 마지막 스캔 ${this.#formatScanTimestamp(this.#programScanScannedAt)}`
-                : '수동 스캔 후 목록이 채워집니다.');
+            : '';
 
         list.replaceChildren();
 
@@ -1600,7 +1620,7 @@ class ZenLauncherPreferences {
 
     #getItemMetaText(category, item) {
         if (category === ZenLauncherPreferences.Category.FOLDER) {
-            return this.#summarizeLink(item.link);
+            return this.#summarizeLinkTail(item.link, 14);
         }
 
         if (this.#isExternalLink(item.link)) {
@@ -1663,16 +1683,51 @@ class ZenLauncherPreferences {
         return seed.trim().slice(0, 1).toUpperCase();
     }
 
-    #summarizeLink(link) {
+    #summarizeLink(link, maxVisualLength = 26) {
         if (!link) {
             return '';
         }
 
-        if (link.length <= 26) {
+        let visualLength = 0;
+        let result = '';
+
+        for (const character of link) {
+            const characterWeight = /[^\u0000-\u00ff]/.test(character) ? 2 : 1;
+            if (visualLength + characterWeight > maxVisualLength) {
+                return `${result}...`;
+            }
+
+            result += character;
+            visualLength += characterWeight;
+        }
+
+        if (visualLength <= maxVisualLength) {
             return link;
         }
 
-        return `${link.slice(0, 24)}...`;
+        return `${result}...`;
+    }
+
+    #summarizeLinkTail(link, maxVisualLength = 26) {
+        if (!link) {
+            return '';
+        }
+
+        let visualLength = 0;
+        let result = '';
+
+        for (let index = link.length - 1; index >= 0; index -= 1) {
+            const character = link[index];
+            const characterWeight = /[^\u0000-\u00ff]/.test(character) ? 2 : 1;
+            if (visualLength + characterWeight > maxVisualLength) {
+                return `...${result}`;
+            }
+
+            result = `${character}${result}`;
+            visualLength += characterWeight;
+        }
+
+        return link;
     }
 
     #createStaticElement(tagName, className, textContent) {
