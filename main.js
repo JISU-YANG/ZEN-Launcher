@@ -482,11 +482,19 @@ async function runTarget(target) {
     }
 
     if (normalizedTarget === 'cancel-schedule-shutdown') {
-        await runSystemCommand(
-            'shutdown',
-            ['/a'],
-            '\uC608\uC57D \uC885\uB8CC\uB97C \uCDE8\uC18C\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
-        );
+        try {
+            await runSystemCommand(
+                'shutdown',
+                ['/a'],
+                '\uC608\uC57D \uC885\uB8CC\uB97C \uCDE8\uC18C\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+            );
+        } catch (error) {
+            const message = typeof error?.message === 'string' ? error.message : '';
+            const noScheduledShutdown = message.includes('(1116)') || message.includes('shutdown was in progress') || message.includes('예약');
+            if (!noScheduledShutdown) {
+                throw error;
+            }
+        }
         return;
     }
 
@@ -497,11 +505,36 @@ async function runTarget(target) {
             throw new Error('\uC608\uC57D \uC885\uB8CC \uC2DC\uAC04\uC740 1\uBD84\uBD80\uD130 10080\uBD84\uAE4C\uC9C0 \uC124\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');
         }
 
-        await runSystemCommand(
-            'shutdown',
-            ['/s', '/t', `${minutes * 60}`],
-            '\uC608\uC57D \uC885\uB8CC\uB97C \uC124\uC815\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
-        );
+        try {
+            await runSystemCommand(
+                'shutdown',
+                ['/s', '/t', `${minutes * 60}`],
+                '\uC608\uC57D \uC885\uB8CC\uB97C \uC124\uC815\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+            );
+        } catch (error) {
+            const message = typeof error?.message === 'string' ? error.message : '';
+            const alreadyScheduled = message.includes('(1190)') || message.includes('이미 예약') || message.includes('already been scheduled');
+
+            if (!alreadyScheduled) {
+                throw error;
+            }
+
+            try {
+                await runSystemCommand(
+                    'shutdown',
+                    ['/a'],
+                    '\uAE30\uC874 \uC608\uC57D \uC885\uB8CC\uB97C \uCDE8\uC18C\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+                );
+            } catch (_cancelError) {
+                throw error;
+            }
+
+            await runSystemCommand(
+                'shutdown',
+                ['/s', '/t', `${minutes * 60}`],
+                '\uC608\uC57D \uC885\uB8CC\uB97C \uC124\uC815\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+            );
+        }
         return;
     }
 

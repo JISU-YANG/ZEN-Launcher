@@ -12,10 +12,13 @@
     const editorWidgetCaption = document.getElementById('editor-widget-caption');
     const editorWidgetBody = document.getElementById('editor-widget-body');
     const shutdownMinutesInput = document.getElementById('shutdown-minutes');
+    const shutdownHoursDisplay = document.getElementById('shutdown-hours-display');
+    const shutdownMinutesDisplay = document.getElementById('shutdown-minutes-display');
     const shutdownSchedulerStatus = document.getElementById('shutdown-scheduler-status');
     const shutdownScheduleApplyButton = document.getElementById('btn-shutdown-schedule-apply');
     const shutdownCancelButton = document.getElementById('btn-shutdown-cancel');
     const shutdownPresetButtons = Array.from(document.querySelectorAll('.shutdown-preset-button'));
+    const shutdownStepButtons = Array.from(document.querySelectorAll('.shutdown-step-button'));
     const weatherLocation = document.getElementById('weather-location');
     const weatherUpdated = document.getElementById('weather-updated');
     const weatherPill = document.getElementById('weather-pill');
@@ -114,7 +117,51 @@
         }
 
         shutdownSchedulerStatus.dataset.state = state;
+        const statusMessage = shutdownSchedulerStatus.querySelector('.shutdown-scheduler-status-message');
+        if (statusMessage) {
+            statusMessage.textContent = message;
+            return;
+        }
         shutdownSchedulerStatus.textContent = message;
+    };
+    const clampShutdownMinutes = (minutes) => {
+        if (!Number.isFinite(minutes)) {
+            return 60;
+        }
+
+        return Math.min(10080, Math.max(1, Math.round(minutes)));
+    };
+    const syncShutdownDisplays = () => {
+        if (!shutdownMinutesInput) {
+            return;
+        }
+
+        const totalMinutes = clampShutdownMinutes(Number.parseInt(shutdownMinutesInput.value, 10));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        shutdownMinutesInput.value = String(totalMinutes);
+
+        if (shutdownHoursDisplay) {
+            shutdownHoursDisplay.value = String(hours).padStart(2, '0');
+        }
+        if (shutdownMinutesDisplay) {
+            shutdownMinutesDisplay.value = String(minutes).padStart(2, '0');
+        }
+
+        shutdownPresetButtons.forEach((button) => {
+            button.classList.toggle('active', Number.parseInt(button.dataset.minutes || '0', 10) === totalMinutes);
+        });
+    };
+    const syncShutdownMinutesFromDisplays = () => {
+        if (!shutdownMinutesInput) {
+            return;
+        }
+
+        const hours = Math.min(168, Math.max(0, Number.parseInt(shutdownHoursDisplay?.value || '0', 10) || 0));
+        const minutes = Math.min(59, Math.max(0, Number.parseInt(shutdownMinutesDisplay?.value || '0', 10) || 0));
+        shutdownMinutesInput.value = String(clampShutdownMinutes((hours * 60) + minutes));
+        syncShutdownDisplays();
     };
     const formatDegrees = (value) => `${Math.round(value)}°`;
     const formatWind = (value) => `${Math.round(value)} km/h`;
@@ -557,7 +604,7 @@
         }
 
         const minutes = Number.parseInt(shutdownMinutesInput.value, 10);
-        return minutes;
+        return clampShutdownMinutes(minutes);
     };
     const closeShutdownScheduler = () => {
         if (!shutdownScheduler || !scheduleShutdownButton) {
@@ -623,9 +670,9 @@
         scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 닫기');
         scheduleShutdownButton.setAttribute('aria-expanded', 'true');
         setShutdownSchedulerStatus('예약 종료 또는 예약 취소를 선택할 수 있습니다.', 'idle');
+        syncShutdownDisplays();
         requestAnimationFrame(() => {
-            shutdownMinutesInput?.focus({ preventScroll: true });
-            shutdownMinutesInput?.select();
+            shutdownScheduleApplyButton?.focus({ preventScroll: true });
         });
     };
     const toggleShutdownScheduler = () => {
@@ -792,16 +839,34 @@
             }
 
             shutdownMinutesInput.value = button.dataset.minutes || '60';
-            shutdownMinutesInput.focus({ preventScroll: true });
-            shutdownMinutesInput.select();
+            syncShutdownDisplays();
+        });
+    });
+    shutdownStepButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            if (!shutdownMinutesInput) {
+                return;
+            }
+
+            const delta = Number.parseInt(button.dataset.adjust || '0', 10);
+            const nextMinutes = getScheduledShutdownMinutes() + delta;
+            shutdownMinutesInput.value = String(clampShutdownMinutes(nextMinutes));
+            syncShutdownDisplays();
+        });
+    });
+    [shutdownHoursDisplay, shutdownMinutesDisplay].forEach((input) => {
+        input?.addEventListener('input', () => {
+            syncShutdownMinutesFromDisplays();
+        });
+        input?.addEventListener('blur', () => {
+            syncShutdownMinutesFromDisplays();
         });
     });
     shutdownScheduleApplyButton?.addEventListener('click', async () => {
         const minutes = getScheduledShutdownMinutes();
         if (!Number.isInteger(minutes) || minutes < 1 || minutes > 10080) {
             setShutdownSchedulerStatus('예약 종료 시간은 1분부터 10080분까지 입력할 수 있습니다.', 'error');
-            shutdownMinutesInput?.focus({ preventScroll: true });
-            shutdownMinutesInput?.select();
+            shutdownScheduleApplyButton?.focus({ preventScroll: true });
             return;
         }
 
@@ -836,6 +901,7 @@
         event.preventDefault();
         await shutdownScheduleApplyButton?.click();
     });
+    syncShutdownDisplays();
 
     refreshButton?.addEventListener('click', async () => {
         await window.zenLauncher.reloadWindow();
