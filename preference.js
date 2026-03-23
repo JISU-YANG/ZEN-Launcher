@@ -214,7 +214,6 @@ class ZenLauncherPreferences {
 
         this.#setText('[data-link="shutdown"]', '종료');
         this.#setText('[data-link="reboot"]', '재시작');
-        this.#setText('#btn-preference', '환경설정');
 
         const status = this.#createStaticElement('div', '', '저장됨');
         status.id = 'setting-status';

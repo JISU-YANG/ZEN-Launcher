@@ -132,7 +132,7 @@
             height: 138px;
             box-sizing: border-box;
             padding: 10px;
-            background: #333;
+            background: #1f1f1f;
             border-radius: 14px;
             cursor: pointer;
         }
@@ -296,7 +296,8 @@
             margin-left: 8px;
             margin-top: 0;
             box-sizing: border-box;
-            text-decoration: underline;
+            text-decoration: none;
+            text-underline-offset: 2px;
             cursor: pointer;
             align-self: center;
             vertical-align: middle;
@@ -334,6 +335,7 @@
         .footer-btn:hover {
             color: #dcdcdc;
             background: #303030;
+            text-decoration: underline;
         }
 
         .footer-btn.icon-only:hover .footer-icon {
@@ -426,6 +428,28 @@
                 linear-gradient(currentColor, currentColor) 10px 0 / 2px 2px no-repeat,
                 linear-gradient(currentColor, currentColor) 0 3px / 12px 2px no-repeat;
             border-radius: 2px;
+        }
+
+        .footer-icon-settings::before {
+            left: 2px;
+            top: 2px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+        }
+
+        .footer-icon-settings::after {
+            left: 7px;
+            top: -1px;
+            width: 2px;
+            height: 18px;
+            background:
+                linear-gradient(currentColor, currentColor) center 0 / 2px 3px no-repeat,
+                linear-gradient(currentColor, currentColor) center 100% / 2px 3px no-repeat,
+                linear-gradient(currentColor, currentColor) center / 18px 2px no-repeat;
+            transform: rotate(45deg);
+            border-radius: 999px;
         }
 
         .footer-icon-volume-up::before,
@@ -1147,19 +1171,19 @@
             margin-top: 40px;
             margin-left: 0;
             width: 100%;
-            height: 80px;
+            height: 92px;
             padding: 0 6px;
             box-sizing: border-box;
         }
 
         #icon-area > .icon-entry {
             position: relative;
-            width: 80px;
-            height: 80px;
+            width: 92px;
+            height: 92px;
             text-align: center;
-            border-radius: 10px;
+            border-radius: 12px;
             box-sizing: border-box;
-            padding: 8px;
+            padding: 9px;
         }
 
         #icon-area > .icon-entry > a,
@@ -1170,11 +1194,12 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            gap: 4px;
+            gap: 7px;
             overflow: hidden;
-            border-radius: 10px;
+            border-radius: 12px;
             background: rgba(28, 28, 28, 0.48);
-            
+            padding: 8px 6px 9px;
+            box-sizing: border-box;
         }
 
         .empty-state {
@@ -1229,9 +1254,9 @@
         }
 
         #icon-area.is-empty .empty-state {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
+            width: 92px;
+            height: 92px;
+            border-radius: 12px;
         }
 
         #folder-area.is-empty .empty-state {
@@ -1254,6 +1279,15 @@
             object-fit: cover;
         }
 
+        #icon-area .icon-fallback {
+            flex: 0 0 auto;
+            width: 36px;
+            height: 36px;
+            aspect-ratio: 1 / 1;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
         #icon-area > .icon-entry:hover .icon-img {
             transform: translateY(-1px) scale(1.08);
             cursor: pointer;
@@ -1262,7 +1296,8 @@
 
         .icon-name {
             display: block;
-            max-width: 100%;
+            width: 100%;
+            max-width: 66px;
             font-size: 10px;
             line-height: 1.2;
             font-weight: 700;
@@ -3060,7 +3095,7 @@
                 <div>
                     <div><a class="launcher-basic footer-btn" data-link="shutdown">종료</a></div>
                     <div><a class="launcher-basic footer-btn" data-link="reboot">재시작</a></div>
-                    <div><a class="footer-btn" id="btn-preference">환경설정</a></div>
+                    <div><a class="footer-btn icon-only" id="btn-preference" aria-label="환경설정" title="환경설정"><span class="footer-icon footer-icon-settings" aria-hidden="true"></span></a></div>
                 </div>
                 <div>
                     <div class="footer-tool-group">
