@@ -18,6 +18,12 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     loadData() {
         return ipcRenderer.invoke('zen-launcher:load-data');
     },
+    loadProgramScanCache() {
+        return ipcRenderer.invoke('zen-launcher:load-program-scan-cache');
+    },
+    scanInstalledPrograms() {
+        return ipcRenderer.invoke('zen-launcher:scan-installed-programs');
+    },
     saveCategoryData(category, items) {
         return ipcRenderer.invoke('zen-launcher:save-category-data', category, items);
     },

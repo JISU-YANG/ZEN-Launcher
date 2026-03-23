@@ -1,7 +1,10 @@
 ﻿const { app, BrowserWindow, dialog, globalShortcut, ipcMain, screen, shell } = require('electron');
 const fs = require('node:fs');
+const http = require('node:http');
 const https = require('node:https');
 const path = require('path');
+const crypto = require('node:crypto');
+const { pathToFileURL } = require('node:url');
 const { execFile } = require('node:child_process');
 const Store = require('electron-store');
 const computer = require('electron-shutdown-command');
@@ -12,12 +15,14 @@ const LEGACY_CATEGORY_KEY_PREFIX = 'NPL.Data';
 const CATEGORIES = ['gallery', 'icon', 'folder'];
 const WINDOW_WIDTH = 1150;
 const LAUNCHER_HEIGHT = 420;
-const WEATHER_WIDGET_SPACE = 280;
+const WEATHER_WIDGET_SPACE = 620;
 const WINDOW_HEIGHT = LAUNCHER_HEIGHT + WEATHER_WIDGET_SPACE;
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
 const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
 const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
+const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+const PROGRAM_SCAN_CACHE_FILE = 'program-scan-cache.json';
 
 let mainWindow = null;
 let devWatchers = [];
@@ -65,6 +70,117 @@ function sanitizeItem(item, category) {
     return { name, link, img };
 }
 
+function isRemoteImageUrl(value) {
+    return typeof value === 'string' && /^https?:\/\//i.test(value.trim());
+}
+
+function getImageCacheDirectory() {
+    return path.join(app.getPath('userData'), 'cached-images');
+}
+
+function detectImageExtension(urlString, contentType = '') {
+    const type = contentType.toLowerCase();
+    if (type.includes('image/png')) {
+        return '.png';
+    }
+    if (type.includes('image/jpeg') || type.includes('image/jpg')) {
+        return '.jpg';
+    }
+    if (type.includes('image/webp')) {
+        return '.webp';
+    }
+    if (type.includes('image/gif')) {
+        return '.gif';
+    }
+    if (type.includes('image/svg+xml')) {
+        return '.svg';
+    }
+    if (type.includes('image/x-icon') || type.includes('image/vnd.microsoft.icon')) {
+        return '.ico';
+    }
+
+    try {
+        const extension = path.extname(new URL(urlString).pathname);
+        if (extension && extension.length <= 5) {
+            return extension.toLowerCase();
+        }
+    } catch (_error) {
+        return '.img';
+    }
+
+    return '.img';
+}
+
+function downloadBinary(url, redirectCount = 0) {
+    return new Promise((resolve, reject) => {
+        const transport = url.startsWith('https:') ? https : http;
+        transport.get(url, (response) => {
+            const { statusCode = 500, headers } = response;
+
+            if (statusCode >= 300 && statusCode < 400 && headers.location) {
+                response.resume();
+                if (redirectCount >= 5) {
+                    reject(new Error('이미지 다운로드 리디렉션이 너무 많습니다.'));
+                    return;
+                }
+
+                const nextUrl = new URL(headers.location, url).toString();
+                resolve(downloadBinary(nextUrl, redirectCount + 1));
+                return;
+            }
+
+            if (statusCode < 200 || statusCode >= 300) {
+                response.resume();
+                reject(new Error(`이미지 다운로드 실패 (${statusCode})`));
+                return;
+            }
+
+            const chunks = [];
+            response.on('data', (chunk) => {
+                chunks.push(chunk);
+            });
+            response.on('end', () => {
+                resolve({
+                    buffer: Buffer.concat(chunks),
+                    contentType: typeof headers['content-type'] === 'string' ? headers['content-type'] : '',
+                    finalUrl: url
+                });
+            });
+        }).on('error', (error) => {
+            reject(new Error(`이미지 다운로드 실패: ${error.message}`));
+        });
+    });
+}
+
+async function persistRemoteImage(url) {
+    const trimmedUrl = url.trim();
+    const { buffer, contentType, finalUrl } = await downloadBinary(trimmedUrl);
+    const extension = detectImageExtension(finalUrl || trimmedUrl, contentType);
+    const hash = crypto.createHash('sha1').update(trimmedUrl).digest('hex');
+    const directory = getImageCacheDirectory();
+    fs.mkdirSync(directory, { recursive: true });
+    const filePath = path.join(directory, `${hash}${extension}`);
+    fs.writeFileSync(filePath, buffer);
+    return pathToFileURL(filePath).toString();
+}
+
+async function prepareItemForSave(item, category) {
+    const normalizedItem = sanitizeItem(item, category);
+    if (!normalizedItem) {
+        return null;
+    }
+
+    if (category !== 'folder' && isRemoteImageUrl(normalizedItem.img)) {
+        try {
+            normalizedItem.img = await persistRemoteImage(normalizedItem.img);
+        } catch (_error) {
+            // Keep the original URL if download fails so saving still succeeds.
+        }
+    }
+
+    return normalizedItem;
+}
+
 function fetchJson(url) {
     return new Promise((resolve, reject) => {
         https
@@ -72,7 +188,7 @@ function fetchJson(url) {
                 const { statusCode = 500 } = response;
                 if (statusCode < 200 || statusCode >= 300) {
                     response.resume();
-                    reject(new Error(`요청 실패 (${statusCode})`));
+                    reject(new Error(`?遺욧퍕 ??쎈솭 (${statusCode})`));
                     return;
                 }
 
@@ -85,12 +201,12 @@ function fetchJson(url) {
                     try {
                         resolve(JSON.parse(data));
                     } catch (_error) {
-                        reject(new Error('응답을 해석하지 못했습니다.'));
+                        reject(new Error('?臾먮뼗????곴퐤??? 筌륁궢六??щ빍??'));
                     }
                 });
             })
             .on('error', () => {
-                reject(new Error('네트워크 요청에 실패했습니다.'));
+                reject(new Error('??쎈뱜??곌쾿 ?遺욧퍕????쎈솭??됰뮸??덈뼄.'));
             });
     });
 }
@@ -108,7 +224,7 @@ async function resolveLocationFromProviders() {
                     latitude: payload.latitude,
                     longitude: payload.longitude,
                     locationLabel: [payload.city, payload.region, payload.country].filter(Boolean).join(', '),
-                    locationSource: '대략적인 위치'
+                    locationSource: '?????읅???袁⑺뒄'
                 };
             }
         },
@@ -123,7 +239,7 @@ async function resolveLocationFromProviders() {
                     latitude: payload.latitude,
                     longitude: payload.longitude,
                     locationLabel: [payload.city, payload.region, payload.country_name].filter(Boolean).join(', '),
-                    locationSource: '대략적인 위치'
+                    locationSource: '?????읅???袁⑺뒄'
                 };
             }
         }
@@ -136,7 +252,7 @@ async function resolveLocationFromProviders() {
             if (location) {
                 return {
                     ...location,
-                    locationLabel: location.locationLabel || '대략적인 현재 위치'
+                    locationLabel: location.locationLabel || '?????읅???袁⑹삺 ?袁⑺뒄'
                 };
             }
         } catch (_error) {
@@ -144,7 +260,7 @@ async function resolveLocationFromProviders() {
         }
     }
 
-    throw new Error('현재 위치를 확인할 수 없습니다. 위치 권한 또는 네트워크를 확인해주세요.');
+    throw new Error('?袁⑹삺 ?袁⑺뒄???類ㅼ뵥??????곷뮸??덈뼄. ?袁⑺뒄 亦낅슦釉??癒?뮉 ??쎈뱜??곌쾿???類ㅼ뵥??곻폒?紐꾩뒄.');
 }
 
 function isAllowedExternalUrl(target) {
@@ -177,6 +293,175 @@ async function runSystemCommand(file, args, errorMessage) {
     });
 }
 
+async function execFileText(file, args, errorMessage) {
+    return new Promise((resolve, reject) => {
+        execFile(file, args, { windowsHide: true, maxBuffer: 16 * 1024 * 1024 }, (error, stdout, stderr) => {
+            if (error) {
+                reject(new Error(`${errorMessage}: ${stderr || error.message}`));
+                return;
+            }
+
+            resolve(stdout);
+        });
+    });
+}
+
+function normalizeScannedProgram(item) {
+    if (!item || typeof item !== 'object') {
+        return null;
+    }
+
+    const name = typeof item.name === 'string' ? item.name.trim() : '';
+    const link = typeof item.link === 'string' ? item.link.trim() : '';
+    const source = typeof item.source === 'string' ? item.source.trim() : '';
+    if (!name || !link) {
+        return null;
+    }
+
+    return { name, link, source };
+}
+
+function getProgramScanCachePath() {
+    return path.join(app.getPath('userData'), PROGRAM_SCAN_CACHE_FILE);
+}
+
+function readProgramScanCache() {
+    try {
+        const cachePath = getProgramScanCachePath();
+        if (!fs.existsSync(cachePath)) {
+            return { programs: [], scannedAt: '' };
+        }
+
+        const raw = fs.readFileSync(cachePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        const programs = Array.isArray(parsed?.programs) ? parsed.programs.map((item) => normalizeScannedProgram(item)).filter(Boolean) : [];
+        const scannedAt = typeof parsed?.scannedAt === 'string' ? parsed.scannedAt : '';
+        return { programs, scannedAt };
+    } catch (_error) {
+        return { programs: [], scannedAt: '' };
+    }
+}
+
+function writeProgramScanCache(programs, scannedAt) {
+    const cachePath = getProgramScanCachePath();
+    fs.writeFileSync(
+        cachePath,
+        JSON.stringify({ programs, scannedAt }, null, 2),
+        'utf8'
+    );
+}
+
+async function scanInstalledPrograms() {
+    if (process.platform !== 'win32') {
+        return [];
+    }
+
+    const script = `
+$ErrorActionPreference = 'SilentlyContinue'
+$items = New-Object System.Collections.Generic.List[object]
+$seen = @{}
+
+function Add-App([string]$name, [string]$targetPath, [string]$source) {
+    if ([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($targetPath)) {
+        return
+    }
+
+    $resolvedPath = $targetPath.Trim().Trim('"')
+    if (-not (Test-Path -LiteralPath $resolvedPath)) {
+        return
+    }
+
+    $extension = [System.IO.Path]::GetExtension($resolvedPath).ToLowerInvariant()
+    if ($extension -notin @('.exe', '.lnk', '.cmd', '.bat', '.com')) {
+        return
+    }
+
+    $displayName = $name.Trim()
+    $key = ($displayName.ToLowerInvariant() + '|' + $resolvedPath.ToLowerInvariant())
+    if ($seen.ContainsKey($key)) {
+        return
+    }
+
+    $seen[$key] = $true
+    $items.Add([PSCustomObject]@{
+        name = $displayName
+        link = $resolvedPath
+        source = $source
+    })
+}
+
+$registryRoots = @(
+    'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+    'HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+    'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+)
+
+foreach ($registryRoot in $registryRoots) {
+    Get-ItemProperty -Path $registryRoot | ForEach-Object {
+        $displayName = $_.DisplayName
+        if ([string]::IsNullOrWhiteSpace($displayName)) {
+            return
+        }
+
+        $candidatePath = $null
+
+        if ($_.DisplayIcon) {
+            $iconCandidate = $_.DisplayIcon -replace ',\\d+$', ''
+            $iconCandidate = $iconCandidate.Trim().Trim('"')
+            if (Test-Path -LiteralPath $iconCandidate) {
+                $candidatePath = $iconCandidate
+            }
+        }
+
+        if (-not $candidatePath -and $_.InstallLocation -and (Test-Path -LiteralPath $_.InstallLocation)) {
+            $exeCandidate = Get-ChildItem -LiteralPath $_.InstallLocation -Filter *.exe -File | Sort-Object Length -Descending | Select-Object -First 1
+            if ($exeCandidate) {
+                $candidatePath = $exeCandidate.FullName
+            }
+        }
+
+        Add-App $displayName $candidatePath 'installed'
+    }
+}
+
+$startMenuDirs = @(
+    (Join-Path $env:ProgramData 'Microsoft\\Windows\\Start Menu\\Programs'),
+    (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs')
+)
+
+foreach ($directory in $startMenuDirs) {
+    if (-not (Test-Path -LiteralPath $directory)) {
+        continue
+    }
+
+    Get-ChildItem -LiteralPath $directory -Recurse -File | Where-Object {
+        $_.Extension -in @('.lnk', '.exe')
+    } | ForEach-Object {
+        Add-App ([System.IO.Path]::GetFileNameWithoutExtension($_.Name)) $_.FullName 'start-menu'
+    }
+}
+
+$items | Sort-Object name, source | ConvertTo-Json -Depth 3
+`.trim();
+
+    const stdout = await execFileText(
+        POWERSHELL_PATH,
+        ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script],
+        '설치된 프로그램을 스캔하지 못했습니다'
+    );
+
+    const raw = stdout.trim();
+    if (!raw) {
+        return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    const list = Array.isArray(parsed) ? parsed : [parsed];
+    return list
+        .map((item) => normalizeScannedProgram(item))
+        .filter(Boolean);
+}
+
 async function runTarget(target) {
     if (typeof target !== 'string' || !target.trim()) {
         throw new Error('\uC2E4\uD589\uD560 \uB300\uC0C1\uC774 \uBE44\uC5B4 \uC788\uC2B5\uB2C8\uB2E4.');
@@ -184,6 +469,7 @@ async function runTarget(target) {
 
     const normalizedTarget = target.trim();
     const targetExtension = path.extname(normalizedTarget).toLowerCase();
+    const isExplicitPath = normalizedTarget.includes('\\') || normalizedTarget.includes('/') || path.isAbsolute(normalizedTarget);
 
     if (normalizedTarget === 'shutdown') {
         await computer.shutdown();
@@ -228,15 +514,51 @@ async function runTarget(target) {
         return;
     }
 
+    if (normalizedTarget === 'volume-up' || normalizedTarget === 'volume-down' || normalizedTarget === 'volume-mute') {
+        const keyCode = normalizedTarget === 'volume-up'
+            ? 175
+            : normalizedTarget === 'volume-down'
+                ? 174
+                : 173;
+        await runSystemCommand(
+            POWERSHELL_PATH,
+            [
+                '-NoProfile',
+                '-ExecutionPolicy',
+                'Bypass',
+                '-Command',
+                `Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class KeyboardMedia { [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo); }'; [KeyboardMedia]::keybd_event(${keyCode}, 0, 0, 0); Start-Sleep -Milliseconds 40; [KeyboardMedia]::keybd_event(${keyCode}, 0, 2, 0)`
+            ],
+            '\uBCFC\uB968 \uC870\uC808\uC744 \uC2E4\uD589\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+        );
+        return;
+    }
+
     if (isAllowedExternalUrl(normalizedTarget)) {
         await openExternalUrl(normalizedTarget);
         return;
     }
 
     if (targetExtension === '.exe') {
+        if (isExplicitPath) {
+            await runSystemCommand(
+                normalizedTarget,
+                [],
+                '\uC2E4\uD589 \uD30C\uC77C\uC744 \uC5F4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+            );
+            return;
+        }
+
+        const escapedTarget = normalizedTarget.replace(/'/g, "''");
         await runSystemCommand(
-            normalizedTarget,
-            [],
+            POWERSHELL_PATH,
+            [
+                '-NoProfile',
+                '-ExecutionPolicy',
+                'Bypass',
+                '-Command',
+                `Start-Process -FilePath '${escapedTarget}'`
+            ],
             '\uC2E4\uD589 \uD30C\uC77C\uC744 \uC5F4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
         );
         return;
@@ -386,13 +708,24 @@ ipcMain.handle('zen-launcher:load-data', async () => {
     return getCategoryData();
 });
 
+ipcMain.handle('zen-launcher:load-program-scan-cache', async () => {
+    return readProgramScanCache();
+});
+
+ipcMain.handle('zen-launcher:scan-installed-programs', async () => {
+    const programs = await scanInstalledPrograms();
+    const scannedAt = new Date().toISOString();
+    writeProgramScanCache(programs, scannedAt);
+    return { programs, scannedAt };
+});
+
 ipcMain.handle('zen-launcher:save-category-data', async (_event, category, items) => {
     if (!CATEGORIES.includes(category)) {
         throw new Error('\uC54C \uC218 \uC5C6\uB294 \uCE74\uD14C\uACE0\uB9AC\uC785\uB2C8\uB2E4.');
     }
 
     const safeItems = Array.isArray(items)
-        ? items.map((item) => sanitizeItem(item, category)).filter(Boolean)
+        ? (await Promise.all(items.map((item) => prepareItemForSave(item, category)))).filter(Boolean)
         : [];
 
     store.set(`${CATEGORY_KEY_PREFIX}${category}`, safeItems);
@@ -444,7 +777,7 @@ ipcMain.handle('zen-launcher:fetch-weather', async (_event, latitude, longitude)
     );
 
     if (!response?.current) {
-        throw new Error('날씨 데이터를 불러오지 못했습니다.');
+        throw new Error('?醫롫뎁 ?怨쀬뵠?怨? ?븍뜄???? 筌륁궢六??щ빍??');
     }
 
     return response.current;
@@ -467,7 +800,7 @@ ipcMain.handle('zen-launcher:resolve-location', async (_event, coordinates) => {
         return {
             latitude: coordinates.latitude,
             longitude: coordinates.longitude,
-            locationSource: '정확한 위치'
+            locationSource: '?類μ넇???袁⑺뒄'
         };
     }
 

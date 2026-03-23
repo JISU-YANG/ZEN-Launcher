@@ -7,11 +7,14 @@
     const weatherWidget = document.getElementById('weather-widget');
     const quickWidget = document.getElementById('quick-widget');
     const shutdownScheduler = document.getElementById('shutdown-scheduler');
+    const editorElement = document.getElementById('editor');
+    const editorWidgetTitle = document.getElementById('editor-widget-title');
+    const editorWidgetCaption = document.getElementById('editor-widget-caption');
+    const editorWidgetBody = document.getElementById('editor-widget-body');
     const shutdownMinutesInput = document.getElementById('shutdown-minutes');
     const shutdownSchedulerStatus = document.getElementById('shutdown-scheduler-status');
     const shutdownScheduleApplyButton = document.getElementById('btn-shutdown-schedule-apply');
     const shutdownCancelButton = document.getElementById('btn-shutdown-cancel');
-    const shutdownSchedulerCloseButton = document.getElementById('btn-shutdown-scheduler-close');
     const shutdownPresetButtons = Array.from(document.querySelectorAll('.shutdown-preset-button'));
     const weatherLocation = document.getElementById('weather-location');
     const weatherUpdated = document.getElementById('weather-updated');
@@ -56,9 +59,16 @@
     let isWeatherWidgetOpen = false;
     let isQuickWidgetOpen = false;
     let isShutdownSchedulerOpen = false;
+    let activeExpandedPanel = '';
     let weatherCache = null;
     let weatherFetchPromise = null;
     let widgetSyncFrame = 0;
+    let expandedPanelCloseTimer = 0;
+    const widgetOrigins = new Map([
+        [weatherWidget, { parent: weatherWidget?.parentNode || null, nextSibling: weatherWidget?.nextSibling || null }],
+        [quickWidget, { parent: quickWidget?.parentNode || null, nextSibling: quickWidget?.nextSibling || null }],
+        [shutdownScheduler, { parent: shutdownScheduler?.parentNode || null, nextSibling: shutdownScheduler?.nextSibling || null }]
+    ]);
     const WEATHER_CODE_MAP = {
         0: { title: '맑음', description: '하늘이 깨끗하게 열려 있어요.' },
         1: { title: '대체로 맑음', description: '햇살이 중심이고 구름이 조금 있어요.' },
@@ -119,8 +129,23 @@
             : { title: '밤 날씨', description: '현재 위치 기준의 야간 날씨예요.' };
         return WEATHER_CODE_MAP[weatherCode] || fallback;
     };
+    const getWeatherVisual = (weatherCode, isDay) => {
+        if ([95, 96, 99].includes(weatherCode)) {
+            return 'storm';
+        }
+        if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) {
+            return 'rain';
+        }
+        if ([2, 3, 45, 48].includes(weatherCode)) {
+            return isDay ? 'cloudy' : 'cloudy-night';
+        }
+        return isDay ? 'clear-day' : 'clear-night';
+    };
     const renderWeather = (payload) => {
         const summary = getWeatherSummary(payload.current.weather_code, payload.current.is_day);
+        if (weatherWidget) {
+            weatherWidget.dataset.visual = getWeatherVisual(payload.current.weather_code, payload.current.is_day);
+        }
         if (weatherLocation) {
             weatherLocation.textContent = payload.locationLabel;
         }
@@ -169,6 +194,89 @@
                 syncShutdownSchedulerPosition();
             }
         });
+    };
+    const setExpandedPanel = (panel, { title = '', caption = '' } = {}) => {
+        if (!editorElement || !editorWidgetBody) {
+            return;
+        }
+
+        if (expandedPanelCloseTimer) {
+            window.clearTimeout(expandedPanelCloseTimer);
+            expandedPanelCloseTimer = 0;
+        }
+
+        activeExpandedPanel = panel;
+        if (panel) {
+            editorElement.classList.remove('closing');
+            editorElement.dataset.panel = panel;
+            editorElement.classList.add('open');
+        } else if (editorElement.dataset.panel !== 'settings') {
+            delete editorElement.dataset.panel;
+            editorElement.classList.remove('closing');
+            editorElement.classList.remove('open');
+        }
+
+        if (editorWidgetTitle) {
+            editorWidgetTitle.textContent = title;
+        }
+        if (editorWidgetCaption) {
+            editorWidgetCaption.textContent = caption;
+        }
+    };
+    const restoreWidgetToOrigin = (widget) => {
+        const origin = widgetOrigins.get(widget);
+        if (!widget || !origin?.parent) {
+            return;
+        }
+
+        widget.classList.remove('embedded-widget');
+        if (origin.nextSibling && origin.nextSibling.parentNode === origin.parent) {
+            origin.parent.insertBefore(widget, origin.nextSibling);
+            return;
+        }
+
+        origin.parent.appendChild(widget);
+    };
+    const mountWidgetInExpandedArea = (widget, panel, title, caption) => {
+        if (!widget || !editorWidgetBody) {
+            return;
+        }
+
+        restoreWidgetToOrigin(weatherWidget);
+        restoreWidgetToOrigin(quickWidget);
+        restoreWidgetToOrigin(shutdownScheduler);
+
+        editorWidgetBody.replaceChildren(widget);
+        widget.classList.add('embedded-widget');
+        setExpandedPanel(panel, { title, caption });
+    };
+    const closeExpandedPanel = () => {
+        if (!editorElement) {
+            return;
+        }
+
+        const closingPanel = activeExpandedPanel;
+        if (closingPanel && editorElement.dataset.panel === closingPanel) {
+            editorElement.classList.add('closing');
+            editorElement.classList.remove('open');
+        }
+
+        activeExpandedPanel = '';
+        if (expandedPanelCloseTimer) {
+            window.clearTimeout(expandedPanelCloseTimer);
+        }
+
+        expandedPanelCloseTimer = window.setTimeout(() => {
+            if (editorElement.dataset.panel === closingPanel) {
+                delete editorElement.dataset.panel;
+            }
+            editorElement.classList.remove('closing');
+            restoreWidgetToOrigin(weatherWidget);
+            restoreWidgetToOrigin(quickWidget);
+            restoreWidgetToOrigin(shutdownScheduler);
+            editorWidgetBody?.replaceChildren();
+            expandedPanelCloseTimer = 0;
+        }, 420);
     };
     const getBrowserCoordinates = async () => {
         return new Promise((resolve) => {
@@ -257,11 +365,15 @@
         closeQuickWidget();
         isWeatherWidgetOpen = true;
         weatherWidget.classList.add('open');
+        mountWidgetInExpandedArea(
+            weatherWidget,
+            'weather',
+            'Weather',
+            '현재 위치 기준 날씨와 체감 정보를 확장 영역에서 확인합니다.'
+        );
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 닫기');
         weatherToggleButton.setAttribute('aria-expanded', 'true');
-        scheduleWidgetPositionSync();
         const weatherData = await loadWeatherData();
-        scheduleWidgetPositionSync();
         if (!weatherData) {
             if (weatherLocation) {
                 weatherLocation.textContent = '위치를 확인할 수 없음';
@@ -279,6 +391,9 @@
 
         isWeatherWidgetOpen = false;
         weatherWidget.classList.remove('open');
+        if (activeExpandedPanel === 'weather') {
+            closeExpandedPanel();
+        }
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 열기');
         weatherToggleButton.setAttribute('aria-expanded', 'false');
     };
@@ -350,9 +465,14 @@
         closeWeatherWidget();
         isQuickWidgetOpen = true;
         quickWidget.classList.add('open');
+        mountWidgetInExpandedArea(
+            quickWidget,
+            'quick',
+            'Quick Tools',
+            '자주 쓰는 Windows 기본 도구를 확장 영역 안에서 바로 실행합니다.'
+        );
         quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 닫기');
         quickToggleButton.setAttribute('aria-expanded', 'true');
-        scheduleWidgetPositionSync();
     };
     const closeQuickWidget = () => {
         if (!quickWidget || !quickToggleButton) {
@@ -361,6 +481,9 @@
 
         isQuickWidgetOpen = false;
         quickWidget.classList.remove('open');
+        if (activeExpandedPanel === 'quick') {
+            closeExpandedPanel();
+        }
         quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 열기');
         quickToggleButton.setAttribute('aria-expanded', 'false');
     };
@@ -395,6 +518,9 @@
 
         isShutdownSchedulerOpen = false;
         shutdownScheduler.classList.remove('open');
+        if (activeExpandedPanel === 'shutdown') {
+            closeExpandedPanel();
+        }
         scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 열기');
         scheduleShutdownButton.setAttribute('aria-expanded', 'false');
     };
@@ -440,10 +566,15 @@
         closeQuickWidget();
         isShutdownSchedulerOpen = true;
         shutdownScheduler.classList.add('open');
+        mountWidgetInExpandedArea(
+            shutdownScheduler,
+            'shutdown',
+            '예약 종료',
+            '원하는 시간으로 종료를 예약하거나 예약을 즉시 취소할 수 있습니다.'
+        );
         scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 닫기');
         scheduleShutdownButton.setAttribute('aria-expanded', 'true');
         setShutdownSchedulerStatus('예약 종료 또는 예약 취소를 선택할 수 있습니다.', 'idle');
-        scheduleWidgetPositionSync();
         requestAnimationFrame(() => {
             shutdownMinutesInput?.focus({ preventScroll: true });
             shutdownMinutesInput?.select();
@@ -558,6 +689,9 @@
         try {
             const target = trigger.dataset.link || '';
             await window.zenLauncher.run(target);
+            if (trigger.closest('#quick-widget')) {
+                closeQuickWidget();
+            }
         } catch (error) {
             await window.zenLauncher.showMessage({
                 type: 'error',
@@ -596,57 +730,12 @@
     weatherToggleButton?.addEventListener('click', async () => {
         await toggleWeatherWidget();
     });
-    weatherToggleButton?.addEventListener('mouseenter', async () => {
-        if (!isWeatherWidgetOpen) {
-            await openWeatherWidget();
-        }
-    });
-    weatherToggleButton?.addEventListener('mouseleave', (event) => {
-        if (!isPointerInside(weatherWidget, event)) {
-            closeWeatherWidget();
-        }
-    });
     quickToggleButton?.addEventListener('click', () => {
         toggleQuickWidget();
-    });
-    quickToggleButton?.addEventListener('mouseenter', () => {
-        if (!isQuickWidgetOpen) {
-            openQuickWidget();
-        }
-    });
-    quickToggleButton?.addEventListener('mouseleave', (event) => {
-        if (!isPointerInside(quickWidget, event)) {
-            closeQuickWidget();
-        }
-    });
-    weatherWidget?.addEventListener('mouseleave', (event) => {
-        if (!isPointerInside(weatherToggleButton, event)) {
-            closeWeatherWidget();
-        }
-    });
-    quickWidget?.addEventListener('mouseleave', (event) => {
-        if (!isPointerInside(quickToggleButton, event)) {
-            closeQuickWidget();
-        }
     });
     scheduleShutdownButton?.addEventListener('click', (event) => {
         event.preventDefault();
         toggleShutdownScheduler();
-    });
-    scheduleShutdownButton?.addEventListener('mouseenter', () => {
-        if (!isShutdownSchedulerOpen) {
-            openShutdownScheduler();
-        }
-    });
-    scheduleShutdownButton?.addEventListener('mouseleave', (event) => {
-        if (!isPointerInside(shutdownScheduler, event)) {
-            closeShutdownScheduler();
-        }
-    });
-    shutdownScheduler?.addEventListener('mouseleave', (event) => {
-        if (!isPointerInside(scheduleShutdownButton, event)) {
-            closeShutdownScheduler();
-        }
     });
     shutdownPresetButtons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -682,9 +771,6 @@
         } catch (error) {
             setShutdownSchedulerStatus(error.message || '예약 종료를 취소하지 못했습니다.', 'error');
         }
-    });
-    shutdownSchedulerCloseButton?.addEventListener('click', () => {
-        closeShutdownScheduler();
     });
     scheduleShutdownButton?.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter' && event.key !== ' ') {
