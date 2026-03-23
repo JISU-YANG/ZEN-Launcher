@@ -1198,34 +1198,38 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .quick-widget-title {
             color: #f3f3f3;
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 900;
+            letter-spacing: -0.02em;
         }
 
         .quick-widget-caption {
             margin-top: 4px;
-            color: #9f9f9f;
+            color: #969696;
             font-size: 11px;
             font-weight: 500;
             line-height: 1.4;
+            max-width: 28ch;
         }
 
         .quick-widget-pill {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 64px;
-            height: 24px;
-            padding: 0 10px;
+            min-width: 58px;
+            height: 22px;
+            padding: 0 9px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            color: #9fd9ff;
-            font-size: 10px;
-            font-weight: 900;
+            background: rgba(255, 255, 255, 0.05);
+            color: #b7d8e8;
+            font-size: 9px;
+            font-weight: 800;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             box-sizing: border-box;
@@ -1234,38 +1238,51 @@
         .quick-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 18px;
+            gap: 12px;
+            margin-top: 14px;
+            align-content: end;
         }
 
         .quick-link-button {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 8px;
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr);
+            grid-template-areas:
+                "icon label"
+                "icon meta";
+            align-items: center;
+            column-gap: 12px;
+            row-gap: 3px;
             position: relative;
-            min-height: 86px;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            background: rgba(28, 28, 28, 0.92);
+            min-height: 94px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(42, 42, 42, 0.96), rgba(27, 27, 27, 0.98));
             color: #dcdcdc;
             text-align: left;
             box-sizing: border-box;
             cursor: pointer;
-            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            overflow: hidden;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 10px 20px rgba(0, 0, 0, 0.18);
+            transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .quick-link-button:hover {
-            background: #303030;
+            background:
+                linear-gradient(180deg, rgba(48, 48, 48, 0.98), rgba(31, 31, 31, 0.99));
             border-color: rgba(255, 255, 255, 0.12);
-            transform: translateY(-4px);
-            box-shadow: 0 18px 28px rgba(0, 0, 0, 0.24);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 14px 24px rgba(0, 0, 0, 0.22);
         }
 
         .quick-link-button:active {
-            transform: translateY(-1px) scale(0.99);
-            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 8px 16px rgba(0, 0, 0, 0.2);
         }
 
         .quick-link-button:focus-visible {
@@ -1275,25 +1292,24 @@
 
         .quick-link-icon {
             display: flex;
-            position: absolute;
-            top: 12px;
-            right: 12px;
+            position: relative;
+            grid-area: icon;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
-            background: #262626;
+            background: #222222;
             border: 1px solid rgba(255, 255, 255, 0.06);
             flex: 0 0 auto;
-            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.16);
             cursor: pointer;
             transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
 
         .quick-link-icon img {
-            width: 20px;
-            height: 20px;
+            width: 21px;
+            height: 21px;
             display: block;
             opacity: 0.88;
             cursor: pointer;
@@ -1304,11 +1320,11 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 22px;
-            height: 22px;
-            padding: 0 5px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
             border-radius: 8px;
-            background: #303030;
+            background: #2c2c2c;
             color: #dcdcdc;
             font-size: 9px;
             font-weight: 900;
@@ -1320,9 +1336,9 @@
 
         .quick-link-button:hover .quick-link-icon {
             transform: scale(1.08);
-            background: #333333;
+            background: #2b2b2b;
             border-color: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 18px 28px rgba(0, 0, 0, 0.38);
+            box-shadow: 0 14px 24px rgba(0, 0, 0, 0.28);
         }
 
         .quick-link-button:active .quick-link-icon {
@@ -1360,16 +1376,23 @@
         }
 
         .quick-link-label {
+            grid-area: label;
+            align-self: end;
+            max-width: 100%;
             font-size: 14px;
             font-weight: 900;
             line-height: 1.2;
+            letter-spacing: -0.01em;
         }
 
         .quick-link-meta {
+            grid-area: meta;
+            align-self: start;
             color: #9f9f9f;
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 600;
             line-height: 1.4;
+            max-width: 100%;
         }
 
         #icon-area {
@@ -1680,7 +1703,7 @@
             min-height: 0;
             flex-direction: column;
             gap: 12px;
-            padding: 18px 10px 16px;
+            padding: 18px 10px 8px;
             opacity: 1;
             transform: translateY(0);
             transition: opacity 0.16s ease, transform 0.24s ease;
@@ -1715,7 +1738,7 @@
             flex: 1;
             min-height: 0;
             overflow: hidden;
-            padding: 4px 4px 0;
+            padding: 4px 4px 2px;
         }
 
         #setting-container,
@@ -1949,47 +1972,54 @@
 
         #editor-widget-body #quick-widget.embedded-widget .quick-grid {
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 0;
-            align-content: start;
+            gap: 12px;
+            margin-top: auto;
+            align-content: end;
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-button {
-            min-height: 84px;
-            padding: 12px 12px 12px 14px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.045);
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            grid-template-areas:
+                "icon label"
+                "icon meta";
+            align-items: center;
+            column-gap: 12px;
+            row-gap: 3px;
+            min-height: 92px;
+            padding: 14px;
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(43, 43, 43, 0.94), rgba(29, 29, 29, 0.98));
             border: 1px solid rgba(255, 255, 255, 0.08);
             overflow: hidden;
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-label {
-            max-width: calc(100% - 42px);
+            max-width: 100%;
             font-size: 13px;
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-meta {
             font-size: 9px;
             line-height: 1.3;
-            max-width: calc(100% - 42px);
+            max-width: 100%;
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-icon {
-            width: 30px;
-            height: 30px;
-            top: 12px;
-            right: 12px;
+            width: 34px;
+            height: 34px;
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-icon img {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-icon-text {
-            min-width: 20px;
-            height: 20px;
-            padding: 0 4px;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 5px;
             font-size: 8px;
             border-radius: 7px;
         }
@@ -2012,100 +2042,54 @@
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget {
-            display: grid;
-            grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.9fr);
-            grid-template-areas:
-                "field actions"
-                "presets actions"
-                "status status";
-            gap: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
             max-width: none;
             margin: 0;
-            align-items: stretch;
+            justify-content: space-between;
         }
 
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-field,
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-presets,
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status,
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions {
-            margin-top: 0;
-            padding: 12px 14px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-sizing: border-box;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-field {
-            grid-area: field;
-            display: grid;
-            grid-template-columns: 1fr;
-            align-items: stretch;
-            gap: 12px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-label {
-            margin-bottom: 0;
-            font-size: 12px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-input-row {
-            min-width: 0;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-presets {
-            grid-area: presets;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-self: stretch;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions {
-            grid-area: actions;
-            display: grid;
-            grid-template-columns: 1fr;
-            align-content: stretch;
-            gap: 10px;
-            align-items: stretch;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status {
-            grid-area: status;
-            min-height: 0;
-            padding-top: 10px;
-            padding-bottom: 10px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions > div {
-            display: grid;
-            gap: 10px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action {
-            width: 100%;
-            min-width: 0;
-            height: 40px;
-            font-size: 12px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-input {
-            height: 48px;
-            font-size: 20px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-unit {
-            font-size: 14px;
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-top {
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 0.78fr);
+            gap: 14px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-presets .shutdown-preset-button {
-            min-width: 64px;
-            height: 32px;
+            min-height: 60px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-preset-value {
+            font-size: 16px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-time-display {
+            width: 72px;
+            height: 78px;
+            font-size: 42px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-time-divider {
+            font-size: 30px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status {
-            font-size: 10px;
-            line-height: 1.4;
+            min-height: 54px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status-message {
+            font-size: 12px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action {
+            width: 104px;
+            min-width: 104px;
+            height: 34px;
         }
 
         @media (max-width: 980px) {
@@ -2127,15 +2111,16 @@
             }
 
             #editor-widget-body #shutdown-scheduler.embedded-widget {
-                grid-template-columns: 1fr;
-                grid-template-areas:
-                    "field"
-                    "presets"
-                    "actions"
-                    "status";
+                gap: 18px;
             }
 
-            #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-field {
+            #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-top,
+            .shutdown-scheduler-top {
+                grid-template-columns: 1fr;
+            }
+
+            #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions,
+            .shutdown-scheduler-actions {
                 grid-template-columns: 1fr;
             }
         }
@@ -3069,6 +3054,8 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .shutdown-scheduler-title {
@@ -3089,132 +3076,255 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 56px;
-            height: 24px;
-            padding: 0 10px;
+            min-width: 52px;
+            height: 22px;
+            padding: 0 9px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            color: #ffd28f;
-            font-size: 10px;
-            font-weight: 900;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2c1a2;
+            font-size: 9px;
+            font-weight: 800;
             letter-spacing: 0.08em;
             box-sizing: border-box;
         }
 
-        .shutdown-scheduler-field {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .shutdown-scheduler-label {
-            color: #bdbdbd;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .shutdown-scheduler-input-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .shutdown-scheduler-input {
-            flex: 1;
-            height: 40px;
-            padding: 0 14px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.04);
-            color: #f3f3f3;
-            font-size: 16px;
-            font-weight: 800;
-            box-sizing: border-box;
-            appearance: textfield;
-        }
-
-        .shutdown-scheduler-input::-webkit-outer-spin-button,
-        .shutdown-scheduler-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .shutdown-scheduler-unit {
-            color: #f3f3f3;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .shutdown-scheduler-presets {
-            display: flex;
-            gap: 8px;
+        .shutdown-scheduler-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(220px, 0.82fr);
+            gap: 14px;
             margin-top: 12px;
         }
 
-        .shutdown-preset-button,
-        .shutdown-scheduler-action {
+        .shutdown-scheduler-section-label {
+            color: #8e8e8e;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .shutdown-scheduler-section-label[hidden] {
+            display: none;
+        }
+
+        .shutdown-scheduler-presets {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 0;
+        }
+
+        .shutdown-scheduler-presets .shutdown-preset-button {
+            display: grid;
+            justify-items: center;
+            align-content: center;
+            min-height: 58px;
+            padding: 6px 5px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(37, 37, 37, 0.95), rgba(29, 29, 29, 0.98));
+            color: #f1f1f1;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .shutdown-preset-value {
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .shutdown-preset-unit {
+            margin-top: 4px;
+            color: #9d9d9d;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .shutdown-preset-button.active {
+            border-color: rgba(117, 204, 255, 0.56);
+            background: linear-gradient(180deg, rgba(28, 41, 49, 0.98), rgba(24, 34, 39, 0.98));
+            box-shadow:
+                inset 0 0 0 1px rgba(117, 204, 255, 0.14),
+                0 0 0 1px rgba(117, 204, 255, 0.08);
+        }
+
+        .shutdown-preset-button.active .shutdown-preset-value,
+        .shutdown-preset-button.active .shutdown-preset-unit {
+            color: #75ccff;
+        }
+
+        .shutdown-scheduler-manual {
+            min-width: 0;
+        }
+
+        .shutdown-scheduler-adjuster {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 0;
+            min-height: 100%;
+        }
+
+        .shutdown-scheduler-time-column {
+            display: grid;
+            justify-items: center;
+            row-gap: 6px;
+        }
+
+        .shutdown-step-button,
+        .shutdown-scheduler-action,
+        .shutdown-preset-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 999px;
             cursor: pointer;
             appearance: none;
             box-sizing: border-box;
             font-weight: 800;
         }
 
-        .shutdown-preset-button {
-            min-width: 54px;
-            height: 28px;
-            padding: 0 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-            color: #d7d7d7;
-            font-size: 10px;
+        .shutdown-step-button {
+            width: 30px;
+            height: 18px;
+            border: none;
+            background: transparent;
+            color: #b5b5b5;
+            font-size: 14px;
+            line-height: 1;
         }
 
-        .shutdown-preset-button:hover {
-            background: rgba(255, 255, 255, 0.09);
+        .shutdown-step-button:hover {
+            color: #ececec;
+        }
+
+        .shutdown-time-display {
+            display: inline-block;
+            width: 68px;
+            height: 74px;
+            padding: 0;
+            border-radius: 0;
+            border: none;
+            background: #070707;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: 300;
+            line-height: 1;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.05em;
+            box-sizing: border-box;
+            appearance: textfield;
+        }
+
+        .shutdown-time-display:focus {
+            outline: 1px solid rgba(120, 200, 255, 0.55);
+        }
+
+        .shutdown-time-display::-webkit-outer-spin-button,
+        .shutdown-time-display::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .shutdown-time-divider {
+            color: #72b8e2;
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1;
+            transform: translateY(3px);
         }
 
         .shutdown-scheduler-status {
-            min-height: 18px;
-            margin-top: 14px;
-            color: #b8b8b8;
-            font-size: 11px;
+            min-height: 52px;
+            margin-top: 0;
+            padding: 8px 10px;
+            border-left: 4px solid #78c8ff;
+            background: #080808;
+            color: #d4d4d4;
+            font-size: 10px;
             font-weight: 500;
             line-height: 1.45;
+            box-sizing: border-box;
         }
 
         .shutdown-scheduler-status[data-state="error"] {
             color: #ffb8b8;
+            border-left-color: #ff8b8b;
         }
 
         .shutdown-scheduler-status[data-state="success"] {
-            color: #ffd28f;
+            color: #9fd9ff;
+            border-left-color: #78c8ff;
+        }
+
+        .shutdown-scheduler-status-label {
+            color: #8c8c8c;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .shutdown-scheduler-status-message {
+            margin-top: 5px;
+            color: inherit;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .shutdown-scheduler-actions .shutdown-scheduler-status {
+            width: 300px;
+            min-width: 300px;
+            max-width: 300px;
+            margin-right: auto;
         }
 
         .shutdown-scheduler-actions {
             display: flex;
-            justify-content: space-between;
+            align-items: center;
             gap: 8px;
-            margin-top: 14px;
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .shutdown-scheduler-actions > div {
-            display: flex;
-            gap: 8px;
+        .shutdown-scheduler-actions .shutdown-scheduler-status {
+            width: min(220px, 100%);
+            margin-right: auto;
+        }
+
+        .shutdown-scheduler-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            border: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            clip-path: inset(50%);
+            white-space: nowrap;
         }
 
         .shutdown-scheduler-action {
-            min-width: 76px;
-            height: 32px;
+            width: 112px;
+            min-width: 112px;
+            height: 36px;
             padding: 0 12px;
+            border-radius: 0;
             border: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(255, 255, 255, 0.05);
             color: #f1f1f1;
-            font-size: 11px;
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
         .shutdown-scheduler-action.primary {
@@ -3224,9 +3334,9 @@
         }
 
         .shutdown-scheduler-action.danger {
-            color: #ffb6b6;
-            border-color: rgba(255, 140, 140, 0.2);
-            background: rgba(255, 110, 110, 0.08);
+            color: #f18a8a;
+            border-color: rgba(241, 138, 138, 0.28);
+            background: rgba(91, 45, 45, 0.16);
         }
 
     </style>
@@ -3389,26 +3499,53 @@
             </div>
             <div class="shutdown-scheduler-pill">POWER</div>
         </div>
-        <div class="shutdown-scheduler-field">
-            <div class="shutdown-scheduler-label">종료까지 남은 시간</div>
-            <div class="shutdown-scheduler-input-row">
-                <input id="shutdown-minutes" class="shutdown-scheduler-input" type="number" min="1" max="10080" step="1" value="60">
-                <span class="shutdown-scheduler-unit">분</span>
+        <input id="shutdown-minutes" class="shutdown-scheduler-input" type="number" min="1" max="10080" step="1" value="60">
+        <div class="shutdown-scheduler-top">
+            <div>
+                <div class="shutdown-scheduler-section-label" hidden>Quick Presets</div>
+                <div class="shutdown-scheduler-presets">
+                    <button class="shutdown-preset-button" type="button" data-minutes="15">
+                        <span class="shutdown-preset-value">15</span>
+                        <span class="shutdown-preset-unit">MIN</span>
+                    </button>
+                    <button class="shutdown-preset-button" type="button" data-minutes="30">
+                        <span class="shutdown-preset-value">30</span>
+                        <span class="shutdown-preset-unit">MIN</span>
+                    </button>
+                    <button class="shutdown-preset-button" type="button" data-minutes="60">
+                        <span class="shutdown-preset-value">60</span>
+                        <span class="shutdown-preset-unit">MIN</span>
+                    </button>
+                    <button class="shutdown-preset-button" type="button" data-minutes="120">
+                        <span class="shutdown-preset-value">120</span>
+                        <span class="shutdown-preset-unit">MIN</span>
+                    </button>
+                </div>
+            </div>
+            <div class="shutdown-scheduler-manual">
+                <div class="shutdown-scheduler-section-label" hidden>Manual Adjustment</div>
+                <div class="shutdown-scheduler-adjuster">
+                    <div class="shutdown-scheduler-time-column">
+                        <button class="shutdown-step-button" type="button" data-adjust="60" aria-label="시간 늘리기">⌃</button>
+                        <input class="shutdown-time-display" id="shutdown-hours-display" type="number" min="0" max="168" step="1" value="01" inputmode="numeric" aria-label="시간 입력">
+                        <button class="shutdown-step-button" type="button" data-adjust="-60" aria-label="시간 줄이기">⌄</button>
+                    </div>
+                    <div class="shutdown-time-divider">:</div>
+                    <div class="shutdown-scheduler-time-column">
+                        <button class="shutdown-step-button" type="button" data-adjust="5" aria-label="분 늘리기">⌃</button>
+                        <input class="shutdown-time-display" id="shutdown-minutes-display" type="number" min="0" max="59" step="1" value="00" inputmode="numeric" aria-label="분 입력">
+                        <button class="shutdown-step-button" type="button" data-adjust="-5" aria-label="분 줄이기">⌄</button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="shutdown-scheduler-presets">
-            <button class="shutdown-preset-button" type="button" data-minutes="30">30분</button>
-            <button class="shutdown-preset-button" type="button" data-minutes="60">60분</button>
-            <button class="shutdown-preset-button" type="button" data-minutes="120">120분</button>
-        </div>
-        <div id="shutdown-scheduler-status" class="shutdown-scheduler-status" data-state="idle">예약 종료 또는 예약 취소를 선택할 수 있습니다.</div>
         <div class="shutdown-scheduler-actions">
-            <div>
-                <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
+            <div id="shutdown-scheduler-status" class="shutdown-scheduler-status" data-state="idle">
+                <div class="shutdown-scheduler-status-label">Active Shutdown</div>
+                <div class="shutdown-scheduler-status-message">예약 종료 또는 예약 취소를 선택할 수 있습니다.</div>
             </div>
-            <div>
-                <button id="btn-shutdown-schedule-apply" class="shutdown-scheduler-action primary" type="button">예약하기</button>
-            </div>
+            <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
+            <button id="btn-shutdown-schedule-apply" class="shutdown-scheduler-action primary" type="button">예약하기</button>
         </div>
     </div>
         <div id="editor">
