@@ -21,10 +21,11 @@
     const weatherPill = document.getElementById('weather-pill');
     const weatherCondition = document.getElementById('weather-condition');
     const weatherDescription = document.getElementById('weather-description');
+    const weatherOutfit = document.getElementById('weather-outfit');
     const weatherTemperature = document.getElementById('weather-temperature');
     const weatherFeelsLike = document.getElementById('weather-feels-like');
-    const weatherWind = document.getElementById('weather-wind');
     const weatherHumidity = document.getElementById('weather-humidity');
+    const weatherPrecipitation = document.getElementById('weather-precipitation');
     const weatherStatus = document.getElementById('weather-status');
     const searchEngineLink = document.querySelector('#search-area > div:first-child > a');
     const WEATHER_CACHE_DURATION = 10 * 60 * 1000;
@@ -118,11 +119,55 @@
     const formatDegrees = (value) => `${Math.round(value)}°`;
     const formatWind = (value) => `${Math.round(value)} km/h`;
     const formatHumidity = (value) => `${Math.round(value)}%`;
+    const formatPrecipitation = (value) => `${Math.round(value || 0)}%`;
     const formatUpdatedTime = (date = new Date()) =>
         new Intl.DateTimeFormat('ko-KR', {
             hour: 'numeric',
             minute: '2-digit'
         }).format(date);
+    const getWeatherStyleRecommendation = (current) => {
+        const apparentTemperature = Number.isFinite(current?.apparent_temperature)
+            ? current.apparent_temperature
+            : current?.temperature_2m;
+        const windSpeed = Number.isFinite(current?.wind_speed_10m) ? current.wind_speed_10m : 0;
+        const humidity = Number.isFinite(current?.relative_humidity_2m) ? current.relative_humidity_2m : 0;
+        const precipitationProbability = Number.isFinite(current?.precipitation_probability) ? current.precipitation_probability : 0;
+        const rainyWeather = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(current?.weather_code);
+
+        let outfitMessage = '가볍게 나가기 좋은 날씨예요.';
+        if (apparentTemperature >= 28) {
+            outfitMessage = '반소매 하나로도 충분하지만 햇볕이 강하면 얇은 셔츠를 챙기면 좋아요.';
+        } else if (apparentTemperature >= 23) {
+            outfitMessage = '반소매나 얇은 셔츠 차림이 잘 어울리는 날씨예요.';
+        } else if (apparentTemperature >= 20) {
+            outfitMessage = '가디건을 가볍게 걸치기 좋은 날씨예요.';
+        } else if (apparentTemperature >= 17) {
+            outfitMessage = '셔츠나 얇은 니트 위에 가벼운 아우터를 더하면 편안해요.';
+        } else if (apparentTemperature >= 12) {
+            outfitMessage = '자켓이나 두께감 있는 가디건을 챙기면 잘 맞는 날씨예요.';
+        } else if (apparentTemperature >= 8) {
+            outfitMessage = '후드 집업이나 코트처럼 보온감 있는 겉옷이 어울려요.';
+        } else if (apparentTemperature >= 3) {
+            outfitMessage = '두꺼운 아우터와 긴 바지가 필요한 쌀쌀한 날씨예요.';
+        } else {
+            outfitMessage = '패딩이나 도톰한 코트처럼 보온성이 좋은 옷차림을 추천해요.';
+        }
+
+        const extraNotes = [];
+        if (windSpeed >= 20) {
+            extraNotes.push('바람이 있어 체감은 더 서늘할 수 있어요.');
+        }
+        if (humidity >= 80 && apparentTemperature >= 24) {
+            extraNotes.push('습도가 높아 통풍이 잘 되는 옷이 더 편해요.');
+        }
+        if (rainyWeather || precipitationProbability >= 55) {
+            extraNotes.push('우산을 챙겨두면 안심할 수 있어요.');
+        } else if (precipitationProbability >= 30) {
+            extraNotes.push('비 예보가 살짝 있어 접이식 우산이 있으면 좋아요.');
+        }
+
+        return [outfitMessage, ...extraNotes].join(' ');
+    };
     const getWeatherSummary = (weatherCode, isDay) => {
         const fallback = isDay
             ? { title: '오늘 날씨', description: '현재 위치의 날씨 정보를 확인했어요.' }
@@ -161,17 +206,20 @@
         if (weatherDescription) {
             weatherDescription.textContent = summary.description;
         }
+        if (weatherOutfit) {
+            weatherOutfit.textContent = getWeatherStyleRecommendation(payload.current);
+        }
         if (weatherTemperature) {
             weatherTemperature.textContent = formatDegrees(payload.current.temperature_2m);
         }
         if (weatherFeelsLike) {
             weatherFeelsLike.textContent = formatDegrees(payload.current.apparent_temperature);
         }
-        if (weatherWind) {
-            weatherWind.textContent = formatWind(payload.current.wind_speed_10m);
-        }
         if (weatherHumidity) {
             weatherHumidity.textContent = formatHumidity(payload.current.relative_humidity_2m);
+        }
+        if (weatherPrecipitation) {
+            weatherPrecipitation.textContent = formatPrecipitation(payload.current.precipitation_probability);
         }
 
         setWeatherStatus('', 'idle');

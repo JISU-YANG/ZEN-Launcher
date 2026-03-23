@@ -773,14 +773,27 @@ ipcMain.handle('zen-launcher:reverse-geocode', async (_event, latitude, longitud
 
 ipcMain.handle('zen-launcher:fetch-weather', async (_event, latitude, longitude) => {
     const response = await fetchJson(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&hourly=precipitation_probability&forecast_days=1&timezone=auto`
     );
 
     if (!response?.current) {
         throw new Error('?醫롫뎁 ?怨쀬뵠?怨? ?븍뜄???? 筌륁궢六??щ빍??');
     }
 
-    return response.current;
+    const hourlyTimes = Array.isArray(response?.hourly?.time) ? response.hourly.time : [];
+    const precipitationProbabilities = Array.isArray(response?.hourly?.precipitation_probability)
+        ? response.hourly.precipitation_probability
+        : [];
+    const currentTime = typeof response.current.time === 'string' ? response.current.time : '';
+    const precipitationIndex = currentTime ? hourlyTimes.indexOf(currentTime) : -1;
+    const precipitationProbability = precipitationIndex >= 0
+        ? precipitationProbabilities[precipitationIndex]
+        : precipitationProbabilities[0];
+
+    return {
+        ...response.current,
+        precipitation_probability: typeof precipitationProbability === 'number' ? precipitationProbability : 0
+    };
 });
 
 ipcMain.handle('zen-launcher:reload-window', async (event) => {
