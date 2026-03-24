@@ -46,6 +46,7 @@ const programCatalogService = new ProgramCatalogService({
 let mainWindow = null;
 let devWatchers = [];
 let pendingRelaunch = false;
+const reverseGeocodeCache = new Map();
 
 function normalizeAppearanceSettings(value = {}) {
     const rawTransparency = Number.parseInt(value?.launcherTransparency, 10);
@@ -88,34 +89,73 @@ function focusLauncherSearch() {
     mainWindow.webContents.send('zen-launcher:focus-search');
 }
 
-function fetchJson(url) {
+function fetchJson(url, { headers = {}, timeoutMs = 10000 } = {}) {
     return new Promise((resolve, reject) => {
-        https
-            .get(url, (response) => {
-                const { statusCode = 500 } = response;
+        const request = https.get(url, { headers }, (response) => {
+            const { statusCode = 500 } = response;
+            let data = '';
+
+            response.setEncoding('utf8');
+            response.on('data', (chunk) => {
+                data += chunk;
+            });
+            response.on('end', () => {
                 if (statusCode < 200 || statusCode >= 300) {
-                    response.resume();
-                    reject(new Error(`?遺욧퍕 ??쎈솭 (${statusCode})`));
+                    reject(new Error(`Request failed (${statusCode})`));
                     return;
                 }
 
-                let data = '';
-                response.setEncoding('utf8');
-                response.on('data', (chunk) => {
-                    data += chunk;
-                });
-                response.on('end', () => {
-                    try {
-                        resolve(JSON.parse(data));
-                    } catch (_error) {
-                        reject(new Error('?臾먮뼗????곴퐤??? 筌륁궢六??щ빍??'));
-                    }
-                });
-            })
-            .on('error', () => {
-                reject(new Error('??쎈뱜??곌쾿 ?遺욧퍕????쎈솭??됰뮸??덈뼄.'));
+                try {
+                    resolve(JSON.parse(data));
+                } catch (_error) {
+                    reject(new Error('Invalid JSON response.'));
+                }
             });
+        });
+
+        request.setTimeout(timeoutMs, () => {
+            request.destroy(new Error('Request timed out.'));
+        });
+
+        request.on('error', (error) => {
+            reject(new Error(error?.message || 'Network request failed.'));
+        });
     });
+}
+
+function getReverseGeocodeCacheKey(latitude, longitude) {
+    return `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+}
+
+function setReverseGeocodeCache(cacheKey, label) {
+    reverseGeocodeCache.set(cacheKey, label);
+    if (reverseGeocodeCache.size <= 32) {
+        return;
+    }
+
+    const oldestKey = reverseGeocodeCache.keys().next().value;
+    if (oldestKey) {
+        reverseGeocodeCache.delete(oldestKey);
+    }
+}
+
+function buildReverseGeocodeLabel(payload) {
+    const address = payload?.address;
+    if (!address || typeof address !== 'object') {
+        return typeof payload?.display_name === 'string'
+            ? payload.display_name.split(',').map((part) => part.trim()).filter(Boolean).slice(0, 3).join(', ')
+            : '';
+    }
+
+    return [
+        address.city,
+        address.town,
+        address.village,
+        address.municipality,
+        address.county,
+        address.state,
+        address.country
+    ].filter(Boolean).filter((part, index, parts) => parts.indexOf(part) === index).join(', ');
 }
 
 async function resolveLocationFromProviders() {
@@ -131,7 +171,7 @@ async function resolveLocationFromProviders() {
                     latitude: payload.latitude,
                     longitude: payload.longitude,
                     locationLabel: [payload.city, payload.region, payload.country].filter(Boolean).join(', '),
-                    locationSource: '?????읅???袁⑺뒄'
+                    locationSource: 'Network Location'
                 };
             }
         },
@@ -146,7 +186,7 @@ async function resolveLocationFromProviders() {
                     latitude: payload.latitude,
                     longitude: payload.longitude,
                     locationLabel: [payload.city, payload.region, payload.country_name].filter(Boolean).join(', '),
-                    locationSource: '?????읅???袁⑺뒄'
+                    locationSource: 'Network Location'
                 };
             }
         }
@@ -159,7 +199,7 @@ async function resolveLocationFromProviders() {
             if (location) {
                 return {
                     ...location,
-                    locationLabel: location.locationLabel || '?????읅???袁⑹삺 ?袁⑺뒄'
+                    locationLabel: location.locationLabel || 'Current Location'
                 };
             }
         } catch (_error) {
@@ -167,7 +207,7 @@ async function resolveLocationFromProviders() {
         }
     }
 
-    throw new Error('?袁⑹삺 ?袁⑺뒄???類ㅼ뵥??????곷뮸??덈뼄. ?袁⑺뒄 亦낅슦釉??癒?뮉 ??쎈뱜??곌쾿???類ㅼ뵥??곻폒?紐꾩뒄.');
+    throw new Error('Unable to resolve location from network providers.');
 }
 
 function isAllowedExternalUrl(target) {
@@ -653,13 +693,32 @@ ipcMain.handle('zen-launcher:open-external', async (_event, target) => {
 });
 
 ipcMain.handle('zen-launcher:reverse-geocode', async (_event, latitude, longitude) => {
-    const response = await fetchJson(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&language=ko&count=1`);
-    const result = Array.isArray(response?.results) ? response.results[0] : null;
-    if (!result) {
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
         return '';
     }
 
-    return [result.name, result.admin1, result.country].filter(Boolean).join(', ');
+    const cacheKey = getReverseGeocodeCacheKey(latitude, longitude);
+    if (reverseGeocodeCache.has(cacheKey)) {
+        return reverseGeocodeCache.get(cacheKey) || '';
+    }
+
+    try {
+        const response = await fetchJson(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&accept-language=ko`,
+            {
+                headers: {
+                    Accept: 'application/json',
+                    'User-Agent': `${app.getName()}/${app.getVersion()}`
+                }
+            }
+        );
+        const label = buildReverseGeocodeLabel(response);
+        setReverseGeocodeCache(cacheKey, label);
+        return label;
+    } catch (error) {
+        console.warn('Reverse geocoding failed:', error.message);
+        return '';
+    }
 });
 
 ipcMain.handle('zen-launcher:fetch-weather', async (_event, latitude, longitude) => {
@@ -668,7 +727,7 @@ ipcMain.handle('zen-launcher:fetch-weather', async (_event, latitude, longitude)
     );
 
     if (!response?.current) {
-        throw new Error('?醫롫뎁 ?怨쀬뵠?怨? ?븍뜄???? 筌륁궢六??щ빍??');
+        throw new Error('Weather response is missing current data.');
     }
 
     const hourlyTimes = Array.isArray(response?.hourly?.time) ? response.hourly.time : [];
@@ -704,7 +763,7 @@ ipcMain.handle('zen-launcher:resolve-location', async (_event, coordinates) => {
         return {
             latitude: coordinates.latitude,
             longitude: coordinates.longitude,
-            locationSource: '?類μ넇???袁⑺뒄'
+            locationSource: 'Browser Location'
         };
     }
 
