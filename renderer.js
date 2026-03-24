@@ -955,6 +955,14 @@
             }
         }
 
+        if (isFooterCompactOpen && footerCompactPanel && footerCompactButton) {
+            const clickedInsideCompactPanel = footerCompactPanel.contains(event.target);
+            const clickedCompactToggleButton = footerCompactButton.contains(event.target);
+            if (!clickedInsideCompactPanel && !clickedCompactToggleButton) {
+                closeFooterCompactPanel();
+            }
+        }
+
         const compactActionTrigger = event.target.closest('[data-compact-action]');
         if (compactActionTrigger?.dataset.compactAction === 'open-settings') {
             closeFooterCompactPanel();
@@ -972,6 +980,9 @@
             await window.zenLauncher.run(target);
             if (trigger.closest('#quick-widget')) {
                 closeQuickWidget();
+            }
+            if (trigger.closest('#footer-compact-panel')) {
+                closeFooterCompactPanel();
             }
         } catch (error) {
             await window.zenLauncher.showMessage({
