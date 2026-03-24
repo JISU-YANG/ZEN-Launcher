@@ -1,18 +1,15 @@
 ﻿const { app, BrowserWindow, dialog, globalShortcut, ipcMain, screen, shell } = require('electron');
 const fs = require('node:fs');
-const http = require('node:http');
 const https = require('node:https');
 const path = require('path');
-const crypto = require('node:crypto');
-const { pathToFileURL } = require('node:url');
 const { execFile } = require('node:child_process');
 const Store = require('electron-store');
 const computer = require('electron-shutdown-command');
+const { CategoryStoreRepository } = require('./src/main/infrastructure/repositories/categoryStoreRepository');
+const { RemoteImageCacheRepository } = require('./src/main/infrastructure/repositories/remoteImageCacheRepository');
+const { LauncherCategoryService } = require('./src/main/application/services/launcherCategoryService');
 
 const store = new Store();
-const CATEGORY_KEY_PREFIX = 'ZENL.Data';
-const LEGACY_CATEGORY_KEY_PREFIX = 'NPL.Data';
-const CATEGORIES = ['gallery', 'icon', 'folder'];
 const WINDOW_WIDTH = 1150;
 const LAUNCHER_HEIGHT = 420;
 const WEATHER_WIDGET_SPACE = 620;
@@ -23,6 +20,12 @@ const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
 const PROGRAM_SCAN_CACHE_FILE = 'program-scan-cache.json';
+const categoryRepository = new CategoryStoreRepository(store);
+const remoteImageCacheRepository = new RemoteImageCacheRepository({ app });
+const launcherCategoryService = new LauncherCategoryService({
+    categoryRepository,
+    remoteImageCacheRepository
+});
 
 let mainWindow = null;
 let devWatchers = [];
@@ -40,145 +43,6 @@ function focusLauncherSearch() {
     mainWindow.show();
     mainWindow.focus();
     mainWindow.webContents.send('zen-launcher:focus-search');
-}
-
-function getCategoryData() {
-    return CATEGORIES.reduce((accumulator, category) => {
-        const loadedData = store.get(`${CATEGORY_KEY_PREFIX}${category}`);
-        const legacyData = store.get(`${LEGACY_CATEGORY_KEY_PREFIX}${category}`);
-        const resolvedData = Array.isArray(loadedData)
-            ? loadedData
-            : (Array.isArray(legacyData) ? legacyData : []);
-        accumulator[category] = resolvedData;
-        return accumulator;
-    }, {});
-}
-
-function sanitizeItem(item, category) {
-    if (!item || typeof item !== 'object') {
-        return null;
-    }
-
-    const name = typeof item.name === 'string' ? item.name.trim() : '';
-    const link = typeof item.link === 'string' ? item.link.trim() : '';
-    const img = category !== 'folder' && typeof item.img === 'string' ? item.img.trim() : '';
-
-    if (!link) {
-        return null;
-    }
-
-    return { name, link, img };
-}
-
-function isRemoteImageUrl(value) {
-    return typeof value === 'string' && /^https?:\/\//i.test(value.trim());
-}
-
-function getImageCacheDirectory() {
-    return path.join(app.getPath('userData'), 'cached-images');
-}
-
-function detectImageExtension(urlString, contentType = '') {
-    const type = contentType.toLowerCase();
-    if (type.includes('image/png')) {
-        return '.png';
-    }
-    if (type.includes('image/jpeg') || type.includes('image/jpg')) {
-        return '.jpg';
-    }
-    if (type.includes('image/webp')) {
-        return '.webp';
-    }
-    if (type.includes('image/gif')) {
-        return '.gif';
-    }
-    if (type.includes('image/svg+xml')) {
-        return '.svg';
-    }
-    if (type.includes('image/x-icon') || type.includes('image/vnd.microsoft.icon')) {
-        return '.ico';
-    }
-
-    try {
-        const extension = path.extname(new URL(urlString).pathname);
-        if (extension && extension.length <= 5) {
-            return extension.toLowerCase();
-        }
-    } catch (_error) {
-        return '.img';
-    }
-
-    return '.img';
-}
-
-function downloadBinary(url, redirectCount = 0) {
-    return new Promise((resolve, reject) => {
-        const transport = url.startsWith('https:') ? https : http;
-        transport.get(url, (response) => {
-            const { statusCode = 500, headers } = response;
-
-            if (statusCode >= 300 && statusCode < 400 && headers.location) {
-                response.resume();
-                if (redirectCount >= 5) {
-                    reject(new Error('이미지 다운로드 리디렉션이 너무 많습니다.'));
-                    return;
-                }
-
-                const nextUrl = new URL(headers.location, url).toString();
-                resolve(downloadBinary(nextUrl, redirectCount + 1));
-                return;
-            }
-
-            if (statusCode < 200 || statusCode >= 300) {
-                response.resume();
-                reject(new Error(`이미지 다운로드 실패 (${statusCode})`));
-                return;
-            }
-
-            const chunks = [];
-            response.on('data', (chunk) => {
-                chunks.push(chunk);
-            });
-            response.on('end', () => {
-                resolve({
-                    buffer: Buffer.concat(chunks),
-                    contentType: typeof headers['content-type'] === 'string' ? headers['content-type'] : '',
-                    finalUrl: url
-                });
-            });
-        }).on('error', (error) => {
-            reject(new Error(`이미지 다운로드 실패: ${error.message}`));
-        });
-    });
-}
-
-async function persistRemoteImage(url) {
-    const trimmedUrl = url.trim();
-    const { buffer, contentType, finalUrl } = await downloadBinary(trimmedUrl);
-    const extension = detectImageExtension(finalUrl || trimmedUrl, contentType);
-    const hash = crypto.createHash('sha1').update(trimmedUrl).digest('hex');
-    const directory = getImageCacheDirectory();
-    fs.mkdirSync(directory, { recursive: true });
-    const filePath = path.join(directory, `${hash}${extension}`);
-    fs.writeFileSync(filePath, buffer);
-    return pathToFileURL(filePath).toString();
-}
-
-async function prepareItemForSave(item, category) {
-    const normalizedItem = sanitizeItem(item, category);
-    if (!normalizedItem) {
-        return null;
-    }
-
-    if (category !== 'folder' && isRemoteImageUrl(normalizedItem.img)) {
-        try {
-            normalizedItem.img = await persistRemoteImage(normalizedItem.img);
-        } catch (_error) {
-            // Keep the original URL if download fails so saving still succeeds.
-        }
-    }
-
-    return normalizedItem;
 }
 
 function fetchJson(url) {
@@ -738,7 +602,7 @@ ipcMain.handle('zen-launcher:pick-path', async (_event, kind) => {
 });
 
 ipcMain.handle('zen-launcher:load-data', async () => {
-    return getCategoryData();
+    return launcherCategoryService.loadAll();
 });
 
 ipcMain.handle('zen-launcher:load-program-scan-cache', async () => {
@@ -753,22 +617,11 @@ ipcMain.handle('zen-launcher:scan-installed-programs', async () => {
 });
 
 ipcMain.handle('zen-launcher:save-category-data', async (_event, category, items) => {
-    if (!CATEGORIES.includes(category)) {
-        throw new Error('\uC54C \uC218 \uC5C6\uB294 \uCE74\uD14C\uACE0\uB9AC\uC785\uB2C8\uB2E4.');
-    }
-
-    const safeItems = Array.isArray(items)
-        ? (await Promise.all(items.map((item) => prepareItemForSave(item, category)))).filter(Boolean)
-        : [];
-
-    store.set(`${CATEGORY_KEY_PREFIX}${category}`, safeItems);
-    store.delete(`${LEGACY_CATEGORY_KEY_PREFIX}${category}`);
-    return safeItems;
+    return launcherCategoryService.saveCategory(category, items);
 });
 
 ipcMain.handle('zen-launcher:clear-data', async () => {
-    store.clear();
-    return true;
+    return launcherCategoryService.clearAll();
 });
 
 ipcMain.handle('zen-launcher:show-message', async (_event, options) => {
