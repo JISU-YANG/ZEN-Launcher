@@ -36,6 +36,7 @@ class ZenLauncherPreferences {
     #programBrowserFilter = '';
     #styleInjected = false;
     #editorCloseTimer = 0;
+    #editorOpenReadyTimer = 0;
 
     constructor(initialData) {
         Object.values(ZenLauncherPreferences.Category).forEach((category) => {
@@ -62,6 +63,10 @@ class ZenLauncherPreferences {
     #bindEvents() {
         ElementPath.openButton?.addEventListener('click', () => {
             if (this.#isEditorOpen()) {
+                if (ElementPath.editorElement?.dataset.panel !== 'settings') {
+                    this.#openEditor();
+                    return;
+                }
                 this.#closeEditor();
                 return;
             }
@@ -212,9 +217,6 @@ class ZenLauncherPreferences {
         ElementPath.clearButton?.classList.add('danger-button');
         ElementPath.saveButton?.classList.add('primary-button');
 
-        this.#setText('[data-link="shutdown"]', '종료');
-        this.#setText('[data-link="reboot"]', '재시작');
-
         const status = this.#createStaticElement('div', '', '저장됨');
         status.id = 'setting-status';
         status.dataset.tone = 'neutral';
@@ -236,13 +238,22 @@ class ZenLauncherPreferences {
         actions.append(scanButton, scanMeta, status);
         ElementPath.settingTopbar?.appendChild(actions);
 
+        const footerGroups = document.querySelectorAll('.btn-row > div');
+        const footerStatusGroup = footerGroups[0];
+        const footerActionGroup = footerGroups[1];
+        if (footerStatusGroup && ElementPath.clearButton) {
+            footerStatusGroup.replaceChildren(ElementPath.clearButton);
+        }
+        if (footerActionGroup) {
+            footerActionGroup.replaceChildren(ElementPath.saveButton, ElementPath.cancelButton);
+        }
+
         const content = document.createElement('div');
         content.id = 'setting-content';
         const row = ElementPath.editorContext;
         row.replaceWith(content);
         row.id = 'setting-row';
-        content.append(row, this.#createItemEditor());
-        document.body.appendChild(this.#createProgramBrowser());
+        content.append(row, this.#createItemEditor(), this.#createProgramBrowser());
     }
 
     #injectStyles() {
@@ -252,7 +263,7 @@ class ZenLauncherPreferences {
 
         const style = document.createElement('style');
         style.textContent = `
-            .setting-topbar-actions { display:flex; align-items:center; gap:10px; flex:0 0 auto; padding:4px 0 2px; }
+            .setting-topbar-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex:0 0 auto; min-width:0; margin-left:auto; padding:0; }
             .scan-action-button { gap:8px; }
             .scan-action-icon {
                 position:relative; width:14px; height:14px; border:2px solid currentColor; border-radius:50%;
@@ -263,64 +274,144 @@ class ZenLauncherPreferences {
             }
             .scan-action-label { line-height:1; }
             .setting-scan-meta {
-                display:inline-flex; align-items:center; min-height:32px; padding:0 12px; border-radius:999px;
-                background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.08); color:#a8a8a8;
-                font-size:10px; font-weight:700; box-sizing:border-box; white-space:nowrap;
+                display:inline-flex; align-items:center; min-height:40px; padding:0 14px; border-radius:14px;
+                background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); color:#a8a8a8;
+                font-size:11px; font-weight:700; box-sizing:border-box; white-space:nowrap;
             }
             .setting-field-group { display:flex; flex-direction:column; gap:5px; }
             .setting-field-control { display:flex; align-items:center; gap:8px; min-width:0; }
             .setting-field-control input { flex:1 1 auto; min-width:0; }
             .setting-field-control .file-item { flex:0 0 auto; align-self:auto; margin-top:0 !important; }
             .setting-field-group.mode-tabs { gap:0; }
-            .setting-mode-row { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
-            .setting-mode-chip {
-                display:inline-flex; align-items:center; justify-content:center; min-width:0; height:30px; padding:0 12px;
-                border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.025);
-                color:#d8d8d8; cursor:pointer; font-size:10px; font-weight:800; box-sizing:border-box;
+            .setting-mode-row {
+                display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; padding:8px;
+                border:1px solid rgba(255,255,255,0.08); border-radius:18px;
+                background:linear-gradient(180deg, rgba(21,21,21,0.96), rgba(15,15,15,0.98));
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
             }
-            .setting-mode-chip.active { background:#dcdcdc; border-color:#dcdcdc; color:#151515; }
+            .setting-mode-chip {
+                display:inline-flex; align-items:center; justify-content:center; min-width:0; height:40px; padding:0 14px;
+                border-radius:12px; border:1px solid transparent; background:transparent;
+                color:#8d8d8d; cursor:pointer; font-size:11px; font-weight:800; box-sizing:border-box;
+                transition:background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            }
+            .setting-mode-chip:hover { background:rgba(255,255,255,0.04); color:#cfcfcf; transform:translateY(-1px); }
+            .setting-mode-chip.active {
+                background:linear-gradient(180deg, rgba(72,72,72,0.96), rgba(44,44,44,0.98));
+                border-color:rgba(255,255,255,0.14); color:#f3f3f3;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.03);
+            }
             .program-picker-card {
-                display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,0.03);
-                border:1px solid rgba(255,255,255,0.06); box-sizing:border-box;
+                display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:16px;
+                background:linear-gradient(180deg, rgba(42,42,42,0.96), rgba(28,28,28,0.98));
+                border:1px solid rgba(255,255,255,0.08); box-sizing:border-box;
             }
             .program-picker-control { display:flex; align-items:stretch; gap:8px; min-width:0; }
             .program-picker-control .program-picker-card { flex:1 1 auto; min-width:0; justify-content:center; }
-            .program-picker-card.empty { border-style:dashed; color:#9b9b9b; }
-            .program-picker-name { color:#f1f1f1; font-size:11px; font-weight:800; word-break:break-word; }
+            .program-picker-card.empty { border-style:dashed; color:#9b9b9b; background:rgba(255,255,255,0.02); }
+            .program-picker-name { color:#f1f1f1; font-size:12px; font-weight:800; word-break:break-word; }
             .program-picker-meta { color:#9b9b9b; font-size:9px; line-height:1.4; word-break:break-all; }
             .program-picker-actions { display:flex; gap:8px; flex-wrap:nowrap; }
+            #editor[data-panel="settings"].program-browser-active #setting-topbar,
+            #editor[data-panel="settings"].program-browser-active .btn-row {
+                opacity:0;
+                pointer-events:none;
+                transform:translateY(12px);
+                max-height:0;
+                min-height:0;
+                padding-top:0;
+                padding-bottom:0;
+                margin:0;
+                border:none;
+                overflow:hidden;
+            }
+            #editor[data-panel="settings"].program-browser-active #setting-row,
+            #editor[data-panel="settings"].program-browser-active #slot-editor {
+                opacity:0;
+                pointer-events:none;
+                transform:translateY(10px);
+                max-height:0;
+                min-height:0;
+                padding:0;
+                margin:0;
+                overflow:hidden;
+            }
             .program-browser {
-                position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding:118px 18px 18px;
-                background:transparent; z-index:60; box-sizing:border-box;
+                position:absolute;
+                inset:10px 0 0 0;
+                display:flex;
+                flex-direction:column;
+                opacity:0;
+                visibility:hidden;
+                pointer-events:none;
+                transform:translateY(12px);
+                transition:opacity 0.24s ease, transform 0.34s cubic-bezier(0.25, 0.8, 0.2, 1), visibility 0s linear 0.34s;
+                background:transparent;
+                border:none;
+                border-radius:0;
+                box-shadow:none;
+                z-index:30;
+                box-sizing:border-box;
             }
-            .program-browser.open { display:flex; }
+            .program-browser.open {
+                opacity:1;
+                visibility:visible;
+                pointer-events:auto;
+                transform:translateY(0);
+                transition:opacity 0.2s ease, transform 0.34s cubic-bezier(0.25, 0.8, 0.2, 1), visibility 0s linear 0s;
+            }
             .program-browser-panel {
-                display:flex; flex-direction:column; width:min(1180px, calc(100vw - 36px)); height:min(820px, calc(100vh - 136px)); border-radius:18px;
-                background:#1b1b1b; border:1px solid rgba(255,255,255,0.08); box-shadow:none; overflow:hidden;
-                padding:14px; box-sizing:border-box;
+                display:grid;
+                grid-template-rows:auto auto auto minmax(0, 1fr);
+                row-gap:10px;
+                width:100%;
+                height:100%;
+                min-height:0;
+                overflow:hidden;
+                padding:14px 22px 16px;
+                box-sizing:border-box;
             }
-            .program-browser-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:2px 2px 12px; }
+            .program-browser-header { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:2px 2px 6px; position:relative; z-index:2; }
             .program-browser-tools { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
-            .program-browser-title { color:#f1f1f1; font-size:16px; font-weight:900; }
+            .program-browser-title { color:#f1f1f1; font-size:18px; font-weight:900; }
             .program-browser-caption { margin-top:4px; color:#8f8f8f; font-size:11px; line-height:1.45; }
             .program-browser-search {
-                margin:0 2px 12px; height:38px; padding:0 14px; border:1px solid rgba(255,255,255,0.12); border-radius:14px;
-                background:rgba(255,255,255,0.04); color:#f1f1f1; font-family:'Noto Sans KR', sans-serif; font-size:12px; box-sizing:border-box;
+                margin:0 2px; height:44px; padding:0 14px; border:1px solid rgba(255,255,255,0.08); border-radius:14px;
+                background:rgba(255,255,255,0.03); color:#f1f1f1; font-family:'Noto Sans KR', sans-serif; font-size:12px; box-sizing:border-box;
+                position:relative; z-index:2;
             }
             .program-browser-search::placeholder { color:#727272; }
-            .program-browser-meta { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:0 2px 12px; color:#9a9a9a; font-size:11px; font-weight:700; }
-            .program-browser-list { display:flex; flex-direction:column; gap:8px; flex:1; min-height:0; padding:0 2px 2px; overflow-y:auto; }
+            .program-browser-meta { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:0 2px 4px; color:#9a9a9a; font-size:11px; font-weight:700; position:relative; z-index:2; }
+            .program-browser-list { display:flex; flex-direction:column; gap:8px; min-height:0; padding:0 2px 2px; overflow-y:auto; position:relative; z-index:1; }
+            #editor[data-size="l"] .program-browser-list {
+                display:grid;
+                grid-template-columns:repeat(2, minmax(0, 1fr));
+                align-content:start;
+                gap:8px;
+            }
             .program-browser-item {
-                display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; padding:12px 14px; border:1px solid rgba(255,255,255,0.08);
-                border-radius:14px; background:transparent; color:#f1f1f1; text-align:left; cursor:pointer; box-sizing:border-box;
+                display:flex; justify-content:space-between; align-items:center; gap:10px; width:100%; padding:10px 12px; border:1px solid rgba(255,255,255,0.08);
+                border-radius:16px; background:linear-gradient(180deg, rgba(42,42,42,0.96), rgba(28,28,28,0.98)); color:#f1f1f1; text-align:left; cursor:pointer; box-sizing:border-box;
+                transition:background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
             }
-            .program-browser-item:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.14); }
-            .program-browser-item-title { font-size:12px; font-weight:800; line-height:1.4; word-break:break-word; }
-            .program-browser-item-meta { margin-top:4px; color:#8f8f8f; font-size:10px; line-height:1.45; word-break:break-all; white-space:pre-line; }
+            .program-browser-item:hover { background:linear-gradient(180deg, rgba(50,50,50,0.98), rgba(32,32,32,0.98)); border-color:rgba(255,255,255,0.14); transform:translateY(-1px); }
+            .program-browser-item-title { font-size:11px; font-weight:800; line-height:1.35; word-break:break-word; }
+            .program-browser-item-meta {
+                margin-top:3px;
+                color:#8f8f8f;
+                font-size:9px;
+                line-height:1.35;
+                word-break:break-all;
+                white-space:pre-line;
+                display:-webkit-box;
+                -webkit-line-clamp:2;
+                -webkit-box-orient:vertical;
+                overflow:hidden;
+            }
             .program-browser-item-source {
-                flex:0 0 auto; color:#151515; background:#f1f1f1; border-radius:999px; padding:6px 10px; font-size:10px; font-weight:900; text-transform:uppercase;
+                flex:0 0 auto; color:#151515; background:linear-gradient(180deg, rgba(235,235,235,0.98), rgba(206,206,206,0.98)); border-radius:999px; padding:5px 8px; font-size:9px; font-weight:900; text-transform:uppercase;
             }
-            .program-browser-empty { padding:22px 18px; border:1px dashed rgba(255,255,255,0.12); border-radius:16px; color:#9b9b9b; text-align:center; line-height:1.6; }
+            .program-browser-empty { padding:22px 18px; border:1px dashed rgba(255,255,255,0.12); border-radius:16px; color:#9b9b9b; text-align:center; line-height:1.6; grid-column:1 / -1; }
             .launcher-fallback { display:flex; align-items:center; justify-content:center; box-sizing:border-box; text-align:center; overflow:hidden; }
             .gallery-fallback {
                 width:100%; height:100%; padding:10px; border-radius:10px; background:linear-gradient(135deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
@@ -464,9 +555,38 @@ class ZenLauncherPreferences {
             window.clearTimeout(this.#editorCloseTimer);
             this.#editorCloseTimer = 0;
         }
+        if (this.#editorOpenReadyTimer) {
+            window.clearTimeout(this.#editorOpenReadyTimer);
+            this.#editorOpenReadyTimer = 0;
+        }
+        const editor = ElementPath.editorElement;
+        const wasEditorOpen = editor?.classList.contains('open') && !editor?.classList.contains('closing');
+        const previousPanel = editor?.dataset.panel || '';
+        const isPanelSwitch = wasEditorOpen && previousPanel && previousPanel !== 'settings';
+        if (isPanelSwitch) {
+            window.dispatchEvent(new CustomEvent('zen-launcher:settings-panel-switch'));
+        }
         if (ElementPath.editorElement) {
             ElementPath.editorElement.classList.remove('closing');
             ElementPath.editorElement.dataset.panel = 'settings';
+            ElementPath.editorElement.dataset.size = 'm';
+            if (wasEditorOpen && !isPanelSwitch) {
+                ElementPath.editorElement.classList.remove('expanding');
+                ElementPath.editorElement.classList.add('open-ready');
+            } else {
+                ElementPath.editorElement.classList.remove('open-ready');
+                ElementPath.editorElement.classList.add('expanding');
+                const openReadyDelay = isPanelSwitch ? 360 : 820;
+                this.#editorOpenReadyTimer = window.setTimeout(() => {
+                    this.#editorOpenReadyTimer = 0;
+                    if (!ElementPath.editorElement?.classList.contains('open') || ElementPath.editorElement?.classList.contains('closing')) {
+                        return;
+                    }
+
+                    ElementPath.editorElement.classList.remove('expanding');
+                    ElementPath.editorElement.classList.add('open-ready');
+                }, openReadyDelay);
+            }
         }
         ElementPath.editorElement?.classList.add('open');
         this.#refreshStatus();
@@ -496,9 +616,15 @@ class ZenLauncherPreferences {
             this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
         }
 
-        this.#closeProgramBrowser();
-        this.#closeItemEditor();
+        this.#closeProgramBrowser({ restoreSize: false });
+        this.#closeItemEditor({ closeProgramBrowser: false });
         const editor = ElementPath.editorElement;
+        if (this.#editorOpenReadyTimer) {
+            window.clearTimeout(this.#editorOpenReadyTimer);
+            this.#editorOpenReadyTimer = 0;
+        }
+        editor?.classList.remove('expanding');
+        editor?.classList.remove('open-ready');
         if (this.#editorCloseTimer) {
             window.clearTimeout(this.#editorCloseTimer);
             this.#editorCloseTimer = 0;
@@ -508,6 +634,7 @@ class ZenLauncherPreferences {
         this.#editorCloseTimer = window.setTimeout(() => {
             if (editor?.dataset.panel === 'settings') {
                 delete editor.dataset.panel;
+                delete editor.dataset.size;
             }
             editor?.classList.remove('closing');
             this.#editorCloseTimer = 0;
@@ -1088,12 +1215,14 @@ class ZenLauncherPreferences {
         this.#refreshStatus();
     }
 
-    #closeItemEditor() {
+    #closeItemEditor({ closeProgramBrowser = true, restoreSize = true } = {}) {
         const editor = document.getElementById('slot-editor');
         editor?.classList.remove('open');
         this.#activeItemIndex = -1;
         this.#currentEditorMode = 'direct';
-        this.#closeProgramBrowser();
+        if (closeProgramBrowser) {
+            this.#closeProgramBrowser({ restoreSize });
+        }
     }
 
     #bindEditorGridEvents() {
@@ -1378,19 +1507,27 @@ class ZenLauncherPreferences {
             return;
         }
 
+        if (ElementPath.editorElement?.dataset.panel === 'settings') {
+            ElementPath.editorElement.dataset.size = 'l';
+            ElementPath.editorElement.classList.add('program-browser-active');
+        }
         browser.classList.add('open');
         search.value = '';
         this.#renderProgramBrowser();
         search.focus({ preventScroll: true });
     }
 
-    #closeProgramBrowser() {
+    #closeProgramBrowser({ restoreSize = true } = {}) {
         const browser = document.getElementById('program-browser');
+        ElementPath.editorElement?.classList.remove('program-browser-active');
         if (!browser) {
             return;
         }
 
         browser.classList.remove('open');
+        if (restoreSize && ElementPath.editorElement?.dataset.panel === 'settings') {
+            ElementPath.editorElement.dataset.size = 'm';
+        }
         this.#programBrowserContext = null;
         this.#programBrowserFilter = '';
     }
