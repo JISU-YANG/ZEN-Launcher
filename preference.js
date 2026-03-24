@@ -14,6 +14,8 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
     themeMode: 'dark'
 });
+const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
+const SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS = 180;
 
 function normalizeAppearanceSettings(value = {}) {
     const rawTransparency = Number.parseInt(value?.launcherTransparency, 10);
@@ -1116,7 +1118,9 @@ class ZenLauncherPreferences {
             } else {
                 ElementPath.editorElement.classList.remove('open-ready');
                 ElementPath.editorElement.classList.add('expanding');
-                const openReadyDelay = isPanelSwitch ? 360 : 820;
+                const openReadyDelay = isPanelSwitch
+                    ? SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS
+                    : EXPANDED_PANEL_OPEN_READY_DELAY_MS;
                 this.#editorOpenReadyTimer = window.setTimeout(() => {
                     this.#editorOpenReadyTimer = 0;
                     if (!ElementPath.editorElement?.classList.contains('open') || ElementPath.editorElement?.classList.contains('closing')) {

@@ -37,6 +37,8 @@
     const weatherStatus = document.getElementById('weather-status');
     const searchEngineLink = document.querySelector('#search-area > div:first-child > a');
     const WEATHER_CACHE_DURATION = 10 * 60 * 1000;
+    const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
+    const COMPACT_PANEL_PERSIST_TARGETS = new Set(['volume-up', 'volume-down']);
     const SEARCH_ENGINES = {
         default: {
             label: 'Google',
@@ -326,7 +328,7 @@
 
             editorElement.classList.remove('expanding');
             editorElement.classList.add('open-ready');
-        }, 820);
+        }, EXPANDED_PANEL_OPEN_READY_DELAY_MS);
     };
     const setExpandedPanel = (panel, { title = '', caption = '', size = 'm' } = {}) => {
         if (!editorElement || !editorWidgetBody) {
@@ -981,7 +983,7 @@
             if (trigger.closest('#quick-widget')) {
                 closeQuickWidget();
             }
-            if (trigger.closest('#footer-compact-panel')) {
+            if (trigger.closest('#footer-compact-panel') && !COMPACT_PANEL_PERSIST_TARGETS.has(target)) {
                 closeFooterCompactPanel();
             }
         } catch (error) {
