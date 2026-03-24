@@ -25,7 +25,8 @@ const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'Syst
 const APPEARANCE_SETTINGS_KEY = 'ZENL.Appearance';
 const MAX_LAUNCHER_TRANSPARENCY = 100;
 const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
-    launcherTransparency: 0
+    launcherTransparency: 0,
+    themeMode: 'dark'
 });
 const categoryRepository = new CategoryStoreRepository(store);
 const remoteImageCacheRepository = new RemoteImageCacheRepository({ app });
@@ -51,8 +52,11 @@ function normalizeAppearanceSettings(value = {}) {
     const launcherTransparency = Number.isFinite(rawTransparency)
         ? Math.min(MAX_LAUNCHER_TRANSPARENCY, Math.max(0, rawTransparency))
         : DEFAULT_APPEARANCE_SETTINGS.launcherTransparency;
+    const themeMode = value?.themeMode === 'light'
+        ? 'light'
+        : DEFAULT_APPEARANCE_SETTINGS.themeMode;
 
-    return { launcherTransparency };
+    return { launcherTransparency, themeMode };
 }
 
 function loadAppearanceSettings() {

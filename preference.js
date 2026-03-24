@@ -11,7 +11,8 @@
 const MAX_LAUNCHER_TRANSPARENCY = 100;
 const MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY = 50;
 const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
-    launcherTransparency: 0
+    launcherTransparency: 0,
+    themeMode: 'dark'
 });
 
 function normalizeAppearanceSettings(value = {}) {
@@ -19,16 +20,24 @@ function normalizeAppearanceSettings(value = {}) {
     const launcherTransparency = Number.isFinite(rawTransparency)
         ? Math.min(MAX_LAUNCHER_TRANSPARENCY, Math.max(0, rawTransparency))
         : DEFAULT_APPEARANCE_SETTINGS.launcherTransparency;
+    const themeMode = value?.themeMode === 'light'
+        ? 'light'
+        : DEFAULT_APPEARANCE_SETTINGS.themeMode;
 
-    return { launcherTransparency };
+    return { launcherTransparency, themeMode };
 }
 
 function applyAppearanceSettingsToDocument(settings) {
-    const { launcherTransparency } = normalizeAppearanceSettings(settings);
+    const { launcherTransparency, themeMode } = normalizeAppearanceSettings(settings);
     const effectiveTransparencyRatio = (launcherTransparency / 100) * (MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY / 100);
     const surfaceOpacity = `${(1 - effectiveTransparencyRatio).toFixed(3)}`;
     const rootStyle = document.documentElement.style;
     const launcherShell = document.getElementById('launcher-shell');
+
+    document.documentElement.dataset.theme = themeMode;
+    if (document.body) {
+        document.body.dataset.theme = themeMode;
+    }
 
     rootStyle.setProperty('--launcher-shell-alpha', '1');
     rootStyle.setProperty('--launcher-panel-alpha', '0.96');
@@ -50,6 +59,7 @@ class ZenLauncherPreferences {
         FOLDER: 'folder'
     };
 
+    static TransparencyCategory = 'transparency';
     static ThemeCategory = 'theme';
 
     static MaxCount = {
@@ -109,6 +119,10 @@ class ZenLauncherPreferences {
             return '';
         }
 
+        if (button.dataset.tab === ZenLauncherPreferences.TransparencyCategory) {
+            return ZenLauncherPreferences.TransparencyCategory;
+        }
+
         if (button.dataset.tab === ZenLauncherPreferences.ThemeCategory) {
             return ZenLauncherPreferences.ThemeCategory;
         }
@@ -117,7 +131,8 @@ class ZenLauncherPreferences {
     }
 
     #areAppearanceSettingsEqual(left, right) {
-        return left?.launcherTransparency === right?.launcherTransparency;
+        return left?.launcherTransparency === right?.launcherTransparency
+            && left?.themeMode === right?.themeMode;
     }
 
     #updateAppearanceDirtyState() {
@@ -505,59 +520,85 @@ class ZenLauncherPreferences {
             .theme-settings-panel {
                 display:flex;
                 flex-direction:column;
-                gap:14px;
+                gap:12px;
                 min-height:0;
-                padding:6px 0 0;
+                padding:0;
                 box-sizing:border-box;
             }
             .theme-control-header {
                 display:flex;
                 align-items:center;
                 justify-content:space-between;
-                gap:12px;
+                gap:16px;
+                padding-bottom:6px;
+                border-bottom:1px solid rgba(255,255,255,0.08);
             }
             .theme-control-title {
                 color:#f1f1f1;
-                font-size:16px;
+                font-size:19px;
                 font-weight:900;
+                letter-spacing:-0.03em;
             }
             .theme-control-value {
                 display:inline-flex;
                 align-items:center;
                 justify-content:center;
-                min-width:54px;
-                height:28px;
-                padding:0 10px;
+                min-width:72px;
+                height:34px;
+                padding:0 14px;
                 border-radius:999px;
-                background:rgba(255,255,255,0.05);
+                border:1px solid rgba(255,255,255,0.08);
+                background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
                 color:#f1f1f1;
-                font-size:11px;
+                font-size:12px;
                 font-weight:900;
                 box-sizing:border-box;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
             }
             .theme-control-description {
                 color:#9a9a9a;
-                font-size:11px;
-                line-height:1.55;
+                font-size:12px;
+                line-height:1.6;
+                max-width:54ch;
+            }
+            .theme-range-header {
+                display:flex;
+                align-items:end;
+                justify-content:space-between;
+                gap:12px;
+                margin-top:0;
+            }
+            .theme-range-label {
+                color:#dfdfdf;
+                font-size:13px;
+                font-weight:800;
+            }
+            .theme-range-caption {
+                color:#7f7f7f;
+                font-size:10px;
+                font-weight:700;
+                letter-spacing:0.08em;
+                text-transform:uppercase;
             }
             .theme-transparency-range {
                 width:100%;
                 appearance:none;
                 -webkit-appearance:none;
-                height:8px;
+                height:10px;
                 margin:0;
                 border-radius:999px;
-                background:linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+                background:linear-gradient(90deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08));
                 outline:none;
+                box-shadow:inset 0 1px 2px rgba(0,0,0,0.24);
             }
             .theme-transparency-range::-webkit-slider-thumb {
                 -webkit-appearance:none;
-                width:18px;
-                height:18px;
-                border:none;
+                width:22px;
+                height:22px;
+                border:1px solid rgba(255,255,255,0.1);
                 border-radius:50%;
-                background:#f3f3f3;
-                box-shadow:0 6px 12px rgba(0,0,0,0.24);
+                background:linear-gradient(180deg, #fafafa, #d7d7d7);
+                box-shadow:0 8px 16px rgba(0,0,0,0.28);
                 cursor:pointer;
             }
             .theme-transparency-scale {
@@ -567,6 +608,358 @@ class ZenLauncherPreferences {
                 color:#8a8a8a;
                 font-size:10px;
                 font-weight:700;
+                letter-spacing:0.04em;
+            }
+            .theme-placeholder {
+                display:flex;
+                flex-direction:column;
+                gap:12px;
+                padding-top:6px;
+            }
+            .theme-placeholder-title {
+                color:#f1f1f1;
+                font-size:18px;
+                font-weight:900;
+                letter-spacing:-0.03em;
+            }
+            .theme-mode-group {
+                display:grid;
+                grid-template-columns:repeat(2, minmax(0, 1fr));
+                gap:10px;
+            }
+            .theme-mode-option {
+                display:flex;
+                align-items:center;
+                gap:12px;
+                position:relative;
+                min-height:72px;
+                padding:12px 14px;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:16px;
+                background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+                box-sizing:border-box;
+                cursor:pointer;
+                overflow:hidden;
+                transition:border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+            }
+            .theme-mode-option::before {
+                content:'';
+                position:absolute;
+                left:0;
+                top:0;
+                bottom:0;
+                width:3px;
+                border-radius:16px 0 0 16px;
+                background:transparent;
+                transition:background 0.18s ease;
+            }
+            .theme-mode-option:hover {
+                border-color:rgba(255,255,255,0.14);
+                background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+                transform:translateY(-1px);
+            }
+            .theme-mode-option:has(input:checked) {
+                border-color:rgba(255,255,255,0.24);
+                background:linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px rgba(0,0,0,0.16);
+                transform:translateY(-1px);
+            }
+            .theme-mode-option:has(input:checked)::before {
+                background:linear-gradient(180deg, rgba(255,255,255,0.88), rgba(188,188,188,0.36));
+            }
+            .theme-mode-option input {
+                width:16px;
+                height:16px;
+                margin:0;
+                accent-color:#f1f1f1;
+                cursor:pointer;
+            }
+            .theme-mode-option-swatch {
+                width:34px;
+                height:34px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,0.08);
+                flex:0 0 auto;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 14px rgba(0,0,0,0.14);
+                transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+            }
+            .theme-mode-option-swatch.light {
+                background:linear-gradient(180deg, #f7f8fa, #dde2e8);
+            }
+            .theme-mode-option-swatch.dark {
+                background:linear-gradient(180deg, #323232, #171717);
+            }
+            .theme-mode-option:has(input:checked) .theme-mode-option-swatch {
+                transform:scale(1.06);
+                border-color:rgba(255,255,255,0.18);
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 18px rgba(0,0,0,0.18);
+            }
+            .theme-mode-option:has(input:checked) .theme-mode-option-title {
+                color:#ffffff;
+            }
+            .theme-mode-option:has(input:checked) .theme-mode-option-caption {
+                color:#d4d4d4;
+            }
+            .theme-mode-option:has(input:focus-visible) {
+                outline:2px solid rgba(220,220,220,0.72);
+                outline-offset:2px;
+            }
+            .theme-mode-option-body {
+                display:flex;
+                flex-direction:column;
+                gap:3px;
+                min-width:0;
+            }
+            .theme-mode-option-title {
+                color:#f1f1f1;
+                font-size:13px;
+                font-weight:800;
+            }
+            .theme-mode-option-caption {
+                color:#8d8d8d;
+                font-size:10px;
+                font-weight:600;
+                line-height:1.4;
+            }
+            body[data-theme="light"] #setting-container {
+                color:#25303a;
+            }
+            body[data-theme="light"] #setting-category,
+            body[data-theme="light"] .setting-mode-row {
+                border-color:rgba(84,92,104,0.1);
+                background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(237,241,246,0.96));
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.88), 0 12px 22px rgba(38,46,58,0.06);
+            }
+            body[data-theme="light"] .setting-category-button,
+            body[data-theme="light"] .setting-mode-chip {
+                color:#6f7a86;
+            }
+            body[data-theme="light"] .setting-category-button:hover,
+            body[data-theme="light"] .setting-mode-chip:hover {
+                border-color:rgba(84,92,104,0.12);
+                background:rgba(255,255,255,0.72);
+                color:#27303a;
+            }
+            body[data-theme="light"] .setting-category-button.select-category,
+            body[data-theme="light"] .setting-mode-chip.active {
+                border-color:rgba(84,92,104,0.18);
+                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(232,236,241,0.98));
+                color:#1f2730;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 18px rgba(38,46,58,0.08);
+            }
+            body[data-theme="light"] #setting-status,
+            body[data-theme="light"] .setting-scan-meta {
+                border-color:rgba(84,92,104,0.1);
+                background:rgba(255,255,255,0.82);
+                color:#5d6874;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.88);
+            }
+            body[data-theme="light"] #setting-status::before {
+                background:rgba(95,106,119,0.72);
+                box-shadow:0 0 0 3px rgba(196,204,214,0.6);
+            }
+            body[data-theme="light"] #setting-status[data-tone="warning"] {
+                color:#8a6842;
+                border-color:rgba(173,133,75,0.2);
+                background:linear-gradient(90deg, rgba(219,187,133,0.22), transparent 34%), rgba(255,255,255,0.82);
+            }
+            body[data-theme="light"] #setting-status[data-tone="success"] {
+                color:#557246;
+                border-color:rgba(108,149,86,0.2);
+                background:linear-gradient(90deg, rgba(165,208,141,0.18), transparent 34%), rgba(255,255,255,0.82);
+            }
+            body[data-theme="light"] #setting-status[data-tone="warning"]::before {
+                background:#c49352;
+                box-shadow:0 0 0 4px rgba(196,147,82,0.18);
+            }
+            body[data-theme="light"] #setting-status[data-tone="success"]::before {
+                background:#7fa46b;
+                box-shadow:0 0 0 4px rgba(127,164,107,0.18);
+            }
+            body[data-theme="light"] .setting-item-card,
+            body[data-theme="light"] .setting-add-card,
+            body[data-theme="light"] .program-picker-card,
+            body[data-theme="light"] .program-browser-item {
+                border-color:rgba(84,92,104,0.1);
+                background:linear-gradient(180deg, rgba(249,251,253,0.98), rgba(232,237,243,0.96));
+                color:#25303a;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 20px rgba(38,46,58,0.08);
+            }
+            body[data-theme="light"] .setting-item-card:hover,
+            body[data-theme="light"] .setting-add-card:hover,
+            body[data-theme="light"] .program-browser-item:hover {
+                border-color:rgba(84,92,104,0.16);
+                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(235,239,244,0.98));
+            }
+            body[data-theme="light"] .setting-item-card.select-item {
+                border-color:rgba(84,92,104,0.18);
+                box-shadow:inset 0 0 0 1px rgba(255,255,255,0.88), 0 14px 24px rgba(38,46,58,0.1);
+            }
+            body[data-theme="light"] .setting-item-card-index {
+                background:#dde4ec;
+                color:#495563;
+            }
+            body[data-theme="light"] .setting-item-card-delete {
+                border-color:rgba(84,92,104,0.1);
+                background:rgba(255,255,255,0.8);
+                color:#5d6975;
+            }
+            body[data-theme="light"] .setting-item-card-delete:hover {
+                background:#ffffff;
+                border-color:rgba(84,92,104,0.16);
+                color:#24303a;
+            }
+            body[data-theme="light"] .setting-item-card-name,
+            body[data-theme="light"] .program-picker-name,
+            body[data-theme="light"] .program-browser-title,
+            body[data-theme="light"] .program-browser-item-title,
+            body[data-theme="light"] .slot-editor-title,
+            body[data-theme="light"] .slot-editor-panel-title,
+            body[data-theme="light"] .theme-control-title,
+            body[data-theme="light"] .theme-placeholder-title,
+            body[data-theme="light"] .theme-range-label {
+                color:#1f2730;
+            }
+            body[data-theme="light"] .setting-item-card-meta,
+            body[data-theme="light"] .program-picker-meta,
+            body[data-theme="light"] .program-browser-caption,
+            body[data-theme="light"] .program-browser-meta,
+            body[data-theme="light"] .program-browser-item-meta,
+            body[data-theme="light"] .slot-editor-panel-meta,
+            body[data-theme="light"] .setting-field-label,
+            body[data-theme="light"] .theme-control-description,
+            body[data-theme="light"] .theme-range-caption,
+            body[data-theme="light"] .theme-transparency-scale,
+            body[data-theme="light"] .theme-mode-option-caption {
+                color:#6a7682;
+            }
+            body[data-theme="light"] .setting-grid[data-category="ICON"] .setting-preview-icon-media,
+            body[data-theme="light"] .program-browser-empty {
+                background:rgba(233,238,244,0.82);
+                border-color:rgba(97,107,120,0.2);
+                color:#6a7682;
+            }
+            body[data-theme="light"] .setting-card-preview {
+                background:transparent;
+                box-shadow:none;
+            }
+            body[data-theme="light"] .setting-preview-gallery-shell {
+                background:linear-gradient(180deg, rgba(230,235,241,0.98), rgba(214,221,229,0.96));
+            }
+            body[data-theme="light"] .setting-preview-gallery-media {
+                background:rgba(201,210,220,0.5);
+            }
+            body[data-theme="light"] .setting-preview-gallery-name {
+                color:#46525e;
+                text-shadow:none;
+            }
+            body[data-theme="light"] .setting-grid[data-category="ICON"] .setting-preview-icon-shell {
+                background:transparent;
+            }
+            body[data-theme="light"] .setting-preview-icon-name,
+            body[data-theme="light"] .setting-grid[data-category="ICON"] .setting-preview-icon-name,
+            body[data-theme="light"] .setting-card-preview-empty {
+                color:#66717d;
+            }
+            body[data-theme="light"] .setting-card-preview.folder-preview {
+                color:#56616d;
+                background:linear-gradient(45deg, #dbe1e8 25%, #e8edf3 0, #e8edf3 50%, #dbe1e8 0, #dbe1e8 75%, #e8edf3 0);
+                background-size:5px 5px;
+            }
+            body[data-theme="light"] .setting-add-card {
+                color:#66717d;
+            }
+            body[data-theme="light"] .setting-add-card::before,
+            body[data-theme="light"] .program-browser-empty {
+                border-style:dashed;
+                border-width:1px;
+                border-color:rgba(97,107,120,0.24);
+            }
+            body[data-theme="light"] .setting-add-card::before {
+                background:rgba(255,255,255,0.46);
+            }
+            body[data-theme="light"] .setting-add-card::after {
+                background:
+                    linear-gradient(rgba(102,113,125,0.92), rgba(102,113,125,0.92)) center / 22px 2px no-repeat,
+                    linear-gradient(rgba(102,113,125,0.92), rgba(102,113,125,0.92)) center / 2px 22px no-repeat;
+            }
+            body[data-theme="light"] #slot-editor {
+                color:#25303a;
+            }
+            body[data-theme="light"] .slot-editor-header,
+            body[data-theme="light"] .slot-editor-panel-header,
+            body[data-theme="light"] .slot-editor-actions,
+            body[data-theme="light"] .slot-editor-side-panel {
+                border-color:rgba(84,92,104,0.12);
+            }
+            body[data-theme="light"] .setting-field input,
+            body[data-theme="light"] .program-browser-search,
+            body[data-theme="light"] .theme-control-value,
+            body[data-theme="light"] .theme-transparency-range,
+            body[data-theme="light"] .slot-secondary-button,
+            body[data-theme="light"] .slot-editor-close,
+            body[data-theme="light"] .file-item,
+            body[data-theme="light"] .setting-action-button {
+                border-color:rgba(84,92,104,0.1);
+                background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(235,239,244,0.96));
+                color:#25303a;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 18px rgba(38,46,58,0.06);
+            }
+            body[data-theme="light"] .setting-field input::placeholder,
+            body[data-theme="light"] .program-browser-search::placeholder {
+                color:#8a95a1;
+            }
+            body[data-theme="light"] .slot-secondary-button.danger-button,
+            body[data-theme="light"] .setting-action-button.danger-button {
+                border-color:rgba(176,110,124,0.2);
+                background:linear-gradient(180deg, rgba(252,243,245,0.98), rgba(244,226,231,0.96));
+                color:#9b5e6b;
+            }
+            body[data-theme="light"] .setting-action-button.primary-button {
+                border-color:rgba(84,92,104,0.14);
+                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(232,236,241,0.98));
+                color:#1f2730;
+            }
+            body[data-theme="light"] .slot-secondary-button:hover,
+            body[data-theme="light"] .slot-editor-close:hover,
+            body[data-theme="light"] .file-item:hover,
+            body[data-theme="light"] .setting-action-button:hover {
+                border-color:rgba(84,92,104,0.16);
+                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(239,243,247,0.98));
+            }
+            body[data-theme="light"] .program-picker-card.empty {
+                background:rgba(255,255,255,0.58);
+                color:#6a7682;
+            }
+            body[data-theme="light"] .program-browser-item-source {
+                color:#4c5763;
+                background:linear-gradient(180deg, rgba(239,243,247,0.98), rgba(219,226,234,0.98));
+            }
+            body[data-theme="light"] .theme-control-header {
+                border-bottom-color:rgba(84,92,104,0.1);
+            }
+            body[data-theme="light"] .theme-control-value {
+                color:#4d5966;
+            }
+            body[data-theme="light"] .theme-transparency-range {
+                background:linear-gradient(90deg, rgba(181,190,201,0.56), rgba(226,231,237,0.92));
+                box-shadow:inset 0 1px 2px rgba(103,116,129,0.14);
+            }
+            body[data-theme="light"] .theme-transparency-range::-webkit-slider-thumb {
+                border-color:rgba(84,92,104,0.1);
+                background:linear-gradient(180deg, #ffffff, #dde3ea);
+                box-shadow:0 8px 16px rgba(38,46,58,0.14);
+            }
+            body[data-theme="light"] .setting-category-button:focus-visible,
+            body[data-theme="light"] .setting-item-card:focus-visible,
+            body[data-theme="light"] .setting-add-card:focus-visible,
+            body[data-theme="light"] .setting-action-button:focus-visible,
+            body[data-theme="light"] .file-item:focus-visible,
+            body[data-theme="light"] .slot-secondary-button:focus-visible,
+            body[data-theme="light"] .setting-field input:focus-visible,
+            body[data-theme="light"] .theme-mode-option:has(input:focus-visible) {
+                outline:2px solid rgba(146,164,184,0.72);
+                outline-offset:2px;
             }
         `;
 
@@ -794,7 +1187,10 @@ class ZenLauncherPreferences {
         this.#activeItemIndex = -1;
         this.#statusOverride = null;
         this.#closeProgramBrowser();
-        if (category === ZenLauncherPreferences.ThemeCategory) {
+        if (
+            category === ZenLauncherPreferences.TransparencyCategory
+            || category === ZenLauncherPreferences.ThemeCategory
+        ) {
             this.#closeItemEditor({ closeProgramBrowser: false });
         }
         this.#renderCategoryButtons();
@@ -848,7 +1244,7 @@ class ZenLauncherPreferences {
         this.#getTabButtons().forEach((button) => {
             const category = this.#getTabCategory(button);
             const isActive = category === ZenLauncherPreferences.activeCategory;
-            const isDirty = category === ZenLauncherPreferences.ThemeCategory
+            const isDirty = category === ZenLauncherPreferences.TransparencyCategory
                 ? this.#appearanceDirty
                 : this.#dirtyCategories.has(category);
 
@@ -858,6 +1254,12 @@ class ZenLauncherPreferences {
     }
 
     #renderCategoryItems(category) {
+        if (category === ZenLauncherPreferences.TransparencyCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createTransparencyPanel());
+            this.#closeItemEditor();
+            return;
+        }
+
         if (category === ZenLauncherPreferences.ThemeCategory) {
             ElementPath.editorContext.replaceChildren(this.#createThemePanel());
             this.#closeItemEditor();
@@ -889,7 +1291,7 @@ class ZenLauncherPreferences {
         }
     }
 
-    #createThemePanel() {
+    #createTransparencyPanel() {
         const panel = document.createElement('div');
         panel.className = 'theme-settings-panel';
 
@@ -903,7 +1305,7 @@ class ZenLauncherPreferences {
         const description = this.#createStaticElement(
             'div',
             'theme-control-description',
-            '상단의 원래 투명 영역은 그대로 두고, 메인 런처 본체만 조절합니다. 100%는 실제 최대 투명도 50%입니다.'
+            '상단의 원래 투명 영역은 그대로 두고, 메인 런처 본체만 조절합니다.'
         );
 
         const range = document.createElement('input');
@@ -913,6 +1315,13 @@ class ZenLauncherPreferences {
         range.max = `${MAX_LAUNCHER_TRANSPARENCY}`;
         range.step = '1';
 
+        const rangeHeader = document.createElement('div');
+        rangeHeader.className = 'theme-range-header';
+        rangeHeader.append(
+            this.#createStaticElement('div', 'theme-range-label', '투명도'),
+            this.#createStaticElement('div', 'theme-range-caption', 'Launcher Surface')
+        );
+
         const scale = document.createElement('div');
         scale.className = 'theme-transparency-scale';
         scale.append(
@@ -920,7 +1329,7 @@ class ZenLauncherPreferences {
             this.#createStaticElement('span', '', `${MAX_LAUNCHER_TRANSPARENCY}%`)
         );
 
-        panel.append(header, description, range, scale);
+        panel.append(header, description, rangeHeader, range, scale);
 
         const syncThemePanel = () => {
             const normalizedAppearance = normalizeAppearanceSettings(this.#draftAppearance);
@@ -937,6 +1346,69 @@ class ZenLauncherPreferences {
 
         syncThemePanel();
         return panel;
+    }
+
+    #createThemePanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel theme-placeholder';
+
+        const title = this.#createStaticElement('div', 'theme-placeholder-title', '테마');
+        const description = this.#createStaticElement('div', 'theme-control-description', '라이트 또는 다크 모드를 선택할 수 있습니다.');
+
+        const group = document.createElement('div');
+        group.className = 'theme-mode-group';
+        group.append(
+            this.#createThemeModeOption({
+                id: 'theme-mode-light',
+                name: 'theme-mode',
+                value: 'light',
+                title: '라이트',
+                caption: '밝고 선명한 화면',
+                checked: this.#draftAppearance.themeMode === 'light'
+            }),
+            this.#createThemeModeOption({
+                id: 'theme-mode-dark',
+                name: 'theme-mode',
+                value: 'dark',
+                title: '다크',
+                caption: '현재 기준 테마',
+                checked: this.#draftAppearance.themeMode !== 'light'
+            })
+        );
+
+        panel.append(title, description, group);
+        return panel;
+    }
+
+    #createThemeModeOption({ id, name, value, title, caption, checked = false }) {
+        const label = document.createElement('label');
+        label.className = 'theme-mode-option';
+
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = name;
+        input.id = id;
+        input.value = value;
+        input.checked = checked;
+        input.addEventListener('change', () => {
+            if (!input.checked) {
+                return;
+            }
+            this.#updateAppearanceDraft({ themeMode: input.value });
+        });
+
+        const body = document.createElement('div');
+        body.className = 'theme-mode-option-body';
+        body.append(
+            this.#createStaticElement('div', 'theme-mode-option-title', title),
+            this.#createStaticElement('div', 'theme-mode-option-caption', caption)
+        );
+
+        const swatch = document.createElement('div');
+        swatch.className = `theme-mode-option-swatch ${value}`;
+
+        label.append(input, swatch, body);
+        return label;
     }
 
     #createItemCard(category, item, index) {
