@@ -4,13 +4,18 @@
     const scheduleShutdownButton = document.getElementById('btn-schedule-shutdown');
     const weatherToggleButton = document.getElementById('btn-weather-toggle');
     const quickToggleButton = document.getElementById('btn-quick-toggle');
+    const footerCompactButton = document.getElementById('btn-footer-compact');
+    const preferenceButton = document.getElementById('btn-preference');
     const weatherWidget = document.getElementById('weather-widget');
     const quickWidget = document.getElementById('quick-widget');
     const shutdownScheduler = document.getElementById('shutdown-scheduler');
+    const footerCompactPanel = document.getElementById('footer-compact-panel');
     const editorElement = document.getElementById('editor');
+    const editorSurfaceElement = document.getElementById('editor-s-surface');
     const editorWidgetTitle = document.getElementById('editor-widget-title');
     const editorWidgetCaption = document.getElementById('editor-widget-caption');
     const editorWidgetBody = document.getElementById('editor-widget-body');
+    const compactPanelClock = document.getElementById('compact-panel-clock');
     const shutdownMinutesInput = document.getElementById('shutdown-minutes');
     const shutdownHoursDisplay = document.getElementById('shutdown-hours-display');
     const shutdownMinutesDisplay = document.getElementById('shutdown-minutes-display');
@@ -63,15 +68,22 @@
     let isWeatherWidgetOpen = false;
     let isQuickWidgetOpen = false;
     let isShutdownSchedulerOpen = false;
+    let isFooterCompactOpen = false;
     let activeExpandedPanel = '';
     let weatherCache = null;
     let weatherFetchPromise = null;
     let widgetSyncFrame = 0;
     let expandedPanelCloseTimer = 0;
+    let expandedPanelCloseHandler = null;
+    let expandedPanelCloseTarget = null;
+    let expandedPanelOpenReadyTimer = 0;
+    const SUPPORTED_PANEL_SIZES = new Set(['s', 'm', 'l']);
+    const normalizePanelSize = (size) => SUPPORTED_PANEL_SIZES.has(size) ? size : 'm';
     const widgetOrigins = new Map([
         [weatherWidget, { parent: weatherWidget?.parentNode || null, nextSibling: weatherWidget?.nextSibling || null }],
         [quickWidget, { parent: quickWidget?.parentNode || null, nextSibling: quickWidget?.nextSibling || null }],
-        [shutdownScheduler, { parent: shutdownScheduler?.parentNode || null, nextSibling: shutdownScheduler?.nextSibling || null }]
+        [shutdownScheduler, { parent: shutdownScheduler?.parentNode || null, nextSibling: shutdownScheduler?.nextSibling || null }],
+        [footerCompactPanel, { parent: footerCompactPanel?.parentNode || null, nextSibling: footerCompactPanel?.nextSibling || null }]
     ]);
     const WEATHER_CODE_MAP = {
         0: { title: '맑음', description: '하늘이 깨끗하게 열려 있어요.' },
@@ -290,25 +302,70 @@
             }
         });
     };
-    const setExpandedPanel = (panel, { title = '', caption = '' } = {}) => {
+    const clearExpandedPanelOpenReadyTimer = () => {
+        if (!expandedPanelOpenReadyTimer) {
+            return;
+        }
+
+        window.clearTimeout(expandedPanelOpenReadyTimer);
+        expandedPanelOpenReadyTimer = 0;
+    };
+    const scheduleExpandedPanelOpenReady = () => {
+        if (!editorElement) {
+            return;
+        }
+
+        clearExpandedPanelOpenReadyTimer();
+        editorElement.classList.remove('open-ready');
+        editorElement.classList.add('expanding');
+        expandedPanelOpenReadyTimer = window.setTimeout(() => {
+            expandedPanelOpenReadyTimer = 0;
+            if (!editorElement.classList.contains('open') || editorElement.classList.contains('closing')) {
+                return;
+            }
+
+            editorElement.classList.remove('expanding');
+            editorElement.classList.add('open-ready');
+        }, 820);
+    };
+    const setExpandedPanel = (panel, { title = '', caption = '', size = 'm' } = {}) => {
         if (!editorElement || !editorWidgetBody) {
             return;
         }
+        const wasOpen = editorElement.classList.contains('open') && !editorElement.classList.contains('closing');
+        const resolvedSize = normalizePanelSize(size);
 
         if (expandedPanelCloseTimer) {
             window.clearTimeout(expandedPanelCloseTimer);
             expandedPanelCloseTimer = 0;
+        }
+        if (expandedPanelCloseHandler) {
+            expandedPanelCloseTarget?.removeEventListener('transitionend', expandedPanelCloseHandler);
+            expandedPanelCloseHandler = null;
+            expandedPanelCloseTarget = null;
         }
 
         activeExpandedPanel = panel;
         if (panel) {
             editorElement.classList.remove('closing');
             editorElement.dataset.panel = panel;
+            editorElement.dataset.size = resolvedSize;
             editorElement.classList.add('open');
+            if (wasOpen) {
+                clearExpandedPanelOpenReadyTimer();
+                editorElement.classList.remove('expanding');
+                editorElement.classList.add('open-ready');
+            } else {
+                scheduleExpandedPanelOpenReady();
+            }
         } else if (editorElement.dataset.panel !== 'settings') {
             delete editorElement.dataset.panel;
+            delete editorElement.dataset.size;
             editorElement.classList.remove('closing');
             editorElement.classList.remove('open');
+            editorElement.classList.remove('expanding');
+            editorElement.classList.remove('open-ready');
+            clearExpandedPanelOpenReadyTimer();
         }
 
         if (editorWidgetTitle) {
@@ -332,7 +389,7 @@
 
         origin.parent.appendChild(widget);
     };
-    const mountWidgetInExpandedArea = (widget, panel, title, caption) => {
+    const mountWidgetInExpandedArea = (widget, panel, title, caption, { size = 'm' } = {}) => {
         if (!widget || !editorWidgetBody) {
             return;
         }
@@ -340,18 +397,50 @@
         restoreWidgetToOrigin(weatherWidget);
         restoreWidgetToOrigin(quickWidget);
         restoreWidgetToOrigin(shutdownScheduler);
+        restoreWidgetToOrigin(footerCompactPanel);
 
         editorWidgetBody.replaceChildren(widget);
         widget.classList.add('embedded-widget');
-        setExpandedPanel(panel, { title, caption });
+        setExpandedPanel(panel, { title, caption, size });
     };
     const closeExpandedPanel = () => {
         if (!editorElement) {
             return;
         }
 
+        const finalizeExpandedPanelClose = () => {
+            const shouldKeepCompactSize = closingPanel === 'compact';
+            clearExpandedPanelOpenReadyTimer();
+            if (expandedPanelCloseTimer) {
+                window.clearTimeout(expandedPanelCloseTimer);
+                expandedPanelCloseTimer = 0;
+            }
+            if (expandedPanelCloseHandler) {
+                expandedPanelCloseTarget?.removeEventListener('transitionend', expandedPanelCloseHandler);
+                expandedPanelCloseHandler = null;
+                expandedPanelCloseTarget = null;
+            }
+            editorElement.classList.remove('closing');
+            editorElement.classList.remove('expanding');
+            editorElement.classList.remove('open-ready');
+            if (editorElement.dataset.panel === closingPanel) {
+                delete editorElement.dataset.panel;
+                if (!shouldKeepCompactSize) {
+                    delete editorElement.dataset.size;
+                }
+            }
+            restoreWidgetToOrigin(weatherWidget);
+            restoreWidgetToOrigin(quickWidget);
+            restoreWidgetToOrigin(shutdownScheduler);
+            restoreWidgetToOrigin(footerCompactPanel);
+            editorWidgetBody?.replaceChildren();
+        };
+
         const closingPanel = activeExpandedPanel;
         if (closingPanel && editorElement.dataset.panel === closingPanel) {
+            clearExpandedPanelOpenReadyTimer();
+            editorElement.classList.remove('expanding');
+            editorElement.classList.remove('open-ready');
             editorElement.classList.add('closing');
             editorElement.classList.remove('open');
         }
@@ -361,17 +450,38 @@
             window.clearTimeout(expandedPanelCloseTimer);
         }
 
-        expandedPanelCloseTimer = window.setTimeout(() => {
-            if (editorElement.dataset.panel === closingPanel) {
-                delete editorElement.dataset.panel;
+        const currentSize = editorElement.dataset.size || '';
+        const closeTransitionTarget = editorSurfaceElement && SUPPORTED_PANEL_SIZES.has(currentSize)
+            ? editorSurfaceElement
+            : editorElement;
+
+        expandedPanelCloseHandler = (event) => {
+            if (event.target !== closeTransitionTarget) {
+                return;
             }
-            editorElement.classList.remove('closing');
-            restoreWidgetToOrigin(weatherWidget);
-            restoreWidgetToOrigin(quickWidget);
-            restoreWidgetToOrigin(shutdownScheduler);
-            editorWidgetBody?.replaceChildren();
-            expandedPanelCloseTimer = 0;
-        }, 420);
+            const transitionProperty = 'clip-path';
+            if (event.propertyName !== transitionProperty) {
+                return;
+            }
+            finalizeExpandedPanelClose();
+        };
+        expandedPanelCloseTarget = closeTransitionTarget;
+        closeTransitionTarget.addEventListener('transitionend', expandedPanelCloseHandler);
+
+        expandedPanelCloseTimer = window.setTimeout(() => {
+            finalizeExpandedPanelClose();
+        }, 1100);
+    };
+    const updateCompactPanelClock = () => {
+        if (!compactPanelClock) {
+            return;
+        }
+
+        compactPanelClock.textContent = new Intl.DateTimeFormat('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).format(new Date());
     };
     const getBrowserCoordinates = async () => {
         return new Promise((resolve) => {
@@ -456,8 +566,9 @@
             return;
         }
 
-        closeShutdownScheduler();
-        closeQuickWidget();
+        closeFooterCompactPanel({ skipExpandedClose: true });
+        closeShutdownScheduler({ skipExpandedClose: true });
+        closeQuickWidget({ skipExpandedClose: true });
         isWeatherWidgetOpen = true;
         weatherWidget.classList.add('open');
         mountWidgetInExpandedArea(
@@ -479,14 +590,14 @@
             return;
         }
     };
-    const closeWeatherWidget = () => {
+    const closeWeatherWidget = ({ skipExpandedClose = false } = {}) => {
         if (!weatherWidget || !weatherToggleButton) {
             return;
         }
 
         isWeatherWidgetOpen = false;
         weatherWidget.classList.remove('open');
-        if (activeExpandedPanel === 'weather') {
+        if (!skipExpandedClose && activeExpandedPanel === 'weather') {
             closeExpandedPanel();
         }
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 열기');
@@ -556,27 +667,29 @@
             return;
         }
 
-        closeShutdownScheduler();
-        closeWeatherWidget();
+        closeFooterCompactPanel({ skipExpandedClose: true });
+        closeShutdownScheduler({ skipExpandedClose: true });
+        closeWeatherWidget({ skipExpandedClose: true });
         isQuickWidgetOpen = true;
         quickWidget.classList.add('open');
         mountWidgetInExpandedArea(
             quickWidget,
             'quick',
-            'Quick Tools',
-            '자주 쓰는 Windows 기본 도구를 확장 영역 안에서 바로 실행합니다.'
+            '빠른 도구',
+            '자주 쓰는 Windows 기본 도구를 확장 영역 안에서 바로 실행합니다.',
+            { size: 's' }
         );
         quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 닫기');
         quickToggleButton.setAttribute('aria-expanded', 'true');
     };
-    const closeQuickWidget = () => {
+    const closeQuickWidget = ({ skipExpandedClose = false } = {}) => {
         if (!quickWidget || !quickToggleButton) {
             return;
         }
 
         isQuickWidgetOpen = false;
         quickWidget.classList.remove('open');
-        if (activeExpandedPanel === 'quick') {
+        if (!skipExpandedClose && activeExpandedPanel === 'quick') {
             closeExpandedPanel();
         }
         quickToggleButton.setAttribute('aria-label', '빠른 도구 위젯 열기');
@@ -606,18 +719,76 @@
         const minutes = Number.parseInt(shutdownMinutesInput.value, 10);
         return clampShutdownMinutes(minutes);
     };
-    const closeShutdownScheduler = () => {
+    const closeShutdownScheduler = ({ skipExpandedClose = false } = {}) => {
         if (!shutdownScheduler || !scheduleShutdownButton) {
             return;
         }
 
         isShutdownSchedulerOpen = false;
         shutdownScheduler.classList.remove('open');
-        if (activeExpandedPanel === 'shutdown') {
+        if (!skipExpandedClose && activeExpandedPanel === 'shutdown') {
             closeExpandedPanel();
         }
         scheduleShutdownButton.setAttribute('aria-label', '예약 종료 위젯 열기');
         scheduleShutdownButton.setAttribute('aria-expanded', 'false');
+    };
+    const openFooterCompactPanel = () => {
+        if (!footerCompactPanel || !footerCompactButton) {
+            return;
+        }
+
+        closeWeatherWidget({ skipExpandedClose: true });
+        closeQuickWidget({ skipExpandedClose: true });
+        closeShutdownScheduler({ skipExpandedClose: true });
+        isFooterCompactOpen = true;
+        updateCompactPanelClock();
+        mountWidgetInExpandedArea(
+            footerCompactPanel,
+            'compact',
+            'System Settings',
+            '시스템 설정과 볼륨 제어를 빠르게 실행합니다.',
+            { size: 's' }
+        );
+        footerCompactButton.setAttribute('aria-label', '시스템 설정 닫기');
+        footerCompactButton.setAttribute('aria-expanded', 'true');
+    };
+    const closeFooterCompactPanel = ({ skipExpandedClose = false } = {}) => {
+        if (!footerCompactButton) {
+            return;
+        }
+
+        isFooterCompactOpen = false;
+        if (!skipExpandedClose && activeExpandedPanel === 'compact') {
+            closeExpandedPanel();
+        }
+        footerCompactButton.setAttribute('aria-label', '시스템 설정 열기');
+        footerCompactButton.setAttribute('aria-expanded', 'false');
+    };
+    const toggleFooterCompactPanel = () => {
+        if (isFooterCompactOpen) {
+            closeFooterCompactPanel();
+            return;
+        }
+
+        openFooterCompactPanel();
+    };
+    const syncExpandedStateForSettingsSwitch = () => {
+        const hasExpandedPanel =
+            isWeatherWidgetOpen ||
+            isQuickWidgetOpen ||
+            isShutdownSchedulerOpen ||
+            isFooterCompactOpen ||
+            Boolean(activeExpandedPanel);
+        if (!hasExpandedPanel) {
+            return;
+        }
+
+        clearExpandedPanelOpenReadyTimer();
+        closeWeatherWidget({ skipExpandedClose: true });
+        closeQuickWidget({ skipExpandedClose: true });
+        closeShutdownScheduler({ skipExpandedClose: true });
+        closeFooterCompactPanel({ skipExpandedClose: true });
+        activeExpandedPanel = '';
     };
     const syncShutdownSchedulerArrow = () => {
         if (!shutdownScheduler || !scheduleShutdownButton) {
@@ -657,8 +828,9 @@
             return;
         }
 
-        closeWeatherWidget();
-        closeQuickWidget();
+        closeWeatherWidget({ skipExpandedClose: true });
+        closeQuickWidget({ skipExpandedClose: true });
+        closeFooterCompactPanel({ skipExpandedClose: true });
         isShutdownSchedulerOpen = true;
         shutdownScheduler.classList.add('open');
         mountWidgetInExpandedArea(
@@ -740,6 +912,9 @@
         if (event.key === 'Escape' && isShutdownSchedulerOpen) {
             closeShutdownScheduler();
         }
+        if (event.key === 'Escape' && isFooterCompactOpen) {
+            closeFooterCompactPanel();
+        }
 
         if (event.key === 'F5' && isWeatherWidgetOpen) {
             event.preventDefault();
@@ -749,6 +924,10 @@
 
     window.addEventListener('resize', () => {
         scheduleWidgetPositionSync();
+    });
+
+    window.addEventListener('zen-launcher:settings-panel-switch', () => {
+        syncExpandedStateForSettingsSwitch();
     });
 
     document.addEventListener('click', async (event) => {
@@ -774,6 +953,13 @@
             if (!clickedInsideScheduler && !clickedSchedulerButton) {
                 closeShutdownScheduler();
             }
+        }
+
+        const compactActionTrigger = event.target.closest('[data-compact-action]');
+        if (compactActionTrigger?.dataset.compactAction === 'open-settings') {
+            closeFooterCompactPanel();
+            preferenceButton?.click();
+            return;
         }
 
         const trigger = event.target.closest('.launcher, .launcher-basic');
@@ -827,6 +1013,10 @@
     });
     quickToggleButton?.addEventListener('click', () => {
         toggleQuickWidget();
+    });
+    footerCompactButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        toggleFooterCompactPanel();
     });
     scheduleShutdownButton?.addEventListener('click', (event) => {
         event.preventDefault();
@@ -893,6 +1083,16 @@
         event.preventDefault();
         toggleShutdownScheduler();
     });
+    footerCompactButton?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        toggleFooterCompactPanel();
+    });
+    updateCompactPanelClock();
+    window.setInterval(updateCompactPanelClock, 60 * 1000);
     shutdownMinutesInput?.addEventListener('keydown', async (event) => {
         if (event.key !== 'Enter') {
             return;

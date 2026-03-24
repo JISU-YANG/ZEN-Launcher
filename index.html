@@ -44,16 +44,22 @@
             position: absolute;
             left: 0;
             right: 0;
-            top: -18px;
-            height: 18px;
+            top: -10px;
+            height: 10px;
             background: #1c1c1c;
             z-index: 2;
             pointer-events: none;
-            transition: opacity 0.18s ease;
+            transition:
+                opacity 0.18s ease,
+                background 0.32s ease;
         }
 
-        body:has(#editor.open) #container::before {
+        body:has(#editor.open) #container::before,
+        body:has(#editor.closing) #container::before,
+        body:has(#editor[data-size]) #container::before {
             opacity: 0;
+            animation: none;
+            background: #1c1c1c;
         }
 
         #left-box {
@@ -210,7 +216,7 @@
             box-sizing: border-box;
             padding: 0;
             z-index: 30;
-            overflow: hidden;
+            overflow: visible;
         }
 
 
@@ -237,7 +243,7 @@
             height: 100%;
         }
 
-        #footer-left > div:last-child {
+        #footer-left > div + div {
             margin-left: auto;
         }
 
@@ -302,6 +308,8 @@
             align-self: center;
             vertical-align: middle;
             border-radius: 6px;
+            border: none;
+            font: inherit;
             transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
         }
 
@@ -312,7 +320,20 @@
             min-height: 28px;
             padding: 0;
             border-radius: 6px;
+            border: 1px solid transparent;
+            color: #a9a9a9;
             text-decoration: none;
+            box-shadow: none;
+            transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+
+        .footer-btn.icon-only img {
+            width: 16px;
+            height: 16px;
+            display: block;
+            flex: 0 0 auto;
+            filter: brightness(0) invert(0.62);
+            transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
         }
 
         .footer-icon {
@@ -339,8 +360,13 @@
         }
 
         .footer-btn.icon-only:hover .footer-icon {
-            transform: translateY(-1px) scale(1.08);
+            transform: scale(1.06);
             filter: brightness(1.08);
+        }
+
+        .footer-btn.icon-only:hover img {
+            transform: scale(1.06);
+            filter: brightness(0) invert(0.76);
         }
 
         .footer-btn:active {
@@ -350,6 +376,26 @@
         .footer-btn.icon-only:active .footer-icon {
             transform: scale(0.96);
             filter: brightness(0.98);
+        }
+
+        .footer-btn.icon-only:active img {
+            transform: scale(0.96);
+            filter: brightness(0) invert(0.68);
+        }
+
+        .footer-btn.icon-only:hover {
+            background: linear-gradient(180deg, rgba(50, 50, 50, 0.96), rgba(33, 33, 33, 0.99));
+            border-color: rgba(255, 255, 255, 0.14);
+            color: #f1f1f1;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        .footer-btn.icon-only:active {
+            transform: translateY(0);
+            color: #e0e0e0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 7px 10px rgba(0, 0, 0, 0.2);
         }
 
         .footer-btn:focus-visible {
@@ -450,6 +496,88 @@
                 linear-gradient(currentColor, currentColor) center / 18px 2px no-repeat;
             transform: rotate(45deg);
             border-radius: 999px;
+        }
+
+        .footer-icon-panel::before {
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            height: 10px;
+            border: 2px solid currentColor;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .footer-icon-panel::after {
+            left: 3px;
+            right: 3px;
+            top: 1px;
+            height: 7px;
+            border: 2px solid currentColor;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .footer-icon-power-off::before {
+            left: 2px;
+            top: 2px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+        }
+
+        .footer-icon-power-off::after {
+            left: 7px;
+            top: 0;
+            width: 2px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 999px;
+        }
+
+        .footer-icon-reboot::before {
+            left: 1px;
+            top: 1px;
+            width: 14px;
+            height: 14px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+        }
+
+        .footer-icon-reboot::after {
+            right: 0;
+            top: 2px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid currentColor;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            transform: rotate(-8deg);
+            transform-origin: center;
+        }
+
+        .footer-icon-schedule::before {
+            left: 1px;
+            top: 1px;
+            width: 14px;
+            height: 14px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            background:
+                linear-gradient(currentColor, currentColor) 50% 3px / 2px 5px no-repeat,
+                linear-gradient(currentColor, currentColor) calc(50% + 3px) 50% / 4px 2px no-repeat;
+        }
+
+        .footer-icon-schedule::after {
+            left: 7px;
+            top: 7px;
+            width: 2px;
+            height: 2px;
+            background: currentColor;
+            border-radius: 50%;
         }
 
         .footer-icon-volume-up::before,
@@ -624,14 +752,19 @@
         }
 
         #link-area button.widget-toggle-btn {
-            width: auto;
-            height: auto;
+            width: 42px;
+            min-width: 42px;
+            height: 28px;
+            min-height: 28px;
             margin: 10px 0;
-            border-radius: 0;
+            padding: 0;
+            border-radius: 6px;
             background: transparent;
-            border: none;
+            border: 1px solid transparent;
+            color: #a9a9a9;
             box-shadow: none;
             cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease;
         }
 
         #link-area > div img {
@@ -647,7 +780,16 @@
             width: 18px;
             height: 18px;
             opacity: 1;
+            filter: brightness(0) invert(0.62);
             cursor: pointer;
+            transition: filter 0.18s ease, transform 0.18s ease;
+        }
+
+        #link-area button.widget-toggle-btn .footer-icon {
+            width: 18px;
+            height: 18px;
+            color: #dcdcdc;
+            opacity: 1;
         }
 
         #link-area > div a img:hover {
@@ -659,15 +801,37 @@
         }
 
         #link-area button.widget-toggle-btn:hover img {
+            filter: brightness(0) invert(0.76);
+            transform: scale(1.06);
+        }
+
+        #link-area button.widget-toggle-btn:hover {
+            background: linear-gradient(180deg, rgba(50, 50, 50, 0.96), rgba(33, 33, 33, 0.99));
+            border-color: rgba(255, 255, 255, 0.14);
+            color: #f1f1f1;
+            transform: translateY(-1px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        #link-area button.widget-toggle-btn:active {
+            transform: translateY(0);
+            color: #e0e0e0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 7px 10px rgba(0, 0, 0, 0.2);
         }
 
         #link-area button.widget-toggle-btn[aria-expanded="true"] {
+            background: linear-gradient(180deg, rgba(50, 50, 50, 0.96), rgba(33, 33, 33, 0.99));
+            border-color: rgba(255, 255, 255, 0.14);
+            color: #f1f1f1;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 14px rgba(0, 0, 0, 0.22);
         }
 
         #link-area button.widget-toggle-btn[aria-expanded="true"] img {
+            filter: brightness(0) invert(0.76);
         }
 
         #link-area button:focus-visible img,
+        #link-area button:focus-visible .footer-icon,
         #link-area a:focus-visible img {
             outline: 2px solid #f1f1f1;
             outline-offset: 2px;
@@ -1046,40 +1210,35 @@
             letter-spacing: 0.08em;
         }
 
-        .weather-meta-label::before {
-            content: '';
-            position: relative;
+        .weather-meta-icon {
             flex: 0 0 auto;
-        }
-
-        .weather-meta-label[data-icon="feels"]::before {
-            width: 7px;
-            height: 11px;
-            border: 1.5px solid currentColor;
-            border-radius: 999px;
-            box-sizing: border-box;
-            background:
-                radial-gradient(circle, currentColor 0 2px, transparent 2.2px) center 7px / 5px 5px no-repeat;
-        }
-
-        .weather-meta-label[data-icon="humidity"]::before {
-            width: 9px;
             height: 12px;
-            background: currentColor;
-            clip-path: polygon(50% 0, 82% 38%, 94% 62%, 84% 84%, 66% 100%, 34% 100%, 16% 84%, 6% 62%, 18% 38%);
+            width: 11px;
+            display: block;
+            background-color: currentColor;
+            mask-position: center;
+            mask-repeat: no-repeat;
+            mask-size: contain;
+            -webkit-mask-position: center;
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-size: contain;
             opacity: 0.9;
         }
 
-        .weather-meta-label[data-icon="rain"]::before {
-            width: 11px;
-            height: 9px;
-            border-radius: 999px 999px 6px 6px;
-            background:
-                radial-gradient(circle at 28% 35%, currentColor 0 2px, transparent 2.2px),
-                radial-gradient(circle at 52% 28%, currentColor 0 2.5px, transparent 2.7px),
-                radial-gradient(circle at 76% 40%, currentColor 0 2px, transparent 2.2px),
-                linear-gradient(currentColor, currentColor) center 75% / 9px 3px no-repeat;
-            opacity: 0.9;
+        .weather-meta-icon.temperature {
+            -webkit-mask-image: url("src/icon/icon-temperature.svg");
+            mask-image: url("src/icon/icon-temperature.svg");
+        }
+
+        .weather-meta-icon.humidity {
+            -webkit-mask-image: url("src/icon/icon-humidity.svg");
+            mask-image: url("src/icon/icon-humidity.svg");
+        }
+
+        .weather-meta-icon.cloud {
+            -webkit-mask-image: url("src/icon/icon-cloud.svg");
+            mask-image: url("src/icon/icon-cloud.svg");
+            width: 12px;
         }
 
         .weather-meta-value {
@@ -1606,7 +1765,16 @@
         }
 
         #editor {
-            --editor-hidden-cover-height: 374px;
+            --roll-head-size: 10px;
+            --launcher-main-height: 400px;
+            --roll-requested-sheet-size: 400px;
+            --roll-available-sheet-size: max(0px, calc(100vh - var(--launcher-main-height) - var(--roll-head-size) - 4px));
+            --roll-target-sheet-size: min(var(--roll-requested-sheet-size), var(--roll-available-sheet-size));
+            --roll-open-height: calc(var(--roll-target-sheet-size) + var(--roll-head-size));
+            --roll-closed-head-top: calc(var(--roll-open-height) - var(--roll-head-size));
+            --roll-head-top: var(--roll-closed-head-top);
+            --roll-duration: 0.92s;
+            --roll-ease: cubic-bezier(0.25, 0.8, 0.2, 1);
             position: fixed;
             display: flex;
             justify-content: flex-start;
@@ -1614,29 +1782,50 @@
             gap: 14px;
             left: 0;
             right: 0;
-            bottom: 50px;
+            bottom: 400px;
             width: 100%;
-            height: var(--editor-hidden-cover-height);
-            padding: 20px 24px calc(var(--editor-hidden-cover-height) + 8px);
+            height: var(--roll-open-height);
+            padding: 0;
             box-sizing: border-box;
             overflow: hidden;
             border-radius: 0;
-            background: linear-gradient(180deg, rgba(28, 28, 28, 0.9), rgba(16, 16, 16, 0.9));
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            border-bottom: none;
-            box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.1);
-            background-clip: padding-box;
-            opacity: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            opacity: 0.99;
             pointer-events: none;
-            transform-origin: center bottom;
-            transform: translateY(50px);
-            clip-path: inset(6px 0 0 0 round 28px 28px 0 0);
+            z-index: 17;
             transition:
-                height 0.38s cubic-bezier(0.2, 0.78, 0.18, 1),
-                opacity 0.24s ease,
-                transform 0.38s cubic-bezier(0.2, 0.78, 0.18, 1),
-                clip-path 0.38s cubic-bezier(0.2, 0.78, 0.18, 1);
-            z-index: 14;
+                height var(--roll-duration) var(--roll-ease),
+                opacity 0.22s ease;
+        }
+
+        #editor[data-size="s"] {
+            --roll-requested-sheet-size: 100px;
+        }
+
+        #editor[data-size="m"] {
+            --roll-requested-sheet-size: 400px;
+        }
+
+        #editor[data-size="l"] {
+            --roll-requested-sheet-size: 800px;
+        }
+
+        #editor-s-surface {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, #1f1f1f 0%, #141414 100%);
+            clip-path: inset(calc(var(--roll-head-top) + var(--roll-head-size)) 0 0 0 round 0 0 0 0);
+            transition: clip-path var(--roll-duration) var(--roll-ease);
+            z-index: 0;
+            pointer-events: none;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        #editor::after {
+            content: none;
+            pointer-events: none;
         }
 
         #editor::before {
@@ -1644,41 +1833,50 @@
             position: absolute;
             left: 0;
             right: 0;
-            top: 0;
-            height: 18px;
+            top: var(--roll-head-top);
+            height: var(--roll-head-size);
+            z-index: 2;
+            pointer-events: none;
             background: #1c1c1c;
-            z-index: 1;
-            pointer-events: none;
+            transition:
+                top var(--roll-duration) var(--roll-ease),
+                background 0.22s ease;
         }
 
-        #editor::after {
-            content: none;
-            z-index: 0;
-            pointer-events: none;
+        #editor.open::before,
+        #editor.closing::before {
+            background: linear-gradient(
+                90deg,
+                #2b171b 0%,
+                #2e2417 16%,
+                #1c2d1a 34%,
+                #183036 50%,
+                #20284a 68%,
+                #321c2f 84%,
+                #2b171b 100%
+            );
+            background-size: 220% 100%;
+            animation: search-rgb-border-flow 4.8s linear infinite;
         }
 
-        #editor > * {
+        #editor:not(.open):not(.closing)::before {
+            animation: none;
+            background: #1c1c1c;
+        }
+
+        #editor > *:not(#editor-s-surface) {
             position: relative;
             z-index: 1;
         }
 
         #editor.open {
-            height: min(720px, calc(100vh - 50px));
-            opacity: 0.98;
+            --roll-head-top: 0px;
             pointer-events: auto;
-            transform: translateY(0);
-            clip-path: inset(0 0 0 0 round 0 0 0 0);
         }
 
         #editor.closing {
-            opacity: 0.7;
+            --roll-head-top: var(--roll-closed-head-top);
             pointer-events: none;
-            transform: translateY(116px);
-            clip-path: inset(6px 0 0 0 round 0 0 0 0);
-        }
-
-        #editor:not(.open):not(.closing) {
-            clip-path: inset(6px 0 0 0 round 0 0 0 0);
         }
 
         #editor[data-panel="settings"] #editor-widget-shell,
@@ -1693,6 +1891,7 @@
 
         #editor[data-panel="weather"] #editor-widget-shell,
         #editor[data-panel="quick"] #editor-widget-shell,
+        #editor[data-panel="compact"] #editor-widget-shell,
         #editor[data-panel="shutdown"] #editor-widget-shell {
             display: flex;
         }
@@ -1702,13 +1901,41 @@
             flex: 1;
             min-height: 0;
             flex-direction: column;
-            gap: 12px;
-            padding: 18px 10px 8px;
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 0.16s ease, transform 0.24s ease;
+            gap: 14px;
+            padding: 24px 18px 14px;
+            opacity: 0;
+            transform: translateY(14px);
+            pointer-events: none;
+            transition:
+                opacity 0.24s ease,
+                transform 0.32s ease,
+                padding 0.28s ease,
+                gap 0.28s ease;
             position: relative;
             z-index: 2;
+        }
+
+        #editor[data-size="s"] #editor-widget-shell {
+            gap: 8px;
+            padding: 10px 12px 8px;
+        }
+
+        #editor[data-panel="compact"] #editor-widget-topbar {
+            display: none;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-topbar {
+            display: none;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-shell {
+            gap: 0;
+            padding: 10px 14px 8px;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body {
+            overflow: visible;
+            padding: 2px 0 4px;
         }
 
         #editor-widget-topbar {
@@ -1716,7 +1943,7 @@
             justify-content: flex-start;
             align-items: center;
             gap: 12px;
-            padding: 4px 4px 0;
+            padding: 6px 6px 0;
         }
 
         #editor-widget-title {
@@ -1738,16 +1965,39 @@
             flex: 1;
             min-height: 0;
             overflow: hidden;
-            padding: 4px 4px 2px;
+            padding: 10px 10px 8px;
+            transition: padding 0.28s ease;
+        }
+
+        #editor[data-size="s"] #editor-widget-title {
+            font-size: 15px;
+        }
+
+        #editor[data-size="s"] #editor-widget-caption {
+            font-size: 10px;
+        }
+
+        #editor[data-size="s"] #editor-widget-body {
+            overflow: visible;
+            padding: 6px 6px 4px;
         }
 
         #setting-container,
         .btn-row {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 0.16s ease, transform 0.24s ease;
+            opacity: 0;
+            transform: translateY(14px);
+            pointer-events: none;
+            transition: opacity 0.24s ease, transform 0.32s ease;
             position: relative;
             z-index: 2;
+        }
+
+        #editor.open.open-ready #editor-widget-shell,
+        #editor.open.open-ready #setting-container,
+        #editor.open.open-ready .btn-row {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
         #editor.closing #editor-widget-shell,
@@ -1794,6 +2044,142 @@
         #editor-widget-body > .embedded-widget {
             min-height: 100%;
             min-width: 0;
+        }
+
+        #footer-compact-panel {
+            display: none;
+        }
+
+        #footer-compact-panel.embedded-widget {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            gap: 0;
+            padding: 0;
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: none;
+        }
+
+        #footer-compact-panel.embedded-widget::-webkit-scrollbar {
+            display: none;
+        }
+
+        .compact-panel-quick-list {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+            min-width: 0;
+            padding: 6px 8px 10px;
+            margin: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            box-sizing: border-box;
+        }
+
+        .compact-panel-quick-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .compact-panel-icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: auto;
+            min-width: 122px;
+            min-height: 58px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #a9a9a9;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease;
+            cursor: pointer;
+            font: inherit;
+            text-align: center;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+
+        .compact-panel-icon-button:hover {
+            background: linear-gradient(180deg, rgba(50, 50, 50, 0.96), rgba(33, 33, 33, 0.99));
+            border-color: rgba(255, 255, 255, 0.14);
+            color: #f1f1f1;
+            transform: translateY(-1px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 18px rgba(0, 0, 0, 0.22);
+        }
+
+        .compact-panel-icon-button:active {
+            transform: translateY(0);
+            color: #e0e0e0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        .compact-panel-icon-button:focus-visible {
+            outline: 2px solid rgba(220, 220, 220, 0.82);
+            outline-offset: 2px;
+        }
+
+        .compact-panel-icon-button .footer-icon {
+            width: 15px;
+            height: 15px;
+        }
+
+        .compact-panel-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: #222222;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 14px rgba(0, 0, 0, 0.22);
+            flex: 0 0 auto;
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .compact-panel-icon img {
+            width: 14px;
+            height: 14px;
+            display: block;
+            filter: brightness(0) invert(0.72);
+            transition: transform 0.18s ease, filter 0.18s ease;
+        }
+
+        .compact-panel-icon-button:hover .compact-panel-icon {
+            background: #2b2b2b;
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 16px rgba(0, 0, 0, 0.24);
+            transform: scale(1.06);
+        }
+
+        .compact-panel-icon-button:hover .compact-panel-icon img {
+            transform: scale(1.06);
+            filter: brightness(0) invert(0.86);
+        }
+
+        .compact-panel-icon-button:active .compact-panel-icon img {
+            transform: scale(0.98);
+            filter: brightness(0) invert(0.78);
+        }
+
+        .compact-panel-item-label {
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+            color: inherit;
+            text-align: center;
+            white-space: nowrap;
         }
 
         #editor-widget-body #weather-widget.embedded-widget {
@@ -2014,6 +2400,7 @@
         #editor-widget-body #quick-widget.embedded-widget .quick-link-icon img {
             width: 18px;
             height: 18px;
+            filter: brightness(0) invert(0.72);
         }
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-icon-text {
@@ -2038,58 +2425,173 @@
 
         #editor-widget-body #quick-widget.embedded-widget .quick-link-button:hover .quick-link-icon img {
             transform: none;
-            filter: brightness(1.2);
+            filter: brightness(0) invert(0.86);
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget {
+            justify-content: center;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-grid {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+            margin-top: 0;
+            padding: 6px 8px 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            box-sizing: border-box;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 122px;
+            min-height: 58px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            box-shadow: none;
+            text-align: center;
+            color: #a9a9a9;
+            transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-label {
+            align-self: center;
+            font-size: 12px;
+            line-height: 1.15;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-meta {
+            display: none;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 9px;
+            background: #222222;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-icon img {
+            width: 14px;
+            height: 14px;
+            filter: brightness(0) invert(0.72);
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-icon-text {
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            font-size: 7px;
+            border-radius: 6px;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-button:hover {
+            background: linear-gradient(180deg, rgba(50, 50, 50, 0.96), rgba(33, 33, 33, 0.99));
+            border-color: rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 18px rgba(0, 0, 0, 0.22);
+            color: #f1f1f1;
+            transform: translateY(-1px);
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-button:hover .quick-link-icon {
+            background: #2b2b2b;
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 16px rgba(0, 0, 0, 0.24);
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-button:hover .quick-link-icon img {
+            transform: scale(1.06);
+            filter: brightness(0) invert(0.86);
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 14px rgba(0, 0, 0, 0.2);
+            color: #e0e0e0;
+        }
+
+        #editor[data-panel="quick"][data-size="s"] #editor-widget-body #quick-widget.embedded-widget .quick-link-button:active .quick-link-icon img {
+            transform: scale(0.98);
+            filter: brightness(0) invert(0.78);
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget {
             display: flex;
             flex-direction: column;
-            gap: 0;
+            gap: 10px;
             max-width: none;
             margin: 0;
+            padding: 2px 4px 0;
             justify-content: space-between;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-top {
-            grid-template-columns: minmax(0, 1fr) minmax(240px, 0.78fr);
-            gap: 14px;
+            grid-template-columns: minmax(0, 1fr) minmax(248px, 0.9fr);
+            gap: 12px;
+            margin-top: 0;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-presets .shutdown-preset-button {
-            min-height: 60px;
+            min-height: 58px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-preset-value {
-            font-size: 16px;
+            font-size: 15px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-time-display {
             width: 72px;
             height: 78px;
-            font-size: 42px;
-        }
-
-        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-time-divider {
             font-size: 30px;
         }
 
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-time-divider {
+            font-size: 24px;
+        }
+
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status {
-            min-height: 54px;
+            min-height: 52px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status-message {
-            font-size: 12px;
+            font-size: 11px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions {
             display: flex;
             align-items: center;
+            gap: 10px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action {
-            width: 104px;
-            min-width: 104px;
-            height: 34px;
+            width: auto;
+            min-width: 110px;
+            height: 36px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions .shutdown-scheduler-status {
+            width: auto;
+            min-width: 0;
+            max-width: none;
+            flex: 1 1 auto;
         }
 
         @media (max-width: 980px) {
@@ -2111,17 +2613,25 @@
             }
 
             #editor-widget-body #shutdown-scheduler.embedded-widget {
-                gap: 18px;
+                gap: 12px;
+                padding: 2px 4px 0;
             }
 
             #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-top,
             .shutdown-scheduler-top {
                 grid-template-columns: 1fr;
+                gap: 12px;
             }
 
             #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions,
             .shutdown-scheduler-actions {
-                grid-template-columns: 1fr;
+                flex-wrap: wrap;
+            }
+
+            #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-actions .shutdown-scheduler-status,
+            .shutdown-scheduler-actions .shutdown-scheduler-status {
+                width: 100%;
+                flex: 1 1 100%;
             }
         }
 
@@ -2142,31 +2652,44 @@
         #setting-container {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 10px;
             min-height: 0;
             flex: 1;
             min-width: 0;
-            padding: 2px 6px 0;
+            padding: 14px 26px 12px;
             box-sizing: border-box;
         }
 
         #setting-topbar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            margin-top: 10px;
-            padding: 0 4px;
+            align-items: flex-end;
+            gap: 16px;
+            margin-top: 0;
+            padding: 6px 6px 10px;
+            border-bottom: none;
         }
 
         #setting-category {
-            display: flex;
+            display: inline-flex;
+            align-items: center;
             gap: 10px;
             min-width: 0;
-            flex: 1;
+            flex: 0 1 auto;
+            width: max-content;
+            max-width: min(100%, 760px);
             box-sizing: border-box;
             overflow-x: auto;
-            padding-bottom: 2px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(21, 21, 21, 0.96), rgba(15, 15, 15, 0.98));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            scrollbar-width: none;
+        }
+
+        #setting-category::-webkit-scrollbar {
+            display: none;
         }
 
         .setting-category-button {
@@ -2177,30 +2700,34 @@
             gap: 0;
             flex: 0 0 auto;
             min-width: 92px;
-            height: 36px;
-            padding: 0 14px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.025);
-            color: #dcdcdc;
+            height: 40px;
+            padding: 0 16px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: transparent;
+            color: #8d8d8d;
             text-align: center;
             cursor: pointer;
-            transition: 0.2s all ease;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
             box-sizing: border-box;
             appearance: none;
             white-space: nowrap;
         }
 
         .setting-category-button:hover {
-            border-color: rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: #cfcfcf;
+            transform: translateY(-1px);
         }
 
         .setting-category-button.select-category {
-            background: #dcdcdc;
-            color: #151515;
-            border-color: rgba(220, 220, 220, 0.18);
-            box-shadow: none;
+            background: linear-gradient(180deg, rgba(72, 72, 72, 0.96), rgba(44, 44, 44, 0.98));
+            color: #f3f3f3;
+            border-color: rgba(255, 255, 255, 0.14);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.03);
         }
 
         .setting-category-button[data-dirty="true"]::after {
@@ -2235,39 +2762,72 @@
             min-width: 0;
             min-height: 0;
             flex-direction: column;
-            padding: 0 2px 0 0;
+            padding: 0 8px 0 6px;
             position: relative;
         }
 
         #setting-status {
-            flex: 0 0 auto;
-            min-width: 102px;
-            padding: 7px 10px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.04);
-            color: #c7c7c7;
-            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            min-width: 132px;
+            max-width: 220px;
+            min-height: 40px;
+            padding: 0 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            color: #b9b9b9;
+            font-size: 11px;
             font-weight: 700;
-            text-align: center;
+            text-align: left;
             box-sizing: border-box;
-            line-height: 1.2;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        #setting-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.38);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+            flex: 0 0 auto;
         }
 
         #setting-status[data-tone="warning"] {
-            background: rgba(246, 198, 91, 0.14);
-            color: #f6c65b;
+            color: #d8c29e;
+            border-color: rgba(106, 79, 37, 0.34);
+            background:
+                linear-gradient(90deg, rgba(106, 79, 37, 0.18), transparent 30%),
+                rgba(255, 255, 255, 0.03);
         }
 
         #setting-status[data-tone="success"] {
-            background: rgba(117, 204, 145, 0.16);
-            color: #8ce3a4;
+            color: #c7d7bd;
+            border-color: rgba(65, 90, 42, 0.34);
+            background:
+                linear-gradient(90deg, rgba(65, 90, 42, 0.16), transparent 30%),
+                rgba(255, 255, 255, 0.03);
+        }
+
+        #setting-status[data-tone="warning"]::before {
+            background: #bc9760;
+            box-shadow: 0 0 0 4px rgba(106, 79, 37, 0.2);
+        }
+
+        #setting-status[data-tone="success"]::before {
+            background: #87a56d;
+            box-shadow: 0 0 0 4px rgba(65, 90, 42, 0.2);
         }
 
         #setting-row {
             flex: 1;
             min-height: 0;
             overflow-y: auto;
-            padding: 0 4px 10px 0;
+            padding: 8px 8px 10px 2px;
         }
 
         .setting-grid {
@@ -2275,7 +2835,7 @@
             grid-template-columns: repeat(auto-fill, 118px);
             justify-content: flex-start;
             gap: 8px;
-            padding: 0 2px 6px;
+            padding: 0 4px 4px;
         }
 
         .setting-grid[data-category="GALLERY"] {
@@ -2303,17 +2863,19 @@
             min-height: 172px;
             padding: 10px 8px;
             border-radius: 14px;
-            background-color: #262626;
+            background:
+                linear-gradient(180deg, rgba(42, 42, 42, 0.96), rgba(28, 28, 28, 0.98));
             background-image: none;
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 1px 0 rgba(0, 0, 0, 0.12);
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 10px 20px rgba(0, 0, 0, 0.14);
             color: #dcdcdc;
             cursor: pointer;
             text-align: left;
             box-sizing: border-box;
             appearance: none;
+            transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
         }
 
         .setting-grid[data-category="GALLERY"] .setting-item-card,
@@ -2345,14 +2907,18 @@
 
         .setting-item-card:hover,
         .setting-add-card:hover {
-            border-color: rgba(255, 255, 255, 0.18);
-            background-color: #303030;
+            border-color: rgba(255, 255, 255, 0.14);
+            background:
+                linear-gradient(180deg, rgba(50, 50, 50, 0.98), rgba(32, 32, 32, 0.98));
             background-image: none;
+            transform: translateY(-1px);
         }
 
         .setting-item-card.select-item {
-            border-color: rgba(241, 241, 241, 0.34);
-            box-shadow: inset 0 0 0 1px rgba(241, 241, 241, 0.08);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+                0 12px 22px rgba(0, 0, 0, 0.18);
         }
 
         .setting-item-card-index {
@@ -2362,7 +2928,7 @@
             width: 24px;
             height: 24px;
             border-radius: 10px;
-            background: #111;
+            background: rgba(14, 14, 14, 0.96);
             color: #f0f0f0;
             font-size: 10px;
             font-weight: 900;
@@ -2382,7 +2948,7 @@
             padding: 0;
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 999px;
-            background: rgba(0, 0, 0, 0.14);
+            background: rgba(255, 255, 255, 0.03);
             color: #d8d8d8;
             cursor: pointer;
             appearance: none;
@@ -2410,7 +2976,7 @@
 
         .setting-item-card-delete:hover {
             background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.14);
             color: #f1f1f1;
         }
 
@@ -2444,7 +3010,7 @@
             height: 48px;
             border-radius: 12px;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.035);
         }
 
         .setting-card-preview.gallery-preview {
@@ -2463,7 +3029,7 @@
             height: 100%;
             padding: 5px;
             box-sizing: border-box;
-            background: #333;
+            background: linear-gradient(180deg, rgba(58, 58, 58, 0.96), rgba(36, 36, 36, 0.98));
             border-radius: 10px;
         }
 
@@ -2478,7 +3044,7 @@
             height: 100%;
             border-radius: 8px;
             overflow: hidden;
-            background: rgba(28, 28, 28, 0.5);
+            background: rgba(18, 18, 18, 0.5);
         }
 
         .setting-preview-gallery-media img {
@@ -2597,7 +3163,7 @@
             color: #cfcfcf;
             font-size: 10px;
             font-weight: 700;
-            background: linear-gradient(45deg, #262626 25%, #2d2d2d 0, #2d2d2d 50%, #262626 0, #262626 75%, #2d2d2d 0);
+            background: linear-gradient(45deg, #262626 25%, #2f2f2f 0, #2f2f2f 50%, #262626 0, #262626 75%, #2f2f2f 0);
             background-size: 5px 5px;
             box-sizing: border-box;
         }
@@ -2683,7 +3249,7 @@
         #slot-editor {
             position: absolute;
             inset: 0;
-            padding: 0;
+            padding: 12px 14px 10px;
             border-radius: 0;
             background: transparent;
             border: none;
@@ -2697,7 +3263,7 @@
         #slot-editor.open {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
             min-height: 100%;
         }
 
@@ -2731,8 +3297,8 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            padding: 2px 0 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 8px 2px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .slot-editor-title {
@@ -2745,18 +3311,19 @@
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            min-width: 56px;
-            height: 28px;
-            padding: 0 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.04);
+            min-width: 64px;
+            height: 32px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(54, 54, 54, 0.9), rgba(34, 34, 34, 0.94));
             color: #f1f1f1;
             cursor: pointer;
             appearance: none;
             box-sizing: border-box;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
         }
 
         .slot-editor-fields {
@@ -2766,13 +3333,13 @@
             min-height: 0;
             flex: 1;
             overflow: hidden;
-            padding: 10px 0 0;
+            padding: 14px 4px 0;
         }
 
         .slot-editor-layout {
             display: grid;
             grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
-            gap: 24px;
+            gap: 20px;
             min-height: 0;
             height: 100%;
             align-items: stretch;
@@ -2792,7 +3359,7 @@
 
         .slot-editor-side-panel {
             padding-right: 18px;
-            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .slot-editor-panel-header {
@@ -2801,7 +3368,7 @@
             align-items: flex-start;
             gap: 4px;
             padding: 0 0 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .slot-editor-panel-title {
@@ -2825,7 +3392,7 @@
             flex: 1;
             justify-content: flex-start;
             overflow: visible;
-            padding: 8px 0 12px;
+            padding: 12px 2px 14px;
         }
 
         .slot-editor-panel-body .setting-field,
@@ -2840,22 +3407,23 @@
         }
 
         .setting-field-label {
-            color: #9f9f9f;
-            font-size: 10px;
+            color: #a3a3a3;
+            font-size: 11px;
             font-weight: 700;
         }
 
         .setting-field input {
-            height: 36px;
-            padding: 0 11px;
+            height: 40px;
+            padding: 0 13px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border-radius: 14px;
             background: rgba(255, 255, 255, 0.03);
             color: #f1f1f1;
-            font-size: 11px;
+            font-size: 12px;
             font-family: 'Noto Sans KR', sans-serif;
-            font-weight: 500;
+            font-weight: 600;
             box-sizing: border-box;
+            transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
         }
 
         .setting-field input::placeholder {
@@ -2869,12 +3437,12 @@
             justify-content: center;
             align-items: center;
             align-self: flex-start;
-            min-width: 92px;
-            height: 36px;
-            padding: 0 12px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            background: #262626;
+            min-width: 98px;
+            height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(52, 52, 52, 0.92), rgba(34, 34, 34, 0.96));
             color: #f1f1f1;
             cursor: pointer;
             box-sizing: border-box;
@@ -2882,7 +3450,8 @@
             line-height: 1;
             appearance: none;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 800;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
         }
 
         .slot-editor-actions {
@@ -2891,8 +3460,8 @@
             align-items: center;
             gap: 8px;
             margin-top: auto;
-            padding: 12px 0 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 14px 2px 2px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .slot-editor-actions > div {
@@ -2905,23 +3474,24 @@
             justify-content: center;
             align-items: center;
             min-width: 64px;
-            height: 30px;
-            padding: 0 10px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.03);
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(54, 54, 54, 0.9), rgba(34, 34, 34, 0.94));
             color: #f1f1f1;
             cursor: pointer;
             appearance: none;
             box-sizing: border-box;
-            font-size: 10px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: 800;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
         }
 
         .slot-secondary-button.danger-button {
-            color: #ffb6b6;
-            border-color: rgba(255, 140, 140, 0.2);
-            background: rgba(255, 110, 110, 0.06);
+            color: #dfc1c7;
+            border-color: rgba(95, 36, 48, 0.28);
+            background: linear-gradient(180deg, rgba(59, 43, 47, 0.92), rgba(43, 33, 35, 0.96));
         }
 
         @media (max-width: 1120px) {
@@ -2940,58 +3510,80 @@
 
         .btn-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-top: 0;
+            margin: 0 18px 14px;
             flex: 0 0 auto;
-            padding: 12px 10px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            min-height: 0;
+            padding: 12px 6px 10px;
+            gap: 8px;
+            border-top: none;
+            box-sizing: border-box;
         }
 
         .btn-row > div {
             display: flex;
             gap: 8px;
+            align-items: center;
+        }
+
+        .btn-row > div:last-child {
+            margin-left: auto;
+        }
+
+        .btn-row .setting-action-button {
+            min-width: 64px;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 12px;
+            box-shadow: none;
         }
 
         .setting-action-button {
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            min-width: 84px;
-            height: 32px;
-            padding: 0 12px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(255, 255, 255, 0.04);
+            min-width: 96px;
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(54, 54, 54, 0.92), rgba(34, 34, 34, 0.96));
             color: #f1f1f1;
             font-size: 11px;
-            font-weight: 900;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            text-transform: none;
             cursor: pointer;
-            transition: 0.2s all ease;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
             box-sizing: border-box;
             text-align: center;
             line-height: 1;
             appearance: none;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 6px 14px rgba(0, 0, 0, 0.18);
         }
 
         .setting-action-button:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(64, 64, 64, 0.96), rgba(40, 40, 40, 0.98));
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
         }
 
         .setting-action-button.primary-button {
-            background: #f1f1f1;
-            color: #151515;
-            border-color: #f1f1f1;
+            background: linear-gradient(180deg, rgba(235, 235, 235, 0.98), rgba(206, 206, 206, 0.98));
+            color: #171717;
+            border-color: rgba(255, 255, 255, 0.18);
         }
 
         .setting-action-button.primary-button:hover {
-            background: #ffffff;
+            background: linear-gradient(180deg, rgba(247, 247, 247, 1), rgba(220, 220, 220, 1));
         }
 
         .setting-action-button.danger-button {
-            color: #ffb6b6;
-            border-color: rgba(255, 140, 140, 0.2);
-            background: rgba(255, 110, 110, 0.06);
+            color: #dfc1c7;
+            border-color: rgba(95, 36, 48, 0.28);
+            background: linear-gradient(180deg, rgba(59, 43, 47, 0.92), rgba(43, 33, 35, 0.96));
         }
 
         .setting-category-button:focus-visible,
@@ -3001,7 +3593,7 @@
         .file-item:focus-visible,
         .slot-secondary-button:focus-visible,
         .setting-field input:focus-visible {
-            outline: 2px solid #f1f1f1;
+            outline: 2px solid rgba(220, 220, 220, 0.82);
             outline-offset: 2px;
         }
 
@@ -3090,9 +3682,19 @@
 
         .shutdown-scheduler-top {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(220px, 0.82fr);
-            gap: 14px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 12px;
             margin-top: 12px;
+        }
+
+        .shutdown-scheduler-top > div {
+            min-width: 0;
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            box-shadow: none;
+            box-sizing: border-box;
         }
 
         .shutdown-scheduler-section-label {
@@ -3110,7 +3712,7 @@
         .shutdown-scheduler-presets {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
+            gap: 8px;
             margin-top: 0;
         }
 
@@ -3118,24 +3720,31 @@
             display: grid;
             justify-items: center;
             align-content: center;
-            min-height: 58px;
-            padding: 6px 5px;
+            min-height: 56px;
+            padding: 6px 6px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: linear-gradient(180deg, rgba(37, 37, 37, 0.95), rgba(29, 29, 29, 0.98));
-            color: #f1f1f1;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #dedede;
+            box-shadow: none;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
+        }
+
+        .shutdown-scheduler-presets .shutdown-preset-button:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-1px);
         }
 
         .shutdown-preset-value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             line-height: 1;
         }
 
         .shutdown-preset-unit {
-            margin-top: 4px;
-            color: #9d9d9d;
+            margin-top: 3px;
+            color: #9b9b9b;
             font-size: 8px;
             font-weight: 700;
             letter-spacing: 0.14em;
@@ -3143,29 +3752,30 @@
         }
 
         .shutdown-preset-button.active {
-            border-color: rgba(117, 204, 255, 0.56);
-            background: linear-gradient(180deg, rgba(28, 41, 49, 0.98), rgba(24, 34, 39, 0.98));
-            box-shadow:
-                inset 0 0 0 1px rgba(117, 204, 255, 0.14),
-                0 0 0 1px rgba(117, 204, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.24);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
         .shutdown-preset-button.active .shutdown-preset-value,
         .shutdown-preset-button.active .shutdown-preset-unit {
-            color: #75ccff;
+            color: #f1f1f1;
         }
 
         .shutdown-scheduler-manual {
             min-width: 0;
+            display: flex;
+            align-items: stretch;
         }
 
         .shutdown-scheduler-adjuster {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             margin-top: 0;
             min-height: 100%;
+            width: 100%;
         }
 
         .shutdown-scheduler-time-column {
@@ -3188,39 +3798,46 @@
 
         .shutdown-step-button {
             width: 30px;
-            height: 18px;
-            border: none;
-            background: transparent;
-            color: #b5b5b5;
-            font-size: 14px;
+            height: 20px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.035);
+            color: #bcbcbc;
+            font-size: 12px;
             line-height: 1;
+            transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
         }
 
         .shutdown-step-button:hover {
-            color: #ececec;
+            color: #f1f1f1;
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
         }
 
         .shutdown-time-display {
             display: inline-block;
-            width: 68px;
-            height: 74px;
+            width: 72px;
+            height: 78px;
             padding: 0;
-            border-radius: 0;
-            border: none;
-            background: #070707;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(180deg, rgba(32, 32, 32, 0.98), rgba(18, 18, 18, 0.98));
             color: #f1f1f1;
-            font-size: 40px;
-            font-weight: 300;
+            font-size: 30px;
+            font-weight: 700;
             line-height: 1;
             text-align: center;
             font-variant-numeric: tabular-nums;
-            letter-spacing: -0.05em;
+            letter-spacing: -0.03em;
             box-sizing: border-box;
             appearance: textfield;
+            box-shadow: none;
         }
 
         .shutdown-time-display:focus {
-            outline: 1px solid rgba(120, 200, 255, 0.55);
+            outline: 2px solid rgba(220, 220, 220, 0.72);
+            outline-offset: 1px;
         }
 
         .shutdown-time-display::-webkit-outer-spin-button,
@@ -3230,38 +3847,45 @@
         }
 
         .shutdown-time-divider {
-            color: #72b8e2;
-            font-size: 28px;
-            font-weight: 400;
+            color: #b7b7b7;
+            font-size: 24px;
+            font-weight: 700;
             line-height: 1;
-            transform: translateY(3px);
+            transform: translateY(2px);
         }
 
         .shutdown-scheduler-status {
             min-height: 52px;
             margin-top: 0;
-            padding: 8px 10px;
-            border-left: 4px solid #78c8ff;
-            background: #080808;
-            color: #d4d4d4;
-            font-size: 10px;
-            font-weight: 500;
-            line-height: 1.45;
+            padding: 9px 11px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #cfcfcf;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.35;
             box-sizing: border-box;
         }
 
         .shutdown-scheduler-status[data-state="error"] {
-            color: #ffb8b8;
-            border-left-color: #ff8b8b;
+            color: #e6c4c8;
+            border-color: rgba(182, 124, 130, 0.42);
+            background:
+                linear-gradient(90deg, rgba(182, 124, 130, 0.18), transparent 36%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018));
         }
 
         .shutdown-scheduler-status[data-state="success"] {
-            color: #9fd9ff;
-            border-left-color: #78c8ff;
+            color: #c7d7bd;
+            border-color: rgba(65, 90, 42, 0.34);
+            background:
+                linear-gradient(90deg, rgba(65, 90, 42, 0.16), transparent 36%),
+                rgba(255, 255, 255, 0.03);
         }
 
         .shutdown-scheduler-status-label {
-            color: #8c8c8c;
+            color: #9f9f9f;
             font-size: 8px;
             font-weight: 700;
             letter-spacing: 0.1em;
@@ -3270,20 +3894,21 @@
         }
 
         .shutdown-scheduler-status-message {
-            margin-top: 5px;
+            margin-top: 4px;
             color: inherit;
-            font-size: 12px;
-            font-weight: 800;
-            line-height: 1.2;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
             font-variant-numeric: tabular-nums;
-            white-space: nowrap;
+            white-space: normal;
         }
 
         .shutdown-scheduler-actions .shutdown-scheduler-status {
-            width: 300px;
-            min-width: 300px;
-            max-width: 300px;
-            margin-right: auto;
+            width: auto;
+            min-width: 0;
+            max-width: none;
+            margin-right: 0;
+            flex: 1 1 auto;
         }
 
         .shutdown-scheduler-actions {
@@ -3291,13 +3916,8 @@
             align-items: center;
             gap: 8px;
             margin-top: auto;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .shutdown-scheduler-actions .shutdown-scheduler-status {
-            width: min(220px, 100%);
-            margin-right: auto;
+            padding-top: 10px;
+            border-top: none;
         }
 
         .shutdown-scheduler-input {
@@ -3314,29 +3934,36 @@
         }
 
         .shutdown-scheduler-action {
-            width: 112px;
-            min-width: 112px;
-            height: 36px;
+            width: auto;
+            min-width: 98px;
+            height: 34px;
             padding: 0 12px;
-            border-radius: 0;
+            border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.05);
-            color: #f1f1f1;
-            font-size: 9px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            background: linear-gradient(180deg, rgba(52, 52, 52, 0.92), rgba(34, 34, 34, 0.96));
+            color: #e8e8e8;
+            font-size: 11px;
+            letter-spacing: -0.01em;
+            text-transform: none;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
+        }
+
+        .shutdown-scheduler-action:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(180deg, rgba(61, 61, 61, 0.96), rgba(40, 40, 40, 0.98));
+            transform: translateY(-1px);
         }
 
         .shutdown-scheduler-action.primary {
-            background: #f1f1f1;
-            border-color: #f1f1f1;
+            background: linear-gradient(180deg, rgba(236, 236, 236, 0.98), rgba(206, 206, 206, 0.98));
+            border-color: rgba(255, 255, 255, 0.2);
             color: #151515;
         }
 
         .shutdown-scheduler-action.danger {
-            color: #f18a8a;
-            border-color: rgba(241, 138, 138, 0.28);
-            background: rgba(91, 45, 45, 0.16);
+            color: #e6c4c8;
+            border-color: rgba(182, 124, 130, 0.36);
+            background: linear-gradient(180deg, rgba(74, 50, 54, 0.9), rgba(53, 36, 39, 0.94));
         }
 
     </style>
@@ -3349,61 +3976,55 @@
             <div id="center-box">
                 <div id="link-area">
                     <div>
-                        <button id="btn-weather-toggle" class="widget-toggle-btn" type="button" aria-label="날씨 위젯 열기" aria-expanded="false">
-                            <img src="src/icon/icon-weather.svg" alt="Weather">
+                        <button id="btn-weather-toggle" class="widget-toggle-btn" type="button" aria-label="날씨 위젯 열기" aria-expanded="false" title="날씨">
+                            <img src="src/icon/icon-weather.svg" alt="날씨">
                         </button>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 링크 위젯 열기" aria-expanded="false">
-                            <img src="src/icon/icon-quicklink.svg" alt="Quick Link">
+                        <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 도구 위젯 열기" aria-expanded="false" title="빠른 도구">
+                            <img src="src/icon/icon-quicktools.svg" alt="빠른 도구">
                         </button>
                     </div>
                     <div class="vertical-divider"></div>
                     <div>
-                        <button id="btn-schedule-shutdown" class="widget-toggle-btn" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false">
-                            <img src="src/icon/icon-schedule-shutdown.svg" alt="Shutdown Timer">
+                        <button id="btn-footer-compact" class="widget-toggle-btn" type="button" aria-label="시스템 설정 열기" aria-expanded="false" title="시스템 설정">
+                            <img src="src/icon/icon-setting.svg" alt="시스템 설정">
                         </button>
                     </div>
                 </div>
                 <div id="quick-widget" aria-label="빠른 도구 위젯">
                     <div class="quick-widget-header">
                         <div>
-                            <div class="quick-widget-title">Quick Tools</div>
+                            <div class="quick-widget-title">빠른 도구</div>
                             <div class="quick-widget-caption">Windows 기본 도구를 바로 실행합니다.</div>
                         </div>
                         <div class="quick-widget-pill">TOOLS</div>
                     </div>
                     <div class="quick-grid">
                         <button class="launcher-basic quick-link-button" data-link="calc.exe" type="button">
-                            <span class="quick-link-label">계산기</span>
                             <span class="quick-link-icon"><img src="src/icon/icon-tool-calculator.svg" alt=""></span>
-                            <span class="quick-link-meta">빠른 계산</span>
+                            <span class="quick-link-label">계산기</span>
                         </button>
                         <button class="launcher-basic quick-link-button" data-link="ms-clock:" type="button">
-                            <span class="quick-link-label">시계</span>
                             <span class="quick-link-icon"><img src="src/icon/icon-tool-clock.svg" alt=""></span>
-                            <span class="quick-link-meta">알람과 타이머</span>
+                            <span class="quick-link-label">시계</span>
                         </button>
                         <button class="launcher-basic quick-link-button" data-link="notepad.exe" type="button">
-                            <span class="quick-link-label">메모장</span>
                             <span class="quick-link-icon"><img src="src/icon/icon-tool-notepad.svg" alt=""></span>
-                            <span class="quick-link-meta">빠른 텍스트 작성</span>
+                            <span class="quick-link-label">메모장</span>
                         </button>
                         <button class="launcher-basic quick-link-button" data-link="SnippingTool.exe" type="button">
-                            <span class="quick-link-label">캡처도구</span>
                             <span class="quick-link-icon"><img src="src/icon/icon-tool-snipping.svg" alt=""></span>
-                            <span class="quick-link-meta">화면 캡처</span>
+                            <span class="quick-link-label">캡처도구</span>
                         </button>
                         <button class="launcher-basic quick-link-button" data-link="mspaint.exe" type="button">
-                            <span class="quick-link-label">그림판</span>
                             <span class="quick-link-icon"><img src="src/icon/icon-tool-paint.svg" alt=""></span>
-                            <span class="quick-link-meta">빠른 이미지 편집</span>
+                            <span class="quick-link-label">그림판</span>
                         </button>
                         <button class="launcher-basic quick-link-button" data-link="osk.exe" type="button">
-                            <span class="quick-link-label">화상 키보드</span>
                             <span class="quick-link-icon"><img src="src/icon/icon-tool-keyboard.svg" alt=""></span>
-                            <span class="quick-link-meta">터치 입력과 보조 타이핑</span>
+                            <span class="quick-link-label">화상 키보드</span>
                         </button>
                     </div>
                 </div>
@@ -3436,15 +4057,24 @@
                     </div>
                     <div class="weather-meta">
                         <div class="weather-meta-card">
-                            <div class="weather-meta-label" data-icon="feels">체감</div>
+                            <div class="weather-meta-label">
+                                <span class="weather-meta-icon temperature" aria-hidden="true"></span>
+                                <span>체감</span>
+                            </div>
                             <div class="weather-meta-value" id="weather-feels-like">--°</div>
                         </div>
                         <div class="weather-meta-card">
-                            <div class="weather-meta-label" data-icon="humidity">습도</div>
+                            <div class="weather-meta-label">
+                                <span class="weather-meta-icon humidity" aria-hidden="true"></span>
+                                <span>습도</span>
+                            </div>
                             <div class="weather-meta-value" id="weather-humidity">--</div>
                         </div>
                         <div class="weather-meta-card">
-                            <div class="weather-meta-label" data-icon="rain">강수</div>
+                            <div class="weather-meta-label">
+                                <span class="weather-meta-icon cloud" aria-hidden="true"></span>
+                                <span>강수</span>
+                            </div>
                             <div class="weather-meta-value" id="weather-precipitation">--</div>
                         </div>
                     </div>
@@ -3465,23 +4095,12 @@
         <div id="footer">
             <div id="footer-left">
                 <div>
-                    <div><a class="launcher-basic footer-btn" data-link="shutdown">종료</a></div>
-                    <div><a class="launcher-basic footer-btn" data-link="reboot">재시작</a></div>
-                    <div><a class="footer-btn icon-only" id="btn-preference" aria-label="환경설정" title="환경설정"><span class="footer-icon footer-icon-settings" aria-hidden="true"></span></a></div>
+                    <div><a class="launcher-basic footer-btn icon-only" data-link="shutdown" aria-label="종료" title="종료"><span class="footer-icon footer-icon-power-off" aria-hidden="true"></span></a></div>
+                    <div><a class="launcher-basic footer-btn icon-only" data-link="reboot" aria-label="재시작" title="재시작"><span class="footer-icon footer-icon-reboot" aria-hidden="true"></span></a></div>
+                    <div><button class="footer-btn icon-only" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt="예약 종료"></button></div>
                 </div>
                 <div>
-                    <div class="footer-tool-group">
-                        <div><a class="footer-btn icon-only" href="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><span class="footer-icon footer-icon-display" aria-hidden="true"></span></a></div>
-                        <div><a class="footer-btn icon-only" href="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><span class="footer-icon footer-icon-mouse" aria-hidden="true"></span></a></div>
-                        <div><a class="footer-btn icon-only" href="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><span class="footer-icon footer-icon-keyboard" aria-hidden="true"></span></a></div>
-                    </div>
-                    <div class="footer-tool-divider" aria-hidden="true"></div>
-                    <div class="footer-tool-group">
-                        <div><a class="footer-btn icon-only" href="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><span class="footer-icon footer-icon-sound" aria-hidden="true"></span></a></div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><span class="footer-icon footer-icon-volume-down" aria-hidden="true"></span></a></div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><span class="footer-icon footer-icon-volume-up" aria-hidden="true"></span></a></div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="volume-mute" aria-label="음소거" title="음소거"><span class="footer-icon footer-icon-volume-mute" aria-hidden="true"></span></a></div>
-                    </div>
+                    <div><button class="footer-btn icon-only" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt="런처 설정"></button></div>
                 </div>
             </div>
             <div id="footer-right">
@@ -3491,7 +4110,18 @@
             </div>
         </div>
     </div>
-    <div id="shutdown-scheduler" aria-label="예약 종료 설정">
+        <div id="footer-compact-panel" aria-label="시스템 설정">
+            <div class="compact-panel-quick-list" role="list">
+            <a class="launcher-basic compact-panel-icon-button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><span class="compact-panel-icon"><img src="src/icon/icon-display.svg" alt=""></span><span class="compact-panel-item-label">화면</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><span class="compact-panel-icon"><img src="src/icon/icon-mouse.svg" alt=""></span><span class="compact-panel-item-label">마우스</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><span class="compact-panel-icon"><img src="src/icon/icon-keyboard.svg" alt=""></span><span class="compact-panel-item-label">키보드</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><span class="compact-panel-icon"><img src="src/icon/icon-audio.svg" alt=""></span><span class="compact-panel-item-label">오디오</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><span class="compact-panel-icon"><img src="src/icon/icon-volume-low.svg" alt=""></span><span class="compact-panel-item-label">볼륨 -</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><span class="compact-panel-icon"><img src="src/icon/icon-volume-high.svg" alt=""></span><span class="compact-panel-item-label">볼륨 +</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="volume-mute" aria-label="음소거" title="음소거"><span class="compact-panel-icon"><img src="src/icon/icon-volume-mute.svg" alt=""></span><span class="compact-panel-item-label">음소거</span></a>
+            </div>
+        </div>
+        <div id="shutdown-scheduler" aria-label="예약 종료 설정">
         <div class="shutdown-scheduler-header">
             <div>
                 <div class="shutdown-scheduler-title">예약 종료</div>
@@ -3546,9 +4176,10 @@
             </div>
             <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
             <button id="btn-shutdown-schedule-apply" class="shutdown-scheduler-action primary" type="button">예약하기</button>
+            </div>
         </div>
-    </div>
         <div id="editor">
+            <div id="editor-s-surface" aria-hidden="true"></div>
             <div id="editor-widget-shell">
                 <div id="editor-widget-topbar">
                     <div>
