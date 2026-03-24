@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZEN Launcher Extension Area Guidelines</title>
+  <style>
+    :root {
+      --bg:#0d1215; --panel:#141b20; --card:rgba(255,255,255,.04); --line:rgba(255,255,255,.1);
+      --text:#edf3f5; --soft:#b7c4c9; --dim:#7f9097; --mint:#7cc7aa; --sky:#83abdb; --amber:#c8a86a;
+      --shadow:0 24px 56px rgba(0,0,0,.3); --r1:28px; --r2:20px; --r3:16px; --content:1180px;
+    }
+    * { box-sizing:border-box; }
+    html, body {
+      margin:0; min-height:100%;
+      background:
+        radial-gradient(circle at top left, rgba(124,199,170,.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(131,171,219,.12), transparent 22%),
+        linear-gradient(180deg, #10161a 0%, #0a0e11 100%);
+      color:var(--text); font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;
+    }
+    body { padding:32px 20px 72px; }
+    .page { width:min(100%, var(--content)); margin:0 auto; }
+    h1,h2,h3,p,ul,ol { margin:0; }
+    .hero,.section,.card,.note-box {
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
+    }
+    .hero { position:relative; overflow:hidden; padding:36px; border-radius:var(--r1); }
+    .hero::before {
+      content:""; position:absolute; inset:0 auto auto 0; width:100%; height:5px;
+      background:linear-gradient(90deg, var(--mint), var(--sky), var(--amber));
+    }
+    .eyebrow,.ratio {
+      display:inline-flex; align-items:center; min-height:30px; padding:0 12px; border-radius:999px;
+      background:rgba(255,255,255,.06); font-size:12px; font-weight:800; letter-spacing:.08em;
+    }
+    h1 { margin-top:18px; font-size:clamp(36px,6vw,60px); line-height:1.04; letter-spacing:-.04em; }
+    .hero-copy,.section-intro,.card p,.card li,.section td,.section th,.note-box p,.note-box li {
+      color:var(--soft); line-height:1.7;
+    }
+    .hero-copy { max-width:780px; margin-top:18px; font-size:17px; }
+    .hero-grid,.grid-2,.grid-3,.do-dont { display:grid; gap:18px; }
+    .hero-grid { grid-template-columns:1.05fr .95fr; margin-top:28px; }
+    .grid-2,.do-dont { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .grid-3 { grid-template-columns:repeat(3, minmax(0,1fr)); }
+    .card,.note-box { padding:22px; border-radius:var(--r2); }
+    .card h3,.note-box h3 { margin-bottom:12px; font-size:20px; letter-spacing:-.02em; }
+    .section { margin-top:22px; padding:28px; border-radius:var(--r1); }
+    .section h2 { margin-bottom:10px; font-size:28px; letter-spacing:-.03em; }
+    .section-intro { max-width:820px; margin-bottom:20px; }
+    .rule-list,.key-list { padding-left:18px; }
+    .rule-list li + li,.key-list li + li { margin-top:10px; }
+    .stage {
+      position:relative; min-height:430px; margin-top:18px; padding:24px 24px 34px;
+      border-radius:24px; border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at top left, rgba(124,199,170,.08), transparent 30%),
+        linear-gradient(180deg, #0e1418 0%, #11191d 100%);
+      overflow:hidden;
+    }
+    .main-window {
+      position:relative; z-index:1; width:100%; max-width:920px; margin:0 auto;
+      padding:20px 20px 116px; border-radius:26px; border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)), #1a2328;
+    }
+    .search-bar { height:62px; border-radius:16px; background:rgba(255,255,255,.06); }
+    .icon-row { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:12px; margin-top:18px; }
+    .icon-tile { aspect-ratio:1/1; border-radius:18px; background:rgba(255,255,255,.05); }
+    .sheet-cover {
+      position:absolute; left:24px; right:24px; bottom:24px; height:18px; border-radius:18px 18px 0 0;
+      background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      z-index:3;
+    }
+    .sheet-handle {
+      position:absolute; left:50%; bottom:10px; width:86px; height:8px; border-radius:999px;
+      background:rgba(255,255,255,.3); transform:translateX(-50%); z-index:4;
+    }
+    .sheet-peek,
+    .sheet-m,
+    .sheet-l {
+      position:absolute; left:50%; transform:translateX(-50%); width:min(920px, calc(100% - 48px));
+      border:1px solid rgba(255,255,255,.08); border-radius:26px 26px 0 0;
+      overflow:hidden;
+    }
+    .sheet-peek {
+      bottom:24px; z-index:2; height:76px;
+      background:linear-gradient(180deg, rgba(124,199,170,.22), rgba(124,199,170,.08)), #12191d;
+    }
+    .sheet-m {
+      bottom:24px; z-index:1; height:212px;
+      background:linear-gradient(180deg, rgba(131,171,219,.22), rgba(131,171,219,.08)), #12191d;
+    }
+    .sheet-l {
+      bottom:24px; z-index:0; height:304px;
+      background:linear-gradient(180deg, rgba(124,199,170,.14), rgba(131,171,219,.1)), #12191d;
+      opacity:.74;
+    }
+    .sheet-head {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px 10px; font-size:12px; font-weight:800; letter-spacing:.08em;
+    }
+    .sheet-body { display:grid; gap:10px; padding:0 18px 18px; }
+    .sheet-line,.sheet-block,.sheet-grid,.comp-line-lg,.comp-line-sm,.comp-chip,.comp-button,.comp-row,.comp-card,.size-main,.size-sheet {
+      background:rgba(255,255,255,.08);
+    }
+    .sheet-line { height:12px; border-radius:12px; }
+    .sheet-block { height:56px; border-radius:14px; }
+    .sheet-grid { height:92px; border-radius:14px; }
+    .caption { margin-top:14px; color:var(--dim); font-size:13px; line-height:1.6; }
+    .flow { display:grid; gap:12px; margin-top:16px; }
+    .flow-step {
+      display:grid; grid-template-columns:54px 1fr; gap:14px; padding:16px;
+      border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.03);
+    }
+    .flow-step strong { font-size:22px; line-height:1; }
+    .size-visual {
+      position:relative; height:180px; margin-top:16px; padding:14px;
+      border-radius:18px; border:1px solid var(--line); background:rgba(0,0,0,.16);
+    }
+    .size-main {
+      position:absolute; left:14px; top:14px; width:100%; max-width:240px; height:92px; border-radius:18px;
+    }
+    .size-sheet {
+      position:absolute; left:14px; right:14px; bottom:14px; border-radius:18px 18px 0 0; border:1px solid rgba(255,255,255,.08);
+    }
+    .size-sheet.s { height:34px; background:rgba(124,199,170,.28); }
+    .size-sheet.m { height:92px; background:rgba(124,199,170,.2); }
+    .size-sheet.l { height:148px; background:rgba(131,171,219,.18); }
+    table { width:100%; border-collapse:collapse; margin-top:14px; border-radius:16px; overflow:hidden; }
+    th,td { padding:14px 16px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); }
+    th { color:var(--text); font-size:13px; background:rgba(255,255,255,.05); }
+    tr:last-child td { border-bottom:none; }
+    .component-demo {
+      margin-top:14px; padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.16);
+    }
+    .comp-header { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:14px; }
+    .comp-meta,.comp-lines,.comp-list { display:grid; gap:7px; }
+    .comp-line-lg { width:180px; height:16px; border-radius:12px; }
+    .comp-line-sm { width:120px; height:10px; border-radius:12px; background:rgba(255,255,255,.05); }
+    .comp-chip { width:72px; height:28px; border-radius:12px; }
+    .comp-button-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .comp-button { width:108px; height:42px; border-radius:12px; }
+    .comp-button.primary { background:rgba(124,199,170,.28); }
+    .comp-row {
+      display:grid; grid-template-columns:42px 1fr 84px; gap:12px; align-items:center;
+      padding:10px; border-radius:12px;
+    }
+    .comp-icon { width:42px; height:42px; border-radius:14px; background:rgba(255,255,255,.08); }
+    .comp-tail { height:18px; border-radius:999px; background:rgba(255,255,255,.05); }
+    .comp-card { min-height:126px; border-radius:12px; }
+    .note { margin-top:14px; padding:14px 16px; border-left:3px solid var(--amber); border-radius:0 14px 14px 0; background:rgba(200,168,106,.08); color:var(--soft); }
+    .do,.dont { padding:22px; border-radius:20px; border:1px solid var(--line); }
+    .do { background:rgba(124,199,170,.08); }
+    .dont { background:rgba(186,127,137,.08); }
+    pre {
+      margin:14px 0 0; padding:18px; overflow:auto; border-radius:16px; border:1px solid var(--line);
+      background:rgba(0,0,0,.22); color:#d8e2e6; line-height:1.65;
+      font-family:"Cascadia Code","D2Coding",monospace;
+    }
+    @media (max-width:980px) {
+      .hero-grid,.grid-2,.grid-3,.do-dont { grid-template-columns:1fr; }
+    }
+    @media (max-width:680px) {
+      body { padding:18px 14px 48px; }
+      .hero,.section { padding:22px; }
+      .icon-row { grid-template-columns:repeat(3, minmax(0,1fr)); }
+      .main-window { padding-bottom:100px; }
+      .sheet-peek { height:66px; }
+      .sheet-m { height:188px; }
+      .sheet-l { height:270px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="eyebrow">Extension Area Guideline</div>
+      <h1>현재 확장영역의 기준 형태는<br>하단에서 올라오는 M 사이즈 확장 캔버스다.</h1>
+      <p class="hero-copy">지금 구현된 확장영역은 우측 패널이나 롤아웃 장치가 아니라, 메인 런처 아래쪽 경계가 열리면서 위젯과 도구를 담는 중간 크기의 작업면이 펼쳐지는 구조에 가깝다. 따라서 가이드도 "우측에서 말려 나온다"가 아니라 "메인 아래에 붙어 있는 M 레이어가 열리고 닫힌다"는 기준으로 설명하는 편이 맞다.</p>
+      <div class="hero-grid">
+        <article class="card">
+          <h3>현재 구조 해석</h3>
+          <ul class="key-list">
+            <li>확장영역은 메인 아래에 붙는 하단 확장 캔버스다.</li>
+            <li>기본 감각은 side panel이 아니라 bottom sheet에 더 가깝다.</li>
+            <li>지금 보이는 확장영역은 이미 M 크기의 기본형이다.</li>
+            <li>S와 L은 이 M을 기준으로 축소 또는 확장된 변형으로 설명해야 한다.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>이 문서의 기준</h3>
+          <ul class="key-list">
+            <li>M을 현재 실제 구현 상태로 본다.</li>
+            <li>메인과 확장영역은 상하 관계로 연결되어야 한다.</li>
+            <li>핵심 인상은 "하단 덮개가 열리며 작업면이 올라온다"이다.</li>
+            <li>설명은 현재 구조와 맞지 않는 우측 seam, rail, handle 비유를 쓰지 않는다.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>1. 메인 비주얼</h2>
+      <p class="section-intro">현재 확장영역은 메인 런처 아래쪽 경계가 열리면서 M 크기의 확장 작업면이 올라오는 구조로 이해하는 것이 정확하다. 아래 시안은 메인 창 아래에 붙은 얇은 커버와, 그 아래에서 올라오는 S/M/L 레이어의 관계를 보여준다.</p>
+      <div class="stage" aria-hidden="true">
+        <div class="main-window">
+          <div class="search-bar"></div>
+          <div class="icon-row">
+            <div class="icon-tile"></div><div class="icon-tile"></div><div class="icon-tile"></div>
+            <div class="icon-tile"></div><div class="icon-tile"></div><div class="icon-tile"></div>
+          </div>
+        </div>
+        <div class="sheet-l">
+          <div class="sheet-head"><span>SHEET L</span><span>workspace</span></div>
+          <div class="sheet-body"><div class="sheet-grid"></div><div class="sheet-block"></div><div class="sheet-line"></div></div>
+        </div>
+        <div class="sheet-m">
+          <div class="sheet-head"><span>SHEET M</span><span>default</span></div>
+          <div class="sheet-body"><div class="sheet-block"></div><div class="sheet-line"></div></div>
+        </div>
+        <div class="sheet-peek">
+          <div class="sheet-head"><span>SHEET S</span><span>peek</span></div>
+          <div class="sheet-body"><div class="sheet-line"></div></div>
+        </div>
+        <div class="sheet-cover"></div>
+        <div class="sheet-handle"></div>
+      </div>
+      <p class="caption">핵심은 세 크기가 모두 메인 아래에서 열리는 같은 계열의 레이어라는 점이다. 지금 구현 기준에서 M은 "주 확장 작업면"이고, S는 얕게 열린 상태, L은 더 깊게 확장된 상태로 보는 편이 자연스럽다.</p>
+    </section>
+
+    <section class="section">
+      <h2>2. 현재 구현 기준 해석</h2>
+      <p class="section-intro">문서 표현은 실제 구현과 맞아야 한다. 현재 코드 기준으로 확장영역은 메인 아래에 고정되어 열리고, 내부에 위젯이 임베드되는 구조다.</p>
+      <div class="grid-2">
+        <div class="note-box">
+          <h3>맞는 표현</h3>
+          <ul class="rule-list">
+            <li>하단 확장 레이어</li>
+            <li>메인 아래에 붙는 M 캔버스</li>
+            <li>열리고 닫히는 작업면</li>
+            <li>위젯이 내장되는 확장 영역</li>
+          </ul>
+        </div>
+        <div class="note-box">
+          <h3>맞지 않는 표현</h3>
+          <ul class="rule-list">
+            <li>우측에서 말려 나오는 패널</li>
+            <li>레일과 손잡이 기반 구조</li>
+            <li>옆으로 꺼내는 도구층</li>
+            <li>메인과 분리된 플로팅 시트</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3. 크기 체계</h2>
+      <p class="section-intro">지금 보이는 확장영역을 M으로 두고, S와 L은 같은 하단 레이어가 덜 열리거나 더 확장된 상태로 설명하는 편이 정확하다.</p>
+      <div class="grid-3">
+        <article class="card">
+          <div class="ratio">S = 메인 0.2배</div>
+          <h3>Peek Layer</h3>
+          <p>하단 경계가 살짝 열려 상태 확인이나 한 번의 액션만 빠르게 처리하는 얕은 상태다.</p>
+          <ul class="rule-list">
+            <li>높이가 낮다.</li>
+            <li>스크롤보다 즉시 실행에 적합하다.</li>
+            <li>외부 클릭으로 자연스럽게 닫혀도 된다.</li>
+          </ul>
+          <div class="size-visual" aria-hidden="true"><div class="size-main"></div><div class="size-sheet s"></div></div>
+        </article>
+        <article class="card">
+          <div class="ratio">M = 메인 1배</div>
+          <h3>Default Layer</h3>
+          <p>현재 구현된 확장영역의 기본형이다. 위젯, 퀵툴, 간단한 설정 편집은 이 단계에서 해결하는 것이 맞다.</p>
+          <ul class="rule-list">
+            <li>헤더, 요약, 액션, 본문이 함께 들어간다.</li>
+            <li>현재 런처에서 가장 자주 쓰이는 확장 형태다.</li>
+            <li>문서의 기본 기준점이 된다.</li>
+          </ul>
+          <div class="size-visual" aria-hidden="true"><div class="size-main"></div><div class="size-sheet m"></div></div>
+        </article>
+        <article class="card">
+          <div class="ratio">L = 메인 2배</div>
+          <h3>Workspace Layer</h3>
+          <p>M보다 더 깊게 열려 편집, 탐색, 비교처럼 집중이 필요한 작업을 담는 확장 상태다.</p>
+          <ul class="rule-list">
+            <li>목록과 편집 폼을 함께 배치할 수 있다.</li>
+            <li>M에서 추가로 확장되는 흐름이 자연스럽다.</li>
+            <li>새 화면처럼 느껴질 정도로 분리되면 안 된다.</li>
+          </ul>
+          <div class="size-visual" aria-hidden="true"><div class="size-main"></div><div class="size-sheet l"></div></div>
+        </article>
+      </div>
+      <table>
+        <thead><tr><th>단계</th><th>의미</th><th>적합한 콘텐츠</th><th>전환 인상</th></tr></thead>
+        <tbody>
+          <tr><td>S</td><td>하단이 살짝 열린 상태</td><td>상태 요약, 토글, 1회 액션</td><td>짧게 올라왔다가 빠르게 닫힘</td></tr>
+          <tr><td>M</td><td>기본 확장 상태</td><td>상세 정보, 위젯, 퀵 액션, 짧은 설정</td><td>메인 아래 작업면이 열림</td></tr>
+          <tr><td>L</td><td>집중 작업 상태</td><td>편집, 탐색, 비교, 다중 액션</td><td>같은 하단 레이어가 더 깊게 확장됨</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>4. 호출과 복귀</h2>
+      <p class="section-intro">현재 구조에서는 확장영역이 아래에서 열린다는 점이 전환의 핵심이다. 따라서 등장과 복귀 역시 수직 방향성을 유지해야 한다.</p>
+      <div class="flow">
+        <div class="flow-step"><strong>01</strong><div><h3>명확한 트리거</h3><p>아이콘, 토글, 퀵 기능 선택처럼 사용자의 의도가 분명할 때만 확장영역이 열린다.</p></div></div>
+        <div class="flow-step"><strong>02</strong><div><h3>M을 기본으로 사용</h3><p>현재 구현의 중심은 M이다. 대부분의 확장 작업은 M에서 해결하고, 더 단순하면 S로, 더 복잡하면 L로 변형한다.</p></div></div>
+        <div class="flow-step"><strong>03</strong><div><h3>상하 문맥 유지</h3><p>메인 위, 확장영역 아래의 관계가 계속 읽혀야 한다. 확장영역이 열려도 메인을 대체한 새 화면처럼 보이면 안 된다.</p></div></div>
+        <div class="flow-step"><strong>04</strong><div><h3>아래로 닫히는 복귀</h3><p>복귀는 사라지는 느낌보다, 아래 작업면이 다시 접히며 내려가는 인상을 주는 편이 현재 구조에 더 맞다.</p></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>5. 실제 디자인 제안</h2>
+      <p class="section-intro">M 확장영역은 큰 빈 박스가 아니라, 메인 아래에 붙은 밀도 높은 작업면이어야 한다. 즉 내부는 풍부하되, 바깥 윤곽은 하나의 하단 캔버스로 유지하는 편이 좋다.</p>
+      <div class="grid-2">
+        <article class="card">
+          <h3>헤더 구조</h3>
+          <p>헤더는 제목, 짧은 설명, 상태 뱃지 정도만 두고, 메인 위젯 내용이 바로 이어지게 한다.</p>
+          <div class="component-demo" aria-hidden="true"><div class="comp-header"><div class="comp-meta"><div class="comp-line-lg"></div><div class="comp-line-sm"></div></div><div class="comp-chip"></div></div></div>
+        </article>
+        <article class="card">
+          <h3>퀵 액션 구조</h3>
+          <p>가장 자주 쓰는 액션 1개만 강하게 두고, 나머지는 보조 버튼으로 정리한다. 하단 작업면일수록 액션 흐름이 짧아야 한다.</p>
+          <div class="component-demo" aria-hidden="true"><div class="comp-button-row"><div class="comp-button primary"></div><div class="comp-button"></div><div class="comp-button"></div></div></div>
+        </article>
+        <article class="card">
+          <h3>리스트 / 후보군</h3>
+          <p>L로 확장될 때는 목록과 상세를 함께 다루게 된다. 각 행은 얇고 빠르게 읽히게 구성하는 편이 좋다.</p>
+          <div class="component-demo" aria-hidden="true"><div class="comp-list"><div class="comp-row"><div class="comp-icon"></div><div class="comp-lines"><div class="comp-line-lg"></div><div class="comp-line-sm"></div></div><div class="comp-tail"></div></div><div class="comp-row"><div class="comp-icon"></div><div class="comp-lines"><div class="comp-line-lg"></div><div class="comp-line-sm"></div></div><div class="comp-tail"></div></div></div></div>
+        </article>
+        <article class="card">
+          <h3>요약 카드</h3>
+          <p>정보 카드는 장식보다 읽힘이 우선이다. 큰 수치, 현재 상태, 추천 액션 순으로 읽히게 정리한다.</p>
+          <div class="component-demo" aria-hidden="true"><div class="comp-card"></div></div>
+        </article>
+      </div>
+      <div class="note">지금 구조에서는 "하단 확장 작업면"이라는 기본 인상을 먼저 지키고, 그 안에서 정보 밀도와 도구 밀도를 올리는 편이 더 자연스럽다.</div>
+    </section>
+
+    <section class="section">
+      <h2>6. Do / Don't</h2>
+      <div class="do-dont">
+        <div class="do">
+          <h3>Do</h3>
+          <ul class="rule-list">
+            <li>현재 확장영역을 하단에서 열리는 M 캔버스로 정의한다.</li>
+            <li>S와 L을 M의 축소/확장 변형으로 설명한다.</li>
+            <li>등장과 복귀는 수직 방향성을 유지한다.</li>
+            <li>메인 위, 확장영역 아래의 상하 관계를 유지한다.</li>
+          </ul>
+        </div>
+        <div class="dont">
+          <h3>Don't</h3>
+          <ul class="rule-list">
+            <li>지금 구조를 우측 롤아웃 패널처럼 설명하지 않는다.</li>
+            <li>레일, 손잡이 같은 현재 구현과 무관한 비유를 쓰지 않는다.</li>
+            <li>M을 지나가는 중간 상태처럼 설명하지 않는다.</li>
+            <li>확장영역을 메인과 분리된 새 화면처럼 설계하지 않는다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>7. 구현용 문장 정리</h2>
+      <p class="section-intro">아래 문장은 실제 설계와 개발 태스크에 바로 옮겨 적을 수 있도록 정리한 기준 문장이다.</p>
+      <pre>확장영역 설계 원칙
+
+1. 현재 확장영역의 기본 형태는 메인 런처 아래에서 열리는 M 사이즈 확장 캔버스다.
+2. 확장영역은 우측 패널이 아니라 하단 확장 레이어로 설명한다.
+3. S(0.2x), M(1x), L(2x)은 같은 하단 레이어의 축소/기본/확장 상태다.
+4. M은 현재 구현의 기준형이며, 위젯과 도구는 이 상태를 중심으로 배치한다.
+5. 등장 모션은 아래에서 위로 열리는 방향성을 유지한다.
+6. 복귀 모션은 작업면이 다시 아래로 접히며 닫히는 인상을 주어야 한다.
+7. 확장영역이 열려도 메인과의 상하 관계는 계속 읽혀야 한다.</pre>
+    </section>
+  </div>
+</body>
+</html>
