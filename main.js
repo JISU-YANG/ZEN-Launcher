@@ -5,9 +5,12 @@ const path = require('path');
 const { execFile } = require('node:child_process');
 const Store = require('electron-store');
 const computer = require('electron-shutdown-command');
+const { normalizeProgramScanItem } = require('./src/main/domain/program/programScanItem');
 const { CategoryStoreRepository } = require('./src/main/infrastructure/repositories/categoryStoreRepository');
+const { ProgramScanCacheRepository } = require('./src/main/infrastructure/repositories/programScanCacheRepository');
 const { RemoteImageCacheRepository } = require('./src/main/infrastructure/repositories/remoteImageCacheRepository');
 const { LauncherCategoryService } = require('./src/main/application/services/launcherCategoryService');
+const { ProgramCatalogService } = require('./src/main/application/services/programCatalogService');
 
 const store = new Store();
 const WINDOW_WIDTH = 1150;
@@ -19,12 +22,19 @@ const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
 const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
-const PROGRAM_SCAN_CACHE_FILE = 'program-scan-cache.json';
 const categoryRepository = new CategoryStoreRepository(store);
 const remoteImageCacheRepository = new RemoteImageCacheRepository({ app });
 const launcherCategoryService = new LauncherCategoryService({
     categoryRepository,
     remoteImageCacheRepository
+});
+const programScanCacheRepository = new ProgramScanCacheRepository({
+    app,
+    normalizeProgramScanItem
+});
+const programCatalogService = new ProgramCatalogService({
+    cacheRepository: programScanCacheRepository,
+    scanPrograms: scanInstalledPrograms
 });
 
 let mainWindow = null;
@@ -170,51 +180,6 @@ async function execFileText(file, args, errorMessage) {
     });
 }
 
-function normalizeScannedProgram(item) {
-    if (!item || typeof item !== 'object') {
-        return null;
-    }
-
-    const name = typeof item.name === 'string' ? item.name.trim() : '';
-    const link = typeof item.link === 'string' ? item.link.trim() : '';
-    const source = typeof item.source === 'string' ? item.source.trim() : '';
-    if (!name || !link) {
-        return null;
-    }
-
-    return { name, link, source };
-}
-
-function getProgramScanCachePath() {
-    return path.join(app.getPath('userData'), PROGRAM_SCAN_CACHE_FILE);
-}
-
-function readProgramScanCache() {
-    try {
-        const cachePath = getProgramScanCachePath();
-        if (!fs.existsSync(cachePath)) {
-            return { programs: [], scannedAt: '' };
-        }
-
-        const raw = fs.readFileSync(cachePath, 'utf8');
-        const parsed = JSON.parse(raw);
-        const programs = Array.isArray(parsed?.programs) ? parsed.programs.map((item) => normalizeScannedProgram(item)).filter(Boolean) : [];
-        const scannedAt = typeof parsed?.scannedAt === 'string' ? parsed.scannedAt : '';
-        return { programs, scannedAt };
-    } catch (_error) {
-        return { programs: [], scannedAt: '' };
-    }
-}
-
-function writeProgramScanCache(programs, scannedAt) {
-    const cachePath = getProgramScanCachePath();
-    fs.writeFileSync(
-        cachePath,
-        JSON.stringify({ programs, scannedAt }, null, 2),
-        'utf8'
-    );
-}
-
 async function scanInstalledPrograms() {
     if (process.platform !== 'win32') {
         return [];
@@ -322,7 +287,7 @@ $items | Sort-Object name, source | ConvertTo-Json -Depth 3
     const parsed = JSON.parse(raw);
     const list = Array.isArray(parsed) ? parsed : [parsed];
     return list
-        .map((item) => normalizeScannedProgram(item))
+        .map((item) => normalizeProgramScanItem(item))
         .filter(Boolean);
 }
 
@@ -606,14 +571,11 @@ ipcMain.handle('zen-launcher:load-data', async () => {
 });
 
 ipcMain.handle('zen-launcher:load-program-scan-cache', async () => {
-    return readProgramScanCache();
+    return programCatalogService.loadScanCache();
 });
 
 ipcMain.handle('zen-launcher:scan-installed-programs', async () => {
-    const programs = await scanInstalledPrograms();
-    const scannedAt = new Date().toISOString();
-    writeProgramScanCache(programs, scannedAt);
-    return { programs, scannedAt };
+    return programCatalogService.scanAndCachePrograms();
 });
 
 ipcMain.handle('zen-launcher:save-category-data', async (_event, category, items) => {
