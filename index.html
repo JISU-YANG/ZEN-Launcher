@@ -13,6 +13,13 @@
             padding: 0;
             width: 100%;
             height: 100%;
+            --launcher-shell-alpha: 1;
+            --launcher-panel-alpha: 0.96;
+            --launcher-card-alpha: 1;
+            --launcher-soft-card-alpha: 0.48;
+            --launcher-list-alpha: 1;
+            --launcher-overlay-alpha: 0.2;
+            --launcher-surface-opacity: 1;
             font-family: 'Noto Sans KR', sans-serif;
             font-size: 14px;
             font-weight: 700;
@@ -28,25 +35,40 @@
 
         #container {
             position: fixed;
-            display: inline-flex;
-            justify-content: space-between;
-            align-items: stretch;
             bottom: 0;
             width: 100%;
             height: 400px;
-            background: linear-gradient(45deg, #262626 25%, #1c1c1c 0, #1c1c1c 50%, #262626 0, #262626 75%, #1c1c1c 0);
-            background-size: 5px 5px;
             z-index: 18;
         }
 
-        #container::before {
+        #launcher-shell {
+            position: absolute;
+            inset: 0;
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: stretch;
+            background: linear-gradient(
+                45deg,
+                rgba(38, 38, 38, var(--launcher-shell-alpha)) 25%,
+                rgba(28, 28, 28, var(--launcher-shell-alpha)) 0,
+                rgba(28, 28, 28, var(--launcher-shell-alpha)) 50%,
+                rgba(38, 38, 38, var(--launcher-shell-alpha)) 0,
+                rgba(38, 38, 38, var(--launcher-shell-alpha)) 75%,
+                rgba(28, 28, 28, var(--launcher-shell-alpha)) 0
+            );
+            background-size: 5px 5px;
+            opacity: var(--launcher-surface-opacity);
+            transition: opacity 0.24s ease;
+        }
+
+        #launcher-shell::before {
             content: '';
             position: absolute;
             left: 0;
             right: 0;
             top: -10px;
             height: 10px;
-            background: #1c1c1c;
+            background: rgba(28, 28, 28, var(--launcher-shell-alpha));
             z-index: 2;
             pointer-events: none;
             transition:
@@ -54,12 +76,12 @@
                 background 0.32s ease;
         }
 
-        body:has(#editor.open) #container::before,
-        body:has(#editor.closing) #container::before,
-        body:has(#editor[data-size]) #container::before {
+        body:has(#editor.open) #launcher-shell::before,
+        body:has(#editor.closing) #launcher-shell::before,
+        body:has(#editor[data-size]) #launcher-shell::before {
             opacity: 0;
             animation: none;
-            background: #1c1c1c;
+            background: rgba(28, 28, 28, var(--launcher-shell-alpha));
         }
 
         #left-box {
@@ -99,8 +121,8 @@
             height: 100%;
             border-radius: 10px;
             box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
-            background: #1c1c1c;
-            opacity: 0.96;
+            background: rgba(28, 28, 28, var(--launcher-panel-alpha));
+            transition: background 0.24s ease;
         }
 
         #center-box > #search-area {
@@ -138,9 +160,10 @@
             height: 138px;
             box-sizing: border-box;
             padding: 10px;
-            background: #1f1f1f;
+            background: rgba(31, 31, 31, var(--launcher-card-alpha));
             border-radius: 14px;
             cursor: pointer;
+            transition: background 0.24s ease;
         }
 
         #gallery-area > .gallery-entry > a,
@@ -162,8 +185,8 @@
             width: calc(100% - 20px);
             height: calc(100% - 20px);
             z-index: 1;
-            opacity: 0.2;
-            background: #1c1c1c;
+            opacity: 1;
+            background: rgba(28, 28, 28, var(--launcher-overlay-alpha));
             border-radius: 12px;
             pointer-events: none;
         }
@@ -212,11 +235,12 @@
             right: 0;
             height: 50px;
             bottom: 0;
-            background: #1c1c1c;
+            background: rgba(28, 28, 28, var(--launcher-shell-alpha));
             box-sizing: border-box;
             padding: 0;
             z-index: 30;
             overflow: visible;
+            transition: background 0.24s ease;
         }
 
 
@@ -667,7 +691,7 @@
             position: absolute;
             inset: 1px;
             border-radius: 9px;
-            background: #1c1c1c;
+            background: rgba(28, 28, 28, var(--launcher-panel-alpha));
             z-index: -1;
         }
 
@@ -1584,9 +1608,10 @@
             gap: 7px;
             overflow: hidden;
             border-radius: 12px;
-            background: rgba(28, 28, 28, 0.48);
+            background: rgba(28, 28, 28, var(--launcher-soft-card-alpha));
             padding: 8px 6px 9px;
             box-sizing: border-box;
+            transition: background 0.24s ease;
         }
 
         .empty-state {
@@ -1638,12 +1663,14 @@
             width: 116px;
             height: 138px;
             border-radius: 14px;
+            transition: background 0.24s ease;
         }
 
         #icon-area.is-empty .empty-state {
             width: 92px;
             height: 92px;
             border-radius: 12px;
+            transition: background 0.24s ease;
         }
 
         #folder-area.is-empty .empty-state {
@@ -1651,7 +1678,15 @@
             min-height: 36px;
             padding: 8px 10px 10px 10px;
             border-radius: 10px;
-            background: linear-gradient(45deg, #262626 25%, #2d2d2d 0, #2d2d2d 50%, #262626 0, #262626 75%, #2d2d2d 0);
+            background: linear-gradient(
+                45deg,
+                rgba(38, 38, 38, var(--launcher-list-alpha)) 25%,
+                rgba(45, 45, 45, var(--launcher-list-alpha)) 0,
+                rgba(45, 45, 45, var(--launcher-list-alpha)) 50%,
+                rgba(38, 38, 38, var(--launcher-list-alpha)) 0,
+                rgba(38, 38, 38, var(--launcher-list-alpha)) 75%,
+                rgba(45, 45, 45, var(--launcher-list-alpha)) 0
+            );
             background-size: 5px 5px;
         }
 
@@ -1710,9 +1745,10 @@
             justify-content: center;
             align-items: center;
             gap: 14px;
-            background: #262626;
+            background: rgba(38, 38, 38, var(--launcher-list-alpha));
             border-radius: 0;
             box-sizing: border-box;
+            transition: background 0.24s ease;
         }
 
         .list-item {
@@ -1725,7 +1761,15 @@
             color: #868686;
             border-radius: 14px;
             transition: 0.2s all ease;
-            background: linear-gradient(45deg, #262626 25%, #333 0, #333 50%, #262626 0, #262626 75%, #333 0);
+            background: linear-gradient(
+                45deg,
+                rgba(38, 38, 38, var(--launcher-list-alpha)) 25%,
+                rgba(51, 51, 51, var(--launcher-list-alpha)) 0,
+                rgba(51, 51, 51, var(--launcher-list-alpha)) 50%,
+                rgba(38, 38, 38, var(--launcher-list-alpha)) 0,
+                rgba(38, 38, 38, var(--launcher-list-alpha)) 75%,
+                rgba(51, 51, 51, var(--launcher-list-alpha)) 0
+            );
             background-size: 5px 5px;
             box-sizing: border-box;
             line-height: 1.45;
@@ -1746,7 +1790,15 @@
             text-decoration: underline;
             transition: 0.2s all ease;
             cursor: pointer;
-            background: linear-gradient(45deg, #262626 25%, #1c1c1c 0, #1c1c1c 50%, #262626 0, #262626 75%, #1c1c1c 0);
+            background: linear-gradient(
+                45deg,
+                rgba(38, 38, 38, var(--launcher-shell-alpha)) 25%,
+                rgba(28, 28, 28, var(--launcher-shell-alpha)) 0,
+                rgba(28, 28, 28, var(--launcher-shell-alpha)) 50%,
+                rgba(38, 38, 38, var(--launcher-shell-alpha)) 0,
+                rgba(38, 38, 38, var(--launcher-shell-alpha)) 75%,
+                rgba(28, 28, 28, var(--launcher-shell-alpha)) 0
+            );
             background-size: 5px 5px;
         }
 
@@ -3970,144 +4022,146 @@
 </head>
 <body>
     <div id="container">
-        <div id="left-box">
-            <div class="item-box" id="gallery-area"></div>
-            <div class="item-box" id="icon-area"></div>
-            <div id="center-box">
-                <div id="link-area">
-                    <div>
-                        <button id="btn-weather-toggle" class="widget-toggle-btn" type="button" aria-label="날씨 위젯 열기" aria-expanded="false" title="날씨">
-                            <img src="src/icon/icon-weather.svg" alt="날씨">
-                        </button>
-                    </div>
-                    <div class="vertical-divider"></div>
-                    <div>
-                        <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 도구 위젯 열기" aria-expanded="false" title="빠른 도구">
-                            <img src="src/icon/icon-quicktools.svg" alt="빠른 도구">
-                        </button>
-                    </div>
-                    <div class="vertical-divider"></div>
-                    <div>
-                        <button id="btn-footer-compact" class="widget-toggle-btn" type="button" aria-label="시스템 설정 열기" aria-expanded="false" title="시스템 설정">
-                            <img src="src/icon/icon-setting.svg" alt="시스템 설정">
-                        </button>
-                    </div>
-                </div>
-                <div id="quick-widget" aria-label="빠른 도구 위젯">
-                    <div class="quick-widget-header">
+        <div id="launcher-shell">
+            <div id="left-box">
+                <div class="item-box" id="gallery-area"></div>
+                <div class="item-box" id="icon-area"></div>
+                <div id="center-box">
+                    <div id="link-area">
                         <div>
-                            <div class="quick-widget-title">빠른 도구</div>
-                            <div class="quick-widget-caption">Windows 기본 도구를 바로 실행합니다.</div>
+                            <button id="btn-weather-toggle" class="widget-toggle-btn" type="button" aria-label="날씨 위젯 열기" aria-expanded="false" title="날씨">
+                                <img src="src/icon/icon-weather.svg" alt="날씨">
+                            </button>
                         </div>
-                        <div class="quick-widget-pill">TOOLS</div>
-                    </div>
-                    <div class="quick-grid">
-                        <button class="launcher-basic quick-link-button" data-link="calc.exe" type="button">
-                            <span class="quick-link-icon"><img src="src/icon/icon-tool-calculator.svg" alt=""></span>
-                            <span class="quick-link-label">계산기</span>
-                        </button>
-                        <button class="launcher-basic quick-link-button" data-link="ms-clock:" type="button">
-                            <span class="quick-link-icon"><img src="src/icon/icon-tool-clock.svg" alt=""></span>
-                            <span class="quick-link-label">시계</span>
-                        </button>
-                        <button class="launcher-basic quick-link-button" data-link="notepad.exe" type="button">
-                            <span class="quick-link-icon"><img src="src/icon/icon-tool-notepad.svg" alt=""></span>
-                            <span class="quick-link-label">메모장</span>
-                        </button>
-                        <button class="launcher-basic quick-link-button" data-link="SnippingTool.exe" type="button">
-                            <span class="quick-link-icon"><img src="src/icon/icon-tool-snipping.svg" alt=""></span>
-                            <span class="quick-link-label">캡처도구</span>
-                        </button>
-                        <button class="launcher-basic quick-link-button" data-link="mspaint.exe" type="button">
-                            <span class="quick-link-icon"><img src="src/icon/icon-tool-paint.svg" alt=""></span>
-                            <span class="quick-link-label">그림판</span>
-                        </button>
-                        <button class="launcher-basic quick-link-button" data-link="osk.exe" type="button">
-                            <span class="quick-link-icon"><img src="src/icon/icon-tool-keyboard.svg" alt=""></span>
-                            <span class="quick-link-label">화상 키보드</span>
-                        </button>
-                    </div>
-                </div>
-                <div id="weather-widget" aria-live="polite">
-                    <div class="weather-widget-header">
+                        <div class="vertical-divider"></div>
                         <div>
-                            <div class="weather-widget-title">Weather</div>
-                            <div class="weather-widget-caption" id="weather-updated">현재 위치와 날씨 정보를 불러옵니다.</div>
+                            <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 도구 위젯 열기" aria-expanded="false" title="빠른 도구">
+                                <img src="src/icon/icon-quicktools.svg" alt="빠른 도구">
+                            </button>
                         </div>
-                        <div class="weather-pill" id="weather-pill">LIVE</div>
-                    </div>
-                    <div class="weather-widget-body">
-                        <div class="weather-summary">
-                            <div class="weather-location" id="weather-location">현재 위치 확인 중</div>
-                            <div class="weather-description-wrap">
-                                <div class="weather-condition" id="weather-condition">날씨 위젯</div>
-                                <div class="weather-description" id="weather-description">현재 위치 기반으로 실시간 날씨를 보여줍니다.</div>
-                            </div>
-                        </div>
-                        <div class="weather-outfit" id="weather-outfit">옷차림 추천을 준비하고 있어요.</div>
-                        <div class="weather-climate">
-                            <div class="weather-temp" id="weather-temperature">--°</div>
-                            <div class="weather-visual" aria-hidden="true">
-                                <div class="weather-visual-orb"></div>
-                                <div class="weather-visual-stars"></div>
-                                <div class="weather-visual-cloud"></div>
-                                <div class="weather-visual-rain"></div>
-                            </div>
+                        <div class="vertical-divider"></div>
+                        <div>
+                            <button id="btn-footer-compact" class="widget-toggle-btn" type="button" aria-label="시스템 설정 열기" aria-expanded="false" title="시스템 설정">
+                                <img src="src/icon/icon-setting.svg" alt="시스템 설정">
+                            </button>
                         </div>
                     </div>
-                    <div class="weather-meta">
-                        <div class="weather-meta-card">
-                            <div class="weather-meta-label">
-                                <span class="weather-meta-icon temperature" aria-hidden="true"></span>
-                                <span>체감</span>
-                            </div>
-                            <div class="weather-meta-value" id="weather-feels-like">--°</div>
-                        </div>
-                        <div class="weather-meta-card">
-                            <div class="weather-meta-label">
-                                <span class="weather-meta-icon humidity" aria-hidden="true"></span>
-                                <span>습도</span>
-                            </div>
-                            <div class="weather-meta-value" id="weather-humidity">--</div>
-                        </div>
-                        <div class="weather-meta-card">
-                            <div class="weather-meta-label">
-                                <span class="weather-meta-icon cloud" aria-hidden="true"></span>
-                                <span>강수</span>
-                            </div>
-                            <div class="weather-meta-value" id="weather-precipitation">--</div>
-                        </div>
+                    <div id="search-area">
+                        <div><a href="https://www.google.com">Google</a></div>
+                        <div class="vertical-divider"></div>
+                        <div><input type="text" id="input-search" placeholder="Type to search"></div>
                     </div>
-                    <div class="weather-status" id="weather-status" data-state="loading">날씨 위젯을 열면 현재 위치와 기온을 확인합니다.</div>
                 </div>
-                <div id="search-area">
-                    <div><a href="https://www.google.com">Google</a></div>
-                    <div class="vertical-divider"></div>
-                    <div><input type="text" id="input-search" placeholder="Type to search"></div>
+            </div>
+            <div id="right-box">
+                <div class="item-box list-view">
+                    <div id="folder-area"></div>
+                </div>
+            </div>
+            <div id="footer">
+                <div id="footer-left">
+                    <div>
+                        <div><a class="launcher-basic footer-btn icon-only" data-link="shutdown" aria-label="종료" title="종료"><span class="footer-icon footer-icon-power-off" aria-hidden="true"></span></a></div>
+                        <div><a class="launcher-basic footer-btn icon-only" data-link="reboot" aria-label="재시작" title="재시작"><span class="footer-icon footer-icon-reboot" aria-hidden="true"></span></a></div>
+                        <div><button class="footer-btn icon-only" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt="예약 종료"></button></div>
+                    </div>
+                    <div>
+                        <div><button class="footer-btn icon-only" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt="런처 설정"></button></div>
+                    </div>
+                </div>
+                <div id="footer-right">
+                    <div>JISU YANG</div>
+                    <div>|</div>
+                    <div>ZEN Launcher</div>
                 </div>
             </div>
         </div>
-        <div id="right-box">
-            <div class="item-box list-view">
-                <div id="folder-area"></div>
+        <div id="quick-widget" aria-label="빠른 도구 위젯">
+            <div class="quick-widget-header">
+                <div>
+                    <div class="quick-widget-title">빠른 도구</div>
+                    <div class="quick-widget-caption">Windows 기본 도구를 바로 실행합니다.</div>
+                </div>
+                <div class="quick-widget-pill">TOOLS</div>
+            </div>
+            <div class="quick-grid">
+                <button class="launcher-basic quick-link-button" data-link="calc.exe" type="button">
+                    <span class="quick-link-icon"><img src="src/icon/icon-tool-calculator.svg" alt=""></span>
+                    <span class="quick-link-label">계산기</span>
+                </button>
+                <button class="launcher-basic quick-link-button" data-link="ms-clock:" type="button">
+                    <span class="quick-link-icon"><img src="src/icon/icon-tool-clock.svg" alt=""></span>
+                    <span class="quick-link-label">시계</span>
+                </button>
+                <button class="launcher-basic quick-link-button" data-link="notepad.exe" type="button">
+                    <span class="quick-link-icon"><img src="src/icon/icon-tool-notepad.svg" alt=""></span>
+                    <span class="quick-link-label">메모장</span>
+                </button>
+                <button class="launcher-basic quick-link-button" data-link="SnippingTool.exe" type="button">
+                    <span class="quick-link-icon"><img src="src/icon/icon-tool-snipping.svg" alt=""></span>
+                    <span class="quick-link-label">캡처도구</span>
+                </button>
+                <button class="launcher-basic quick-link-button" data-link="mspaint.exe" type="button">
+                    <span class="quick-link-icon"><img src="src/icon/icon-tool-paint.svg" alt=""></span>
+                    <span class="quick-link-label">그림판</span>
+                </button>
+                <button class="launcher-basic quick-link-button" data-link="osk.exe" type="button">
+                    <span class="quick-link-icon"><img src="src/icon/icon-tool-keyboard.svg" alt=""></span>
+                    <span class="quick-link-label">화상 키보드</span>
+                </button>
             </div>
         </div>
-        <div id="footer">
-            <div id="footer-left">
+        <div id="weather-widget" aria-live="polite">
+            <div class="weather-widget-header">
                 <div>
-                    <div><a class="launcher-basic footer-btn icon-only" data-link="shutdown" aria-label="종료" title="종료"><span class="footer-icon footer-icon-power-off" aria-hidden="true"></span></a></div>
-                    <div><a class="launcher-basic footer-btn icon-only" data-link="reboot" aria-label="재시작" title="재시작"><span class="footer-icon footer-icon-reboot" aria-hidden="true"></span></a></div>
-                    <div><button class="footer-btn icon-only" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt="예약 종료"></button></div>
+                    <div class="weather-widget-title">Weather</div>
+                    <div class="weather-widget-caption" id="weather-updated">현재 위치와 날씨 정보를 불러옵니다.</div>
                 </div>
-                <div>
-                    <div><button class="footer-btn icon-only" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt="런처 설정"></button></div>
+                <div class="weather-pill" id="weather-pill">LIVE</div>
+            </div>
+            <div class="weather-widget-body">
+                <div class="weather-summary">
+                    <div class="weather-location" id="weather-location">현재 위치 확인 중</div>
+                    <div class="weather-description-wrap">
+                        <div class="weather-condition" id="weather-condition">날씨 위젯</div>
+                        <div class="weather-description" id="weather-description">현재 위치 기반으로 실시간 날씨를 보여줍니다.</div>
+                    </div>
+                </div>
+                <div class="weather-outfit" id="weather-outfit">옷차림 추천을 준비하고 있어요.</div>
+                <div class="weather-climate">
+                    <div class="weather-temp" id="weather-temperature">--°</div>
+                    <div class="weather-visual" aria-hidden="true">
+                        <div class="weather-visual-orb"></div>
+                        <div class="weather-visual-stars"></div>
+                        <div class="weather-visual-cloud"></div>
+                        <div class="weather-visual-rain"></div>
+                    </div>
                 </div>
             </div>
-            <div id="footer-right">
-                <div>JISU YANG</div>
-                <div>|</div>
-                <div>ZEN Launcher</div>
+            <div class="weather-meta">
+                <div class="weather-meta-card">
+                    <div class="weather-meta-label">
+                        <span class="weather-meta-icon temperature" aria-hidden="true"></span>
+                        <span>체감</span>
+                    </div>
+                    <div class="weather-meta-value" id="weather-feels-like">--°</div>
+                </div>
+                <div class="weather-meta-card">
+                    <div class="weather-meta-label">
+                        <span class="weather-meta-icon humidity" aria-hidden="true"></span>
+                        <span>습도</span>
+                    </div>
+                    <div class="weather-meta-value" id="weather-humidity">--</div>
+                </div>
+                <div class="weather-meta-card">
+                    <div class="weather-meta-label">
+                        <span class="weather-meta-icon cloud" aria-hidden="true"></span>
+                        <span>강수</span>
+                    </div>
+                    <div class="weather-meta-value" id="weather-precipitation">--</div>
+                </div>
             </div>
+            <div class="weather-status" id="weather-status" data-state="loading">날씨 위젯을 열면 현재 위치와 기온을 확인합니다.</div>
         </div>
     </div>
         <div id="footer-compact-panel" aria-label="시스템 설정">
@@ -4195,7 +4249,7 @@
                     <button id="btn-preference-gallery" data-tab="gallery" data-category="GALLERY" type="button">갤러리</button>
                     <button id="btn-preference-icon" data-tab="icon" data-category="ICON" type="button">아이콘</button>
                     <button id="btn-preference-folder" data-tab="folder" data-category="FOLDER" type="button">폴더</button>
-                    <button id="btn-preference-theme" data-tab="theme" data-coming-soon="true" data-label="테마" type="button">테마</button>
+                    <button id="btn-preference-theme" data-tab="theme" data-label="테마" type="button">테마</button>
                 </div>
             </div>
             <div id="setting-row"></div>

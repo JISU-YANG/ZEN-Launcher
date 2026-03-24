@@ -22,6 +22,11 @@ const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
 const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+const APPEARANCE_SETTINGS_KEY = 'ZENL.Appearance';
+const MAX_LAUNCHER_TRANSPARENCY = 100;
+const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
+    launcherTransparency: 0
+});
 const categoryRepository = new CategoryStoreRepository(store);
 const remoteImageCacheRepository = new RemoteImageCacheRepository({ app });
 const launcherCategoryService = new LauncherCategoryService({
@@ -40,6 +45,30 @@ const programCatalogService = new ProgramCatalogService({
 let mainWindow = null;
 let devWatchers = [];
 let pendingRelaunch = false;
+
+function normalizeAppearanceSettings(value = {}) {
+    const rawTransparency = Number.parseInt(value?.launcherTransparency, 10);
+    const launcherTransparency = Number.isFinite(rawTransparency)
+        ? Math.min(MAX_LAUNCHER_TRANSPARENCY, Math.max(0, rawTransparency))
+        : DEFAULT_APPEARANCE_SETTINGS.launcherTransparency;
+
+    return { launcherTransparency };
+}
+
+function loadAppearanceSettings() {
+    return normalizeAppearanceSettings(store.get(APPEARANCE_SETTINGS_KEY));
+}
+
+function saveAppearanceSettings(value) {
+    const normalizedSettings = normalizeAppearanceSettings(value);
+    store.set(APPEARANCE_SETTINGS_KEY, normalizedSettings);
+    return normalizedSettings;
+}
+
+function clearAppearanceSettings() {
+    store.delete(APPEARANCE_SETTINGS_KEY);
+    return loadAppearanceSettings();
+}
 
 function focusLauncherSearch() {
     if (!mainWindow || mainWindow.isDestroyed()) {
@@ -570,6 +599,10 @@ ipcMain.handle('zen-launcher:load-data', async () => {
     return launcherCategoryService.loadAll();
 });
 
+ipcMain.handle('zen-launcher:load-appearance-settings', async () => {
+    return loadAppearanceSettings();
+});
+
 ipcMain.handle('zen-launcher:load-program-scan-cache', async () => {
     return programCatalogService.loadScanCache();
 });
@@ -582,8 +615,14 @@ ipcMain.handle('zen-launcher:save-category-data', async (_event, category, items
     return launcherCategoryService.saveCategory(category, items);
 });
 
+ipcMain.handle('zen-launcher:save-appearance-settings', async (_event, settings) => {
+    return saveAppearanceSettings(settings);
+});
+
 ipcMain.handle('zen-launcher:clear-data', async () => {
-    return launcherCategoryService.clearAll();
+    await launcherCategoryService.clearAll();
+    clearAppearanceSettings();
+    return true;
 });
 
 ipcMain.handle('zen-launcher:show-message', async (_event, options) => {

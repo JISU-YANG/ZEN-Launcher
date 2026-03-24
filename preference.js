@@ -8,12 +8,49 @@
     static settingTopbar = document.getElementById('setting-topbar');
 }
 
+const MAX_LAUNCHER_TRANSPARENCY = 100;
+const MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY = 50;
+const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
+    launcherTransparency: 0
+});
+
+function normalizeAppearanceSettings(value = {}) {
+    const rawTransparency = Number.parseInt(value?.launcherTransparency, 10);
+    const launcherTransparency = Number.isFinite(rawTransparency)
+        ? Math.min(MAX_LAUNCHER_TRANSPARENCY, Math.max(0, rawTransparency))
+        : DEFAULT_APPEARANCE_SETTINGS.launcherTransparency;
+
+    return { launcherTransparency };
+}
+
+function applyAppearanceSettingsToDocument(settings) {
+    const { launcherTransparency } = normalizeAppearanceSettings(settings);
+    const effectiveTransparencyRatio = (launcherTransparency / 100) * (MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY / 100);
+    const surfaceOpacity = `${(1 - effectiveTransparencyRatio).toFixed(3)}`;
+    const rootStyle = document.documentElement.style;
+    const launcherShell = document.getElementById('launcher-shell');
+
+    rootStyle.setProperty('--launcher-shell-alpha', '1');
+    rootStyle.setProperty('--launcher-panel-alpha', '0.96');
+    rootStyle.setProperty('--launcher-card-alpha', '1');
+    rootStyle.setProperty('--launcher-soft-card-alpha', '0.48');
+    rootStyle.setProperty('--launcher-list-alpha', '1');
+    rootStyle.setProperty('--launcher-overlay-alpha', '0.2');
+    rootStyle.setProperty('--launcher-surface-opacity', surfaceOpacity);
+
+    if (launcherShell) {
+        launcherShell.style.opacity = surfaceOpacity;
+    }
+}
+
 class ZenLauncherPreferences {
     static Category = {
         GALLERY: 'gallery',
         ICON: 'icon',
         FOLDER: 'folder'
     };
+
+    static ThemeCategory = 'theme';
 
     static MaxCount = {
         gallery: 6,
@@ -37,8 +74,11 @@ class ZenLauncherPreferences {
     #styleInjected = false;
     #editorCloseTimer = 0;
     #editorOpenReadyTimer = 0;
+    #savedAppearance = { ...DEFAULT_APPEARANCE_SETTINGS };
+    #draftAppearance = { ...DEFAULT_APPEARANCE_SETTINGS };
+    #appearanceDirty = false;
 
-    constructor(initialData) {
+    constructor(initialData, appearanceSettings) {
         Object.values(ZenLauncherPreferences.Category).forEach((category) => {
             const items = Array.isArray(initialData?.[category]) ? initialData[category] : [];
             const normalizedItems = items
@@ -49,6 +89,10 @@ class ZenLauncherPreferences {
             this.#drafts.set(category, normalizedItems.map((item) => ({ ...item })));
         });
 
+        this.#savedAppearance = normalizeAppearanceSettings(appearanceSettings);
+        this.#draftAppearance = { ...this.#savedAppearance };
+        this.#applyAppearance(this.#savedAppearance);
+
         this.#prepareEditorStructure();
         this.#bindEvents();
         this.#bindEditorGridEvents();
@@ -58,6 +102,48 @@ class ZenLauncherPreferences {
         this.#renderLauncherItems();
         this.#refreshStatus();
         this.#loadProgramScanCache();
+    }
+
+    #getTabCategory(button) {
+        if (!button) {
+            return '';
+        }
+
+        if (button.dataset.tab === ZenLauncherPreferences.ThemeCategory) {
+            return ZenLauncherPreferences.ThemeCategory;
+        }
+
+        return ZenLauncherPreferences.Category[button.dataset.category] || '';
+    }
+
+    #areAppearanceSettingsEqual(left, right) {
+        return left?.launcherTransparency === right?.launcherTransparency;
+    }
+
+    #updateAppearanceDirtyState() {
+        this.#appearanceDirty = !this.#areAppearanceSettingsEqual(this.#draftAppearance, this.#savedAppearance);
+    }
+
+    #getDirtyPreferenceCount() {
+        return this.#dirtyCategories.size + (this.#appearanceDirty ? 1 : 0);
+    }
+
+    #applyAppearance(settings) {
+        const normalizedSettings = normalizeAppearanceSettings(settings);
+        applyAppearanceSettingsToDocument(normalizedSettings);
+        return normalizedSettings;
+    }
+
+    #updateAppearanceDraft(patch) {
+        this.#draftAppearance = normalizeAppearanceSettings({
+            ...this.#draftAppearance,
+            ...patch
+        });
+        this.#updateAppearanceDirtyState();
+        this.#statusOverride = null;
+        this.#renderCategoryButtons();
+        this.#refreshStatus();
+        this.#applyAppearance(this.#draftAppearance);
     }
 
     #bindEvents() {
@@ -81,7 +167,7 @@ class ZenLauncherPreferences {
         ElementPath.clearButton?.addEventListener('click', async () => {
             const response = await window.zenLauncher.showMessage({
                 type: 'warning',
-                message: '저장된 모든 항목을 초기화할까요?',
+                message: '저장된 모든 항목과 테마 설정을 초기화할까요?',
                 buttons: ['취소', '전체 초기화'],
                 defaultId: 0,
                 cancelId: 0
@@ -97,6 +183,9 @@ class ZenLauncherPreferences {
                 this.#savedData.set(category, []);
                 this.#drafts.set(category, []);
             });
+            this.#savedAppearance = { ...DEFAULT_APPEARANCE_SETTINGS };
+            this.#draftAppearance = { ...this.#savedAppearance };
+            this.#applyAppearance(this.#savedAppearance);
             this.#syncAllDirtyCategories();
 
             this.#activeItemIndex = -1;
@@ -115,16 +204,8 @@ class ZenLauncherPreferences {
         });
 
         this.#getTabButtons().forEach((button) => {
-            this.#makeAccessibleButton(button, async () => {
-                if (button.dataset.comingSoon === 'true') {
-                    await window.zenLauncher.showMessage({
-                        type: 'info',
-                        message: `${button.dataset.label || button.textContent} 탭은 추후 추가할 예정입니다.`
-                    });
-                    return;
-                }
-
-                const category = ZenLauncherPreferences.Category[button.dataset.category];
+            this.#makeAccessibleButton(button, () => {
+                const category = this.#getTabCategory(button);
                 if (category) {
                     this.#switchCategory(category);
                 }
@@ -421,6 +502,72 @@ class ZenLauncherPreferences {
                 width:48px; height:48px; margin:0 auto; border-radius:16px; background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
                 color:#f1f1f1; font-size:18px; font-weight:900;
             }
+            .theme-settings-panel {
+                display:flex;
+                flex-direction:column;
+                gap:14px;
+                min-height:0;
+                padding:6px 0 0;
+                box-sizing:border-box;
+            }
+            .theme-control-header {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+            }
+            .theme-control-title {
+                color:#f1f1f1;
+                font-size:16px;
+                font-weight:900;
+            }
+            .theme-control-value {
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                min-width:54px;
+                height:28px;
+                padding:0 10px;
+                border-radius:999px;
+                background:rgba(255,255,255,0.05);
+                color:#f1f1f1;
+                font-size:11px;
+                font-weight:900;
+                box-sizing:border-box;
+            }
+            .theme-control-description {
+                color:#9a9a9a;
+                font-size:11px;
+                line-height:1.55;
+            }
+            .theme-transparency-range {
+                width:100%;
+                appearance:none;
+                -webkit-appearance:none;
+                height:8px;
+                margin:0;
+                border-radius:999px;
+                background:linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+                outline:none;
+            }
+            .theme-transparency-range::-webkit-slider-thumb {
+                -webkit-appearance:none;
+                width:18px;
+                height:18px;
+                border:none;
+                border-radius:50%;
+                background:#f3f3f3;
+                box-shadow:0 6px 12px rgba(0,0,0,0.24);
+                cursor:pointer;
+            }
+            .theme-transparency-scale {
+                display:flex;
+                justify-content:space-between;
+                gap:10px;
+                color:#8a8a8a;
+                font-size:10px;
+                font-weight:700;
+            }
         `;
 
         document.head.appendChild(style);
@@ -593,7 +740,7 @@ class ZenLauncherPreferences {
     }
 
     async #closeEditor() {
-        if (this.#hasDirtyCategories()) {
+        if (this.#hasDirtyChanges()) {
             const response = await window.zenLauncher.showMessage({
                 type: 'warning',
                 message: '저장하지 않은 변경이 있습니다. 닫으면 입력 중인 내용이 사라집니다.',
@@ -647,6 +794,9 @@ class ZenLauncherPreferences {
         this.#activeItemIndex = -1;
         this.#statusOverride = null;
         this.#closeProgramBrowser();
+        if (category === ZenLauncherPreferences.ThemeCategory) {
+            this.#closeItemEditor({ closeProgramBrowser: false });
+        }
         this.#renderCategoryButtons();
         this.#renderCategoryItems(category);
         this.#refreshStatus();
@@ -654,8 +804,9 @@ class ZenLauncherPreferences {
 
     async #saveDirtyCategories() {
         const dirtyCategories = Object.values(ZenLauncherPreferences.Category).filter((category) => this.#isCategoryDirty(category));
+        const shouldSaveAppearance = this.#appearanceDirty;
 
-        if (dirtyCategories.length === 0) {
+        if (dirtyCategories.length === 0 && !shouldSaveAppearance) {
             this.#statusOverride = {
                 tone: 'neutral',
                 message: '변경 없음'
@@ -675,9 +826,17 @@ class ZenLauncherPreferences {
             this.#updateDirtyState(category);
         }
 
+        if (shouldSaveAppearance) {
+            const savedAppearance = await window.zenLauncher.saveAppearanceSettings(this.#draftAppearance);
+            this.#savedAppearance = normalizeAppearanceSettings(savedAppearance);
+            this.#draftAppearance = { ...this.#savedAppearance };
+            this.#updateAppearanceDirtyState();
+            this.#applyAppearance(this.#savedAppearance);
+        }
+
         this.#statusOverride = {
             tone: 'success',
-            message: `${dirtyCategories.length}개 저장됨`
+            message: `${dirtyCategories.length + (shouldSaveAppearance ? 1 : 0)}개 저장됨`
         };
         this.#renderCategoryButtons();
         this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
@@ -687,15 +846,11 @@ class ZenLauncherPreferences {
 
     #renderCategoryButtons() {
         this.#getTabButtons().forEach((button) => {
-            if (button.dataset.comingSoon === 'true') {
-                button.classList.remove('select-category');
-                button.dataset.dirty = 'false';
-                return;
-            }
-
-            const category = ZenLauncherPreferences.Category[button.dataset.category];
+            const category = this.#getTabCategory(button);
             const isActive = category === ZenLauncherPreferences.activeCategory;
-            const isDirty = this.#dirtyCategories.has(category);
+            const isDirty = category === ZenLauncherPreferences.ThemeCategory
+                ? this.#appearanceDirty
+                : this.#dirtyCategories.has(category);
 
             button.classList.toggle('select-category', isActive);
             button.dataset.dirty = isDirty ? 'true' : 'false';
@@ -703,6 +858,12 @@ class ZenLauncherPreferences {
     }
 
     #renderCategoryItems(category) {
+        if (category === ZenLauncherPreferences.ThemeCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createThemePanel());
+            this.#closeItemEditor();
+            return;
+        }
+
         const items = this.#drafts.get(category) || [];
         const grid = document.createElement('div');
         grid.className = 'setting-grid';
@@ -726,6 +887,56 @@ class ZenLauncherPreferences {
         if (!activeItem) {
             this.#closeItemEditor();
         }
+    }
+
+    #createThemePanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel';
+
+        const header = document.createElement('div');
+        header.className = 'theme-control-header';
+        header.append(
+            this.#createStaticElement('div', 'theme-control-title', '메인 런처 투명도'),
+            this.#createStaticElement('div', 'theme-control-value', '')
+        );
+
+        const description = this.#createStaticElement(
+            'div',
+            'theme-control-description',
+            '상단의 원래 투명 영역은 그대로 두고, 메인 런처 본체만 조절합니다. 100%는 실제 최대 투명도 50%입니다.'
+        );
+
+        const range = document.createElement('input');
+        range.type = 'range';
+        range.className = 'theme-transparency-range';
+        range.min = '0';
+        range.max = `${MAX_LAUNCHER_TRANSPARENCY}`;
+        range.step = '1';
+
+        const scale = document.createElement('div');
+        scale.className = 'theme-transparency-scale';
+        scale.append(
+            this.#createStaticElement('span', '', '0%'),
+            this.#createStaticElement('span', '', `${MAX_LAUNCHER_TRANSPARENCY}%`)
+        );
+
+        panel.append(header, description, range, scale);
+
+        const syncThemePanel = () => {
+            const normalizedAppearance = normalizeAppearanceSettings(this.#draftAppearance);
+            const transparencyText = `${normalizedAppearance.launcherTransparency}%`;
+            range.value = `${normalizedAppearance.launcherTransparency}`;
+            range.setAttribute('aria-valuetext', transparencyText);
+            header.querySelector('.theme-control-value').textContent = transparencyText;
+        };
+
+        range.addEventListener('input', () => {
+            this.#updateAppearanceDraft({ launcherTransparency: range.value });
+            syncThemePanel();
+        });
+
+        syncThemePanel();
+        return panel;
     }
 
     #createItemCard(category, item, index) {
@@ -1432,7 +1643,7 @@ class ZenLauncherPreferences {
             browserScanMeta.textContent = this.#formatScanTimestamp(this.#programScanScannedAt);
         }
 
-        const dirtyCount = this.#dirtyCategories.size;
+        const dirtyCount = this.#getDirtyPreferenceCount();
         let tone = 'neutral';
         let message = '저장됨';
 
@@ -1623,8 +1834,8 @@ class ZenLauncherPreferences {
         });
     }
 
-    #hasDirtyCategories() {
-        return this.#dirtyCategories.size > 0;
+    #hasDirtyChanges() {
+        return this.#getDirtyPreferenceCount() > 0;
     }
 
     #isCategoryDirty(category) {
@@ -1668,6 +1879,7 @@ class ZenLauncherPreferences {
         Object.values(ZenLauncherPreferences.Category).forEach((category) => {
             this.#updateDirtyState(category);
         });
+        this.#updateAppearanceDirtyState();
     }
 
     #resetDraftsFromSaved() {
@@ -1675,6 +1887,8 @@ class ZenLauncherPreferences {
             const savedItems = this.#savedData.get(category) || [];
             this.#drafts.set(category, savedItems.map((item) => ({ ...item })));
         });
+        this.#draftAppearance = { ...this.#savedAppearance };
+        this.#applyAppearance(this.#savedAppearance);
     }
 
     #extractPersistableItems(items, category) {
@@ -1912,6 +2126,10 @@ class ZenLauncherPreferences {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
-    const data = await window.zenLauncher.loadData();
-    new ZenLauncherPreferences(data);
+    const [data, appearanceSettings] = await Promise.all([
+        window.zenLauncher.loadData(),
+        window.zenLauncher.loadAppearanceSettings()
+    ]);
+    applyAppearanceSettingsToDocument(appearanceSettings);
+    new ZenLauncherPreferences(data, appearanceSettings);
 });
