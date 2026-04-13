@@ -18,6 +18,7 @@
 /.idea/
 /dist/.icon-ico/
 /dist/win-unpacked/
+/dist/win-ia32-unpacked/
 /dist/builder-debug.yml
 /dist/builder-effective-config.yaml
 node_modules/
