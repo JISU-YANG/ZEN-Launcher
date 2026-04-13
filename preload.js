@@ -18,8 +18,20 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     loadData() {
         return ipcRenderer.invoke('zen-launcher:load-data');
     },
+    loadAppearanceSettings() {
+        return ipcRenderer.invoke('zen-launcher:load-appearance-settings');
+    },
+    loadProgramScanCache() {
+        return ipcRenderer.invoke('zen-launcher:load-program-scan-cache');
+    },
+    scanInstalledPrograms() {
+        return ipcRenderer.invoke('zen-launcher:scan-installed-programs');
+    },
     saveCategoryData(category, items) {
         return ipcRenderer.invoke('zen-launcher:save-category-data', category, items);
+    },
+    saveAppearanceSettings(settings) {
+        return ipcRenderer.invoke('zen-launcher:save-appearance-settings', settings);
     },
     clearData() {
         return ipcRenderer.invoke('zen-launcher:clear-data');
