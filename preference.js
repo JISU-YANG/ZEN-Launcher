@@ -556,7 +556,7 @@ class ZenLauncherPreferences {
                 flex-direction:column;
                 gap:12px;
                 min-height:0;
-                padding:0;
+                padding:0 4px 4px;
                 box-sizing:border-box;
             }
             .theme-control-header {
@@ -689,7 +689,7 @@ class ZenLauncherPreferences {
                 display:flex;
                 flex-direction:column;
                 gap:12px;
-                padding-top:6px;
+                padding-top:0;
             }
             .theme-placeholder-title {
                 color:#f1f1f1;
@@ -778,7 +778,7 @@ class ZenLauncherPreferences {
             .theme-mode-option-body {
                 display:flex;
                 flex-direction:column;
-                gap:3px;
+                gap:0;
                 min-width:0;
             }
             .theme-mode-option-title {
@@ -1501,7 +1501,7 @@ class ZenLauncherPreferences {
         return panel;
     }
 
-    #createThemeModeOption({ id, name, value, title, caption, checked = false }) {
+    #createThemeModeOption({ id, name, value, title, checked = false }) {
         const label = document.createElement('label');
         label.className = 'theme-mode-option';
 
@@ -1521,8 +1521,7 @@ class ZenLauncherPreferences {
         const body = document.createElement('div');
         body.className = 'theme-mode-option-body';
         body.append(
-            this.#createStaticElement('div', 'theme-mode-option-title', title),
-            this.#createStaticElement('div', 'theme-mode-option-caption', caption)
+            this.#createStaticElement('div', 'theme-mode-option-title', title)
         );
 
         const swatch = document.createElement('div');
