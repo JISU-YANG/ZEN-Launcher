@@ -26,7 +26,8 @@ const APPEARANCE_SETTINGS_KEY = 'ZENL.Appearance';
 const MAX_LAUNCHER_TRANSPARENCY = 100;
 const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
-    themeMode: 'dark'
+    themeMode: 'dark',
+    revealOnHover: false
 });
 const categoryRepository = new CategoryStoreRepository(store);
 const remoteImageCacheRepository = new RemoteImageCacheRepository({ app });
@@ -56,8 +57,9 @@ function normalizeAppearanceSettings(value = {}) {
     const themeMode = value?.themeMode === 'light'
         ? 'light'
         : DEFAULT_APPEARANCE_SETTINGS.themeMode;
+    const revealOnHover = value?.revealOnHover === true;
 
-    return { launcherTransparency, themeMode };
+    return { launcherTransparency, themeMode, revealOnHover };
 }
 
 function loadAppearanceSettings() {

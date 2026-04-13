@@ -12,7 +12,8 @@ const MAX_LAUNCHER_TRANSPARENCY = 100;
 const MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY = 50;
 const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
-    themeMode: 'dark'
+    themeMode: 'dark',
+    revealOnHover: false
 });
 const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
 const SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS = 180;
@@ -25,23 +26,37 @@ function normalizeAppearanceSettings(value = {}) {
     const themeMode = value?.themeMode === 'light'
         ? 'light'
         : DEFAULT_APPEARANCE_SETTINGS.themeMode;
+    const revealOnHover = value?.revealOnHover === true;
 
-    return { launcherTransparency, themeMode };
+    return { launcherTransparency, themeMode, revealOnHover };
 }
 
 function applyAppearanceSettingsToDocument(settings) {
-    const { launcherTransparency, themeMode } = normalizeAppearanceSettings(settings);
+    const normalizedSettings = normalizeAppearanceSettings(settings);
+    const { launcherTransparency, themeMode, revealOnHover } = normalizedSettings;
     const effectiveTransparencyRatio = (launcherTransparency / 100) * (MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY / 100);
-    const surfaceOpacity = `${(1 - effectiveTransparencyRatio).toFixed(3)}`;
+    const baseSurfaceOpacity = `${(1 - effectiveTransparencyRatio).toFixed(3)}`;
+    const surfaceOpacity = revealOnHover && document.documentElement.dataset.launcherHovered === 'true'
+        ? '1'
+        : baseSurfaceOpacity;
+    const launcherHighlightOpacity = `${(Number.parseFloat(surfaceOpacity) * 0.76).toFixed(3)}`;
     const rootStyle = document.documentElement.style;
     const launcherShell = document.getElementById('launcher-shell');
+    const editorElement = document.getElementById('editor');
 
     document.documentElement.dataset.theme = themeMode;
+    document.documentElement.dataset.hoverRevealEnabled = revealOnHover ? 'true' : 'false';
     if (document.body) {
         document.body.dataset.theme = themeMode;
+        document.body.dataset.hoverRevealEnabled = revealOnHover ? 'true' : 'false';
     }
 
-    rootStyle.setProperty('--launcher-shell-alpha', '1');
+    rootStyle.setProperty('--launcher-shell-alpha', surfaceOpacity);
+    rootStyle.setProperty('--launcher-top-strip-alpha', surfaceOpacity);
+    rootStyle.setProperty('--launcher-highlight-alpha', launcherHighlightOpacity);
+    rootStyle.setProperty('--editor-head-alpha', surfaceOpacity);
+    rootStyle.setProperty('--editor-head-opacity', surfaceOpacity);
+    rootStyle.setProperty('--editor-surface-opacity', '1');
     rootStyle.setProperty('--launcher-panel-alpha', '0.96');
     rootStyle.setProperty('--launcher-card-alpha', '1');
     rootStyle.setProperty('--launcher-soft-card-alpha', '0.48');
@@ -52,7 +67,23 @@ function applyAppearanceSettingsToDocument(settings) {
     if (launcherShell) {
         launcherShell.style.opacity = surfaceOpacity;
     }
+    if (editorElement) {
+        const isExpandedActive = editorElement.classList.contains('open')
+            || editorElement.classList.contains('closing')
+            || editorElement.classList.contains('expanding')
+            || editorElement.classList.contains('open-ready');
+        editorElement.style.setProperty('--editor-head-opacity', isExpandedActive ? '1' : surfaceOpacity);
+    }
+
+    window.dispatchEvent(new CustomEvent('zen-launcher:appearance-change', {
+        detail: normalizedSettings
+    }));
 }
+
+window.zenLauncherAppearance = {
+    normalizeAppearanceSettings,
+    applyAppearanceSettingsToDocument
+};
 
 class ZenLauncherPreferences {
     static Category = {
@@ -134,7 +165,8 @@ class ZenLauncherPreferences {
 
     #areAppearanceSettingsEqual(left, right) {
         return left?.launcherTransparency === right?.launcherTransparency
-            && left?.themeMode === right?.themeMode;
+            && left?.themeMode === right?.themeMode
+            && left?.revealOnHover === right?.revealOnHover;
     }
 
     #updateAppearanceDirtyState() {
@@ -612,6 +644,47 @@ class ZenLauncherPreferences {
                 font-weight:700;
                 letter-spacing:0.04em;
             }
+            .theme-toggle-card {
+                display:flex;
+                align-items:flex-start;
+                gap:12px;
+                margin-top:8px;
+                padding:6px 0 0;
+                border:1px solid transparent;
+                border-radius:0;
+                background:transparent;
+                box-sizing:border-box;
+                cursor:pointer;
+                box-shadow:none;
+                transition:color 0.18s ease, transform 0.18s ease;
+            }
+            .theme-toggle-card:hover {
+                transform:translateY(-1px);
+            }
+            .theme-toggle-card input {
+                width:18px;
+                height:18px;
+                margin:2px 0 0;
+                accent-color:#f1f1f1;
+                cursor:pointer;
+                flex:0 0 auto;
+            }
+            .theme-toggle-copy {
+                display:flex;
+                flex-direction:column;
+                gap:4px;
+                min-width:0;
+            }
+            .theme-toggle-title {
+                color:#f1f1f1;
+                font-size:13px;
+                font-weight:800;
+            }
+            .theme-toggle-description {
+                color:#8f8f8f;
+                font-size:11px;
+                line-height:1.6;
+            }
             .theme-placeholder {
                 display:flex;
                 flex-direction:column;
@@ -635,14 +708,15 @@ class ZenLauncherPreferences {
                 gap:12px;
                 position:relative;
                 min-height:72px;
-                padding:12px 14px;
-                border:1px solid rgba(255,255,255,0.08);
-                border-radius:16px;
-                background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+                padding:12px 0;
+                border:1px solid transparent;
+                border-radius:0;
+                background:transparent;
                 box-sizing:border-box;
                 cursor:pointer;
                 overflow:hidden;
-                transition:border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+                box-shadow:none;
+                transition:color 0.18s ease, transform 0.18s ease;
             }
             .theme-mode-option::before {
                 content:'';
@@ -656,14 +730,9 @@ class ZenLauncherPreferences {
                 transition:background 0.18s ease;
             }
             .theme-mode-option:hover {
-                border-color:rgba(255,255,255,0.14);
-                background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
                 transform:translateY(-1px);
             }
             .theme-mode-option:has(input:checked) {
-                border-color:rgba(255,255,255,0.24);
-                background:linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px rgba(0,0,0,0.16);
                 transform:translateY(-1px);
             }
             .theme-mode-option:has(input:checked)::before {
@@ -724,37 +793,37 @@ class ZenLauncherPreferences {
                 line-height:1.4;
             }
             body[data-theme="light"] #setting-container {
-                color:#25303a;
+                color:var(--light-text-default);
             }
             body[data-theme="light"] #setting-category,
             body[data-theme="light"] .setting-mode-row {
                 border-color:rgba(84,92,104,0.1);
-                background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(237,241,246,0.96));
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.88), 0 12px 22px rgba(38,46,58,0.06);
+                background:linear-gradient(180deg, var(--light-surface-top), var(--light-surface-bottom));
+                box-shadow:var(--light-highlight), 0 12px 22px rgba(38,46,58,0.06);
             }
             body[data-theme="light"] .setting-category-button,
             body[data-theme="light"] .setting-mode-chip {
-                color:#6f7a86;
+                color:var(--light-text-muted);
             }
             body[data-theme="light"] .setting-category-button:hover,
             body[data-theme="light"] .setting-mode-chip:hover {
                 border-color:rgba(84,92,104,0.12);
                 background:rgba(255,255,255,0.72);
-                color:#27303a;
+                color:var(--light-text-default);
             }
             body[data-theme="light"] .setting-category-button.select-category,
             body[data-theme="light"] .setting-mode-chip.active {
                 border-color:rgba(84,92,104,0.18);
-                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(232,236,241,0.98));
-                color:#1f2730;
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 18px rgba(38,46,58,0.08);
+                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-active-bottom));
+                color:var(--light-text-strong);
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), var(--light-shadow-medium);
             }
             body[data-theme="light"] #setting-status,
             body[data-theme="light"] .setting-scan-meta {
                 border-color:rgba(84,92,104,0.1);
                 background:rgba(255,255,255,0.82);
-                color:#5d6874;
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.88);
+                color:var(--light-text-tint);
+                box-shadow:var(--light-highlight);
             }
             body[data-theme="light"] #setting-status::before {
                 background:rgba(95,106,119,0.72);
@@ -781,17 +850,28 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .setting-item-card,
             body[data-theme="light"] .setting-add-card,
             body[data-theme="light"] .program-picker-card,
-            body[data-theme="light"] .program-browser-item {
+            body[data-theme="light"] .program-browser-item,
+            body[data-theme="light"] .theme-toggle-card {
                 border-color:rgba(84,92,104,0.1);
-                background:linear-gradient(180deg, rgba(249,251,253,0.98), rgba(232,237,243,0.96));
-                color:#25303a;
+                background:linear-gradient(180deg, rgba(249,251,253,0.98), var(--light-surface-bottom));
+                color:var(--light-text-default);
                 box-shadow:inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 20px rgba(38,46,58,0.08);
             }
             body[data-theme="light"] .setting-item-card:hover,
             body[data-theme="light"] .setting-add-card:hover,
-            body[data-theme="light"] .program-browser-item:hover {
+            body[data-theme="light"] .program-browser-item:hover,
+            body[data-theme="light"] .theme-toggle-card:hover {
                 border-color:rgba(84,92,104,0.16);
-                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(235,239,244,0.98));
+                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-hover-bottom));
+            }
+            body[data-theme="light"] .theme-toggle-card {
+                border-color:transparent;
+                background:transparent;
+                box-shadow:none;
+            }
+            body[data-theme="light"] .theme-toggle-card:hover {
+                border-color:transparent;
+                background:transparent;
             }
             body[data-theme="light"] .setting-item-card.select-item {
                 border-color:rgba(84,92,104,0.18);
@@ -819,8 +899,9 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .slot-editor-panel-title,
             body[data-theme="light"] .theme-control-title,
             body[data-theme="light"] .theme-placeholder-title,
-            body[data-theme="light"] .theme-range-label {
-                color:#1f2730;
+            body[data-theme="light"] .theme-range-label,
+            body[data-theme="light"] .theme-toggle-title {
+                color:var(--light-text-strong);
             }
             body[data-theme="light"] .setting-item-card-meta,
             body[data-theme="light"] .program-picker-meta,
@@ -832,8 +913,9 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .theme-control-description,
             body[data-theme="light"] .theme-range-caption,
             body[data-theme="light"] .theme-transparency-scale,
-            body[data-theme="light"] .theme-mode-option-caption {
-                color:#6a7682;
+            body[data-theme="light"] .theme-mode-option-caption,
+            body[data-theme="light"] .theme-toggle-description {
+                color:var(--light-text-muted);
             }
             body[data-theme="light"] .setting-grid[data-category="ICON"] .setting-preview-icon-media,
             body[data-theme="light"] .program-browser-empty {
@@ -886,7 +968,7 @@ class ZenLauncherPreferences {
                     linear-gradient(rgba(102,113,125,0.92), rgba(102,113,125,0.92)) center / 2px 22px no-repeat;
             }
             body[data-theme="light"] #slot-editor {
-                color:#25303a;
+                color:var(--light-text-default);
             }
             body[data-theme="light"] .slot-editor-header,
             body[data-theme="light"] .slot-editor-panel-header,
@@ -903,13 +985,13 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .file-item,
             body[data-theme="light"] .setting-action-button {
                 border-color:rgba(84,92,104,0.1);
-                background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(235,239,244,0.96));
-                color:#25303a;
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 18px rgba(38,46,58,0.06);
+                background:linear-gradient(180deg, var(--light-surface-top), var(--light-surface-bottom));
+                color:var(--light-text-default);
+                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), var(--light-shadow-soft);
             }
             body[data-theme="light"] .setting-field input::placeholder,
             body[data-theme="light"] .program-browser-search::placeholder {
-                color:#8a95a1;
+                color:var(--light-text-subtle);
             }
             body[data-theme="light"] .slot-secondary-button.danger-button,
             body[data-theme="light"] .setting-action-button.danger-button {
@@ -919,15 +1001,15 @@ class ZenLauncherPreferences {
             }
             body[data-theme="light"] .setting-action-button.primary-button {
                 border-color:rgba(84,92,104,0.14);
-                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(232,236,241,0.98));
-                color:#1f2730;
+                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-active-bottom));
+                color:var(--light-text-strong);
             }
             body[data-theme="light"] .slot-secondary-button:hover,
             body[data-theme="light"] .slot-editor-close:hover,
             body[data-theme="light"] .file-item:hover,
             body[data-theme="light"] .setting-action-button:hover {
                 border-color:rgba(84,92,104,0.16);
-                background:linear-gradient(180deg, rgba(255,255,255,1), rgba(239,243,247,0.98));
+                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-hover-bottom));
             }
             body[data-theme="light"] .program-picker-card.empty {
                 background:rgba(255,255,255,0.58);
@@ -941,7 +1023,28 @@ class ZenLauncherPreferences {
                 border-bottom-color:rgba(84,92,104,0.1);
             }
             body[data-theme="light"] .theme-control-value {
-                color:#4d5966;
+                color:var(--light-text-tint);
+            }
+            body[data-theme="light"] .theme-mode-option:has(input:checked) .theme-mode-option-title {
+                color:var(--light-text-strong);
+            }
+            body[data-theme="light"] .theme-mode-option:has(input:checked) .theme-mode-option-caption {
+                color:var(--light-text-muted);
+            }
+            body[data-theme="light"] .theme-mode-option,
+            body[data-theme="light"] .theme-mode-option:hover,
+            body[data-theme="light"] .theme-mode-option:has(input:checked) {
+                border-color:transparent;
+                background:transparent;
+                box-shadow:none;
+            }
+            body[data-theme="light"] .theme-mode-option::before,
+            body[data-theme="light"] .theme-mode-option:has(input:checked)::before {
+                background:transparent;
+            }
+            body[data-theme="light"] .theme-mode-option-swatch,
+            body[data-theme="light"] .theme-mode-option:has(input:checked) .theme-mode-option-swatch {
+                box-shadow:none;
             }
             body[data-theme="light"] .theme-transparency-range {
                 background:linear-gradient(90deg, rgba(181,190,201,0.56), rgba(226,231,237,0.92));
@@ -949,7 +1052,7 @@ class ZenLauncherPreferences {
             }
             body[data-theme="light"] .theme-transparency-range::-webkit-slider-thumb {
                 border-color:rgba(84,92,104,0.1);
-                background:linear-gradient(180deg, #ffffff, #dde3ea);
+                background:linear-gradient(180deg, #ffffff, var(--light-icon-surface));
                 box-shadow:0 8px 16px rgba(38,46,58,0.14);
             }
             body[data-theme="light"] .setting-category-button:focus-visible,
@@ -1302,14 +1405,8 @@ class ZenLauncherPreferences {
         const header = document.createElement('div');
         header.className = 'theme-control-header';
         header.append(
-            this.#createStaticElement('div', 'theme-control-title', '메인 런처 투명도'),
+            this.#createStaticElement('div', 'theme-control-title', '런처 투명도'),
             this.#createStaticElement('div', 'theme-control-value', '')
-        );
-
-        const description = this.#createStaticElement(
-            'div',
-            'theme-control-description',
-            '상단의 원래 투명 영역은 그대로 두고, 메인 런처 본체만 조절합니다.'
         );
 
         const range = document.createElement('input');
@@ -1333,7 +1430,21 @@ class ZenLauncherPreferences {
             this.#createStaticElement('span', '', `${MAX_LAUNCHER_TRANSPARENCY}%`)
         );
 
-        panel.append(header, description, rangeHeader, range, scale);
+        const hoverToggle = document.createElement('label');
+        hoverToggle.className = 'theme-toggle-card';
+
+        const hoverCheckbox = document.createElement('input');
+        hoverCheckbox.type = 'checkbox';
+        hoverCheckbox.checked = this.#draftAppearance.revealOnHover === true;
+
+        const hoverCopy = document.createElement('div');
+        hoverCopy.className = 'theme-toggle-copy';
+        hoverCopy.append(
+            this.#createStaticElement('div', 'theme-toggle-title', '마우스 호버 시 잠시 선명하게 표시')
+        );
+
+        hoverToggle.append(hoverCheckbox, hoverCopy);
+        panel.append(header, rangeHeader, range, scale, hoverToggle);
 
         const syncThemePanel = () => {
             const normalizedAppearance = normalizeAppearanceSettings(this.#draftAppearance);
@@ -1341,10 +1452,16 @@ class ZenLauncherPreferences {
             range.value = `${normalizedAppearance.launcherTransparency}`;
             range.setAttribute('aria-valuetext', transparencyText);
             header.querySelector('.theme-control-value').textContent = transparencyText;
+            hoverCheckbox.checked = normalizedAppearance.revealOnHover === true;
         };
 
         range.addEventListener('input', () => {
             this.#updateAppearanceDraft({ launcherTransparency: range.value });
+            syncThemePanel();
+        });
+
+        hoverCheckbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ revealOnHover: hoverCheckbox.checked });
             syncThemePanel();
         });
 

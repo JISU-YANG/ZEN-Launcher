@@ -5,6 +5,8 @@
     const weatherToggleButton = document.getElementById('btn-weather-toggle');
     const quickToggleButton = document.getElementById('btn-quick-toggle');
     const footerCompactButton = document.getElementById('btn-footer-compact');
+    const launcherContainer = document.getElementById('container');
+    const launcherShell = document.getElementById('launcher-shell');
     const preferenceButton = document.getElementById('btn-preference');
     const weatherWidget = document.getElementById('weather-widget');
     const quickWidget = document.getElementById('quick-widget');
@@ -39,6 +41,7 @@
     const WEATHER_CACHE_DURATION = 10 * 60 * 1000;
     const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
     const COMPACT_PANEL_PERSIST_TARGETS = new Set(['volume-up', 'volume-down']);
+    const appearanceApi = window.zenLauncherAppearance || null;
     const SEARCH_ENGINES = {
         default: {
             label: 'Google',
@@ -79,6 +82,7 @@
     let expandedPanelCloseHandler = null;
     let expandedPanelCloseTarget = null;
     let expandedPanelOpenReadyTimer = 0;
+    let currentAppearanceSettings = null;
     const SUPPORTED_PANEL_SIZES = new Set(['s', 'm', 'l']);
     const normalizePanelSize = (size) => SUPPORTED_PANEL_SIZES.has(size) ? size : 'm';
     const widgetOrigins = new Map([
@@ -370,6 +374,8 @@
             clearExpandedPanelOpenReadyTimer();
         }
 
+        syncExpandedEditorState();
+
         if (editorWidgetTitle) {
             editorWidgetTitle.textContent = title;
         }
@@ -431,6 +437,7 @@
                     delete editorElement.dataset.size;
                 }
             }
+            syncExpandedEditorState();
             restoreWidgetToOrigin(weatherWidget);
             restoreWidgetToOrigin(quickWidget);
             restoreWidgetToOrigin(shutdownScheduler);
@@ -446,6 +453,8 @@
             editorElement.classList.add('closing');
             editorElement.classList.remove('open');
         }
+
+        syncExpandedEditorState();
 
         activeExpandedPanel = '';
         if (expandedPanelCloseTimer) {
@@ -895,6 +904,82 @@
         searchInput.focus({ preventScroll: true });
         searchInput.select();
     };
+    const applyLauncherAppearance = (settings) => {
+        if (!appearanceApi?.applyAppearanceSettingsToDocument) {
+            return;
+        }
+
+        currentAppearanceSettings = appearanceApi.normalizeAppearanceSettings(settings);
+        appearanceApi.applyAppearanceSettingsToDocument(currentAppearanceSettings);
+    };
+    const syncExpandedEditorState = () => {
+        if (!document.body || !editorElement) {
+            return;
+        }
+
+        const isExpandedActive = Boolean(editorElement.dataset.panel)
+            || editorElement.classList.contains('open')
+            || editorElement.classList.contains('closing')
+            || editorElement.classList.contains('expanding')
+            || editorElement.classList.contains('open-ready');
+
+        document.body.dataset.editorActive = isExpandedActive ? 'true' : 'false';
+    };
+    const syncLauncherHoverState = (isHovered) => {
+        document.documentElement.dataset.launcherHovered = isHovered ? 'true' : 'false';
+        if (document.body) {
+            document.body.dataset.launcherHovered = isHovered ? 'true' : 'false';
+        }
+        if (currentAppearanceSettings) {
+            applyLauncherAppearance(currentAppearanceSettings);
+        }
+    };
+    const isPointInsideElement = (element, clientX, clientY) => {
+        if (!element || !element.isConnected) {
+            return false;
+        }
+
+        const rect = element.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) {
+            return false;
+        }
+
+        return clientX >= rect.left
+            && clientX <= rect.right
+            && clientY >= rect.top
+            && clientY <= rect.bottom;
+    };
+    const isPointInsideLauncherSurface = (clientX, clientY) => {
+        if (!launcherShell || !launcherShell.isConnected) {
+            return false;
+        }
+
+        const rect = launcherShell.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) {
+            return false;
+        }
+
+        return clientX >= rect.left
+            && clientX <= rect.right
+            && clientY >= (rect.top - 10)
+            && clientY <= rect.bottom;
+    };
+    const syncLauncherHoverFromPointer = (event) => {
+        if (!event || typeof event.clientX !== 'number' || typeof event.clientY !== 'number') {
+            return;
+        }
+
+        const isHoveringLauncher =
+            isPointInsideLauncherSurface(event.clientX, event.clientY)
+            || isPointInsideElement(launcherContainer, event.clientX, event.clientY)
+            || isPointInsideElement(editorElement, event.clientX, event.clientY)
+            || isPointInsideElement(weatherWidget, event.clientX, event.clientY)
+            || isPointInsideElement(quickWidget, event.clientX, event.clientY)
+            || isPointInsideElement(shutdownScheduler, event.clientX, event.clientY)
+            || isPointInsideElement(footerCompactPanel, event.clientX, event.clientY);
+
+        syncLauncherHoverState(isHoveringLauncher);
+    };
 
     const detachFocusListener = window.zenLauncher.onFocusSearch(focusSearchInput);
 
@@ -927,9 +1012,28 @@
     window.addEventListener('resize', () => {
         scheduleWidgetPositionSync();
     });
+    document.addEventListener('mousemove', (event) => {
+        syncLauncherHoverFromPointer(event);
+    });
+    document.addEventListener('mousedown', (event) => {
+        syncLauncherHoverFromPointer(event);
+    });
+    window.addEventListener('blur', () => {
+        syncLauncherHoverState(false);
+    });
+    document.addEventListener('mouseleave', () => {
+        syncLauncherHoverState(false);
+    });
 
     window.addEventListener('zen-launcher:settings-panel-switch', () => {
         syncExpandedStateForSettingsSwitch();
+    });
+    window.addEventListener('zen-launcher:appearance-change', (event) => {
+        if (!event.detail || !appearanceApi?.normalizeAppearanceSettings) {
+            return;
+        }
+
+        currentAppearanceSettings = appearanceApi.normalizeAppearanceSettings(event.detail);
     });
 
     document.addEventListener('click', async (event) => {
@@ -1119,6 +1223,18 @@
     refreshButton?.addEventListener('click', async () => {
         await window.zenLauncher.reloadWindow();
     });
+
+    syncLauncherHoverState(false);
+    syncExpandedEditorState();
+    window.zenLauncher.loadAppearanceSettings()
+        .then((settings) => {
+            applyLauncherAppearance(settings);
+            syncExpandedEditorState();
+        })
+        .catch(() => {
+            // Keep the launcher usable even if appearance settings fail to load.
+            syncExpandedEditorState();
+        });
 
     updateSearchEngineDisplay();
 
