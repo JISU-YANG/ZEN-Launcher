@@ -736,7 +736,7 @@ class ZenLauncherPreferences {
                 transform:translateY(-1px);
             }
             .theme-mode-option:has(input:checked)::before {
-                background:linear-gradient(180deg, rgba(255,255,255,0.88), rgba(188,188,188,0.36));
+                background:transparent;
             }
             .theme-mode-option input {
                 width:16px;
