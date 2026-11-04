@@ -20,6 +20,10 @@ function coversMonitor(windowRect, monitorRect, tolerance = FULLSCREEN_EDGE_TOLE
         && Math.abs(windowRect.bottom - monitorRect.bottom) <= tolerance;
 }
 
+function shouldReduceResourcesDuringFullscreen(enabled, otherAppFullscreen, launcherFocused) {
+    return enabled === true && otherAppFullscreen === true && launcherFocused !== true;
+}
+
 function readNativeWindowHandle(buffer) {
     if (!buffer || typeof buffer.length !== 'number' || buffer.length < 4) {
         return 0n;
@@ -310,5 +314,6 @@ module.exports = {
     createProbeStreamDecoder,
     isOtherAppFullscreenSample,
     parseProbeLine,
-    readNativeWindowHandle
+    readNativeWindowHandle,
+    shouldReduceResourcesDuringFullscreen
 };

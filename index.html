@@ -38,6 +38,12 @@
             font: inherit;
         }
 
+        html[data-resource-saver="active"] *,
+        html[data-resource-saver="active"] *::before,
+        html[data-resource-saver="active"] *::after {
+            animation-play-state: paused !important;
+        }
+
         #container {
             position: fixed;
             bottom: 0;

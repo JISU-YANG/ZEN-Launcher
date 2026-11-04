@@ -14,7 +14,8 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
     themeMode: 'dark',
     revealOnHover: false,
-    suppressShortcutDuringFullscreen: false
+    suppressShortcutDuringFullscreen: false,
+    minimizeResourcesDuringFullscreen: true
 });
 const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
 const SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS = 180;
@@ -29,8 +30,15 @@ function normalizeAppearanceSettings(value = {}) {
         : DEFAULT_APPEARANCE_SETTINGS.themeMode;
     const revealOnHover = value?.revealOnHover === true;
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
+    const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
 
-    return { launcherTransparency, themeMode, revealOnHover, suppressShortcutDuringFullscreen };
+    return {
+        launcherTransparency,
+        themeMode,
+        revealOnHover,
+        suppressShortcutDuringFullscreen,
+        minimizeResourcesDuringFullscreen
+    };
 }
 
 function applyAppearanceSettingsToDocument(settings) {
@@ -174,7 +182,8 @@ class ZenLauncherPreferences {
         return left?.launcherTransparency === right?.launcherTransparency
             && left?.themeMode === right?.themeMode
             && left?.revealOnHover === right?.revealOnHover
-            && left?.suppressShortcutDuringFullscreen === right?.suppressShortcutDuringFullscreen;
+            && left?.suppressShortcutDuringFullscreen === right?.suppressShortcutDuringFullscreen
+            && left?.minimizeResourcesDuringFullscreen === right?.minimizeResourcesDuringFullscreen;
     }
 
     #isAppearanceCategoryDirty(category) {
@@ -191,7 +200,8 @@ class ZenLauncherPreferences {
         }
 
         if (category === ZenLauncherPreferences.ShortcutCategory) {
-            return draft.suppressShortcutDuringFullscreen !== saved.suppressShortcutDuringFullscreen;
+            return draft.suppressShortcutDuringFullscreen !== saved.suppressShortcutDuringFullscreen
+                || draft.minimizeResourcesDuringFullscreen !== saved.minimizeResourcesDuringFullscreen;
         }
 
         return false;
@@ -244,7 +254,7 @@ class ZenLauncherPreferences {
         ElementPath.clearButton?.addEventListener('click', async () => {
             const response = await window.zenLauncher.showMessage({
                 type: 'warning',
-                message: '저장된 모든 항목과 테마, 단축키 설정을 초기화할까요?',
+                message: '저장된 모든 항목과 테마, 단축키, 자원 설정을 초기화할까요?',
                 buttons: ['취소', '전체 초기화'],
                 defaultId: 0,
                 cancelId: 0
@@ -1546,14 +1556,14 @@ class ZenLauncherPreferences {
         const header = document.createElement('div');
         header.className = 'theme-control-header';
         header.append(
-            this.#createStaticElement('div', 'theme-control-title', '검색 단축키'),
+            this.#createStaticElement('div', 'theme-control-title', '전체 화면'),
             this.#createStaticElement('div', 'theme-control-value', '')
         );
 
         const description = this.#createStaticElement(
             'div',
             'theme-control-description',
-            'Ctrl+Space를 누르면 런처 검색창으로 이동합니다.'
+            '다른 프로그램이 화면 전체를 쓸 때의 동작입니다. Ctrl+Space는 런처 검색창으로 이동합니다.'
         );
 
         const toggle = document.createElement('label');
@@ -1575,17 +1585,44 @@ class ZenLauncherPreferences {
             )
         );
 
+        const resourceToggle = document.createElement('label');
+        resourceToggle.className = 'theme-toggle-card';
+
+        const resourceCheckbox = document.createElement('input');
+        resourceCheckbox.type = 'checkbox';
+        resourceCheckbox.id = 'resource-minimize-fullscreen';
+        resourceCheckbox.checked = this.#draftAppearance.minimizeResourcesDuringFullscreen !== false;
+
+        const resourceCopy = document.createElement('div');
+        resourceCopy.className = 'theme-toggle-copy';
+        resourceCopy.append(
+            this.#createStaticElement('div', 'theme-toggle-title', '다른 앱이 전체 화면이면 자원 사용 줄이기'),
+            this.#createStaticElement(
+                'div',
+                'theme-toggle-description',
+                '켜 두면 애니메이션을 멈추고 화면 갱신을 초당 1회로 낮춥니다. 기본값은 최소화입니다.'
+            )
+        );
+
         toggle.append(checkbox, copy);
-        panel.append(header, description, toggle);
+        resourceToggle.append(resourceCheckbox, resourceCopy);
+        panel.append(header, description, toggle, resourceToggle);
 
         const syncShortcutPanel = () => {
-            const enabled = this.#draftAppearance.suppressShortcutDuringFullscreen === true;
-            checkbox.checked = enabled;
-            header.querySelector('.theme-control-value').textContent = enabled ? '켜짐' : '꺼짐';
+            const shortcutEnabled = this.#draftAppearance.suppressShortcutDuringFullscreen === true;
+            const resourcesMinimized = this.#draftAppearance.minimizeResourcesDuringFullscreen !== false;
+            checkbox.checked = shortcutEnabled;
+            resourceCheckbox.checked = resourcesMinimized;
+            header.querySelector('.theme-control-value').textContent = resourcesMinimized ? '최소화' : '유지';
         };
 
         checkbox.addEventListener('change', () => {
             this.#updateAppearanceDraft({ suppressShortcutDuringFullscreen: checkbox.checked });
+            syncShortcutPanel();
+        });
+
+        resourceCheckbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ minimizeResourcesDuringFullscreen: resourceCheckbox.checked });
             syncShortcutPanel();
         });
 

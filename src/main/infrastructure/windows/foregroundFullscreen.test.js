@@ -5,7 +5,8 @@ const {
     createProbeStreamDecoder,
     isOtherAppFullscreenSample,
     parseProbeLine,
-    readNativeWindowHandle
+    readNativeWindowHandle,
+    shouldReduceResourcesDuringFullscreen
 } = require('./foregroundFullscreen');
 
 const monitor = { left: 0, top: 0, right: 1920, bottom: 1080 };
@@ -73,6 +74,13 @@ test('probe output can arrive as utf-8 or utf-16', () => {
     ]);
     assert.deepEqual(utf16.push(payload.subarray(0, 5)), []);
     assert.deepEqual(utf16.push(payload.subarray(5)), ['ready', '{"ok":true}']);
+});
+
+test('resource saving follows the fullscreen state and stays on by default only while another app is fullscreen', () => {
+    assert.equal(shouldReduceResourcesDuringFullscreen(true, true, false), true);
+    assert.equal(shouldReduceResourcesDuringFullscreen(true, false, false), false);
+    assert.equal(shouldReduceResourcesDuringFullscreen(false, true, false), false);
+    assert.equal(shouldReduceResourcesDuringFullscreen(true, true, true), false);
 });
 
 test('native window handles are read from Electron buffers', () => {
