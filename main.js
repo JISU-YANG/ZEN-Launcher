@@ -12,6 +12,11 @@ const { RemoteImageCacheRepository } = require('./src/main/infrastructure/reposi
 const { LauncherCategoryService } = require('./src/main/application/services/launcherCategoryService');
 const { ProgramCatalogService } = require('./src/main/application/services/programCatalogService');
 const { setupGitHubAutoUpdater } = require('./src/main/infrastructure/updates/githubAutoUpdater');
+const {
+    WindowsForegroundFullscreenProbe,
+    readNativeWindowHandle,
+    shouldReduceResourcesDuringFullscreen
+} = require('./src/main/infrastructure/windows/foregroundFullscreen');
 
 const store = new Store();
 const WINDOW_WIDTH = 1150;
@@ -28,8 +33,13 @@ const MAX_LAUNCHER_TRANSPARENCY = 100;
 const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
     themeMode: 'dark',
-    revealOnHover: false
+    revealOnHover: false,
+    suppressShortcutDuringFullscreen: false,
+    minimizeResourcesDuringFullscreen: true
 });
+const SEARCH_SHORTCUT = 'CommandOrControl+Space';
+const FULLSCREEN_SHORTCUT_WATCH_MS = 700;
+const FOREGROUND_PROBE_SCRIPT = path.join(__dirname, 'src', 'main', 'infrastructure', 'windows', 'foregroundFullscreenProbe.ps1');
 const categoryRepository = new CategoryStoreRepository(store);
 const remoteImageCacheRepository = new RemoteImageCacheRepository({ app });
 const launcherCategoryService = new LauncherCategoryService({
@@ -48,6 +58,10 @@ const programCatalogService = new ProgramCatalogService({
 let mainWindow = null;
 let devWatchers = [];
 let pendingRelaunch = false;
+let foregroundProbe = null;
+let shortcutWatchTimer = null;
+let searchShortcutInFlight = false;
+let resourceSaverActive = false;
 const reverseGeocodeCache = new Map();
 
 function normalizeAppearanceSettings(value = {}) {
@@ -59,8 +73,16 @@ function normalizeAppearanceSettings(value = {}) {
         ? 'light'
         : DEFAULT_APPEARANCE_SETTINGS.themeMode;
     const revealOnHover = value?.revealOnHover === true;
+    const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
+    const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
 
-    return { launcherTransparency, themeMode, revealOnHover };
+    return {
+        launcherTransparency,
+        themeMode,
+        revealOnHover,
+        suppressShortcutDuringFullscreen,
+        minimizeResourcesDuringFullscreen
+    };
 }
 
 function loadAppearanceSettings() {
@@ -70,18 +92,23 @@ function loadAppearanceSettings() {
 function saveAppearanceSettings(value) {
     const normalizedSettings = normalizeAppearanceSettings(value);
     store.set(APPEARANCE_SETTINGS_KEY, normalizedSettings);
+    syncFullscreenMode(normalizedSettings);
     return normalizedSettings;
 }
 
 function clearAppearanceSettings() {
     store.delete(APPEARANCE_SETTINGS_KEY);
-    return loadAppearanceSettings();
+    const settings = loadAppearanceSettings();
+    syncFullscreenMode(settings);
+    return settings;
 }
 
 function showMainWindow() {
     if (!mainWindow || mainWindow.isDestroyed()) {
         return false;
     }
+
+    setResourceSaverActive(false);
 
     if (mainWindow.isMinimized()) {
         mainWindow.restore();
@@ -98,6 +125,187 @@ function focusLauncherSearch() {
     }
 
     mainWindow.webContents.send('zen-launcher:focus-search');
+}
+
+function setResourceSaverActive(active) {
+    const nextActive = active === true;
+    if (resourceSaverActive === nextActive) {
+        return;
+    }
+
+    resourceSaverActive = nextActive;
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
+        return;
+    }
+
+    const contents = mainWindow.webContents;
+    try {
+        if (typeof contents.setFrameRate === 'function') {
+            contents.setFrameRate(nextActive ? 1 : 0);
+        }
+        if (typeof contents.setBackgroundThrottling === 'function') {
+            contents.setBackgroundThrottling(true);
+        }
+    } catch (error) {
+        console.warn('Resource saver update failed:', error?.message || error);
+    }
+
+    contents.send('zen-launcher:resource-saver', nextActive);
+}
+
+function readOwnWindowHandle() {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        return 0n;
+    }
+
+    return readNativeWindowHandle(mainWindow.getNativeWindowHandle());
+}
+
+function resolveProbeScriptPath() {
+    if (!app.isPackaged) {
+        return FOREGROUND_PROBE_SCRIPT;
+    }
+
+    const targetPath = path.join(app.getPath('temp'), 'zen-launcher-foreground-fullscreen-probe.ps1');
+    fs.copyFileSync(FOREGROUND_PROBE_SCRIPT, targetPath);
+    return targetPath;
+}
+
+function getForegroundProbe() {
+    if (process.platform !== 'win32') {
+        return null;
+    }
+
+    if (!foregroundProbe) {
+        foregroundProbe = new WindowsForegroundFullscreenProbe({
+            powershellPath: POWERSHELL_PATH,
+            scriptPath: resolveProbeScriptPath()
+        });
+    }
+
+    return foregroundProbe;
+}
+
+function registerSearchShortcut() {
+    if (globalShortcut.isRegistered(SEARCH_SHORTCUT)) {
+        return;
+    }
+
+    globalShortcut.register(SEARCH_SHORTCUT, () => {
+        handleSearchShortcut();
+    });
+}
+
+function stopShortcutWatch() {
+    if (!shortcutWatchTimer) {
+        return;
+    }
+
+    clearInterval(shortcutWatchTimer);
+    shortcutWatchTimer = null;
+}
+
+async function isAnotherAppFullscreen() {
+    const probe = getForegroundProbe();
+    if (!probe) {
+        return false;
+    }
+
+    return probe.isOtherAppFullscreen(readOwnWindowHandle());
+}
+
+function shouldWatchFullscreen(settings) {
+    return process.platform === 'win32' && (
+        settings.suppressShortcutDuringFullscreen === true
+        || settings.minimizeResourcesDuringFullscreen === true
+    );
+}
+
+function isLauncherFocused() {
+    return Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused());
+}
+
+async function refreshFullscreenMode() {
+    const settings = loadAppearanceSettings();
+    if (!shouldWatchFullscreen(settings)) {
+        registerSearchShortcut();
+        setResourceSaverActive(false);
+        return;
+    }
+
+    let otherAppFullscreen = false;
+    try {
+        otherAppFullscreen = await isAnotherAppFullscreen();
+    } catch (error) {
+        console.warn('Fullscreen check failed:', error?.message || error);
+        registerSearchShortcut();
+        setResourceSaverActive(false);
+        return;
+    }
+
+    const latestSettings = loadAppearanceSettings();
+    const launcherFocused = isLauncherFocused();
+    const suppressShortcut = latestSettings.suppressShortcutDuringFullscreen === true
+        && otherAppFullscreen
+        && !launcherFocused;
+
+    if (suppressShortcut) {
+        globalShortcut.unregister(SEARCH_SHORTCUT);
+    } else {
+        registerSearchShortcut();
+    }
+
+    setResourceSaverActive(shouldReduceResourcesDuringFullscreen(
+        latestSettings.minimizeResourcesDuringFullscreen === true,
+        otherAppFullscreen,
+        launcherFocused
+    ));
+}
+
+function syncFullscreenMode(settings = loadAppearanceSettings()) {
+    if (!shouldWatchFullscreen(settings)) {
+        stopShortcutWatch();
+        foregroundProbe?.stop();
+        registerSearchShortcut();
+        setResourceSaverActive(false);
+        return;
+    }
+
+    if (!shortcutWatchTimer) {
+        shortcutWatchTimer = setInterval(() => {
+            refreshFullscreenMode();
+        }, FULLSCREEN_SHORTCUT_WATCH_MS);
+        shortcutWatchTimer.unref?.();
+    }
+
+    refreshFullscreenMode();
+}
+
+async function handleSearchShortcut() {
+    if (searchShortcutInFlight) {
+        return;
+    }
+
+    const settings = loadAppearanceSettings();
+    if (!settings.suppressShortcutDuringFullscreen || process.platform !== 'win32') {
+        focusLauncherSearch();
+        return;
+    }
+
+    searchShortcutInFlight = true;
+    try {
+        const blocked = await isAnotherAppFullscreen();
+        if (blocked) {
+            globalShortcut.unregister(SEARCH_SHORTCUT);
+            return;
+        }
+    } catch (error) {
+        console.warn('Fullscreen shortcut check failed:', error?.message || error);
+    } finally {
+        searchShortcutInFlight = false;
+    }
+
+    focusLauncherSearch();
 }
 
 function fetchJson(url, { headers = {}, timeoutMs = 10000 } = {}) {
@@ -569,6 +777,13 @@ function createWindow() {
     win.removeMenu();
     win.loadFile('index.html');
     mainWindow = win;
+    win.webContents.on('did-finish-load', () => {
+        if (win.isDestroyed() || win.webContents.isDestroyed()) {
+            return;
+        }
+
+        win.webContents.send('zen-launcher:resource-saver', resourceSaverActive);
+    });
 
     win.on('closed', () => {
         if (mainWindow === win) {
@@ -646,9 +861,7 @@ app.whenReady().then(() => {
     stopAutoUpdater = setupGitHubAutoUpdater({
         getWindow: () => mainWindow
     });
-    globalShortcut.register('CommandOrControl+Space', () => {
-        focusLauncherSearch();
-    });
+    syncFullscreenMode();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -807,6 +1020,8 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
     stopAutoUpdater();
+    stopShortcutWatch();
+    foregroundProbe?.stop();
     globalShortcut.unregisterAll();
     devWatchers.forEach((watcher) => watcher.close());
     devWatchers = [];
