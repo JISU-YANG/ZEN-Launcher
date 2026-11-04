@@ -34,7 +34,7 @@
     "publish": {
       "provider": "github",
       "owner": "JISU-YANG",
-      "repo": "NP-Launcher",
+      "repo": "ZEN-Launcher",
       "releaseType": "release"
     },
     "win": {
