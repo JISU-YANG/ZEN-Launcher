@@ -12,6 +12,7 @@ const { RemoteImageCacheRepository } = require('./src/main/infrastructure/reposi
 const { LauncherCategoryService } = require('./src/main/application/services/launcherCategoryService');
 const { ProgramCatalogService } = require('./src/main/application/services/programCatalogService');
 const { setupGitHubAutoUpdater } = require('./src/main/infrastructure/updates/githubAutoUpdater');
+const { createAppTray } = require('./src/main/infrastructure/tray/appTray');
 const {
     WindowsForegroundFullscreenProbe,
     readNativeWindowHandle,
@@ -35,7 +36,8 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     themeMode: 'dark',
     revealOnHover: false,
     suppressShortcutDuringFullscreen: false,
-    minimizeResourcesDuringFullscreen: true
+    minimizeResourcesDuringFullscreen: true,
+    launchAtStartup: false
 });
 const SEARCH_SHORTCUT = 'CommandOrControl+Space';
 const FULLSCREEN_SHORTCUT_WATCH_MS = 700;
@@ -62,6 +64,8 @@ let foregroundProbe = null;
 let shortcutWatchTimer = null;
 let searchShortcutInFlight = false;
 let resourceSaverActive = false;
+let appTray = null;
+let autoUpdaterController = null;
 const reverseGeocodeCache = new Map();
 
 function normalizeAppearanceSettings(value = {}) {
@@ -75,14 +79,27 @@ function normalizeAppearanceSettings(value = {}) {
     const revealOnHover = value?.revealOnHover === true;
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
     const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
+    const launchAtStartup = value?.launchAtStartup === true;
 
     return {
         launcherTransparency,
         themeMode,
         revealOnHover,
         suppressShortcutDuringFullscreen,
-        minimizeResourcesDuringFullscreen
+        minimizeResourcesDuringFullscreen,
+        launchAtStartup
     };
+}
+
+function applyLaunchAtStartup(enabled) {
+    if (!app.isPackaged || process.platform !== 'win32') {
+        return;
+    }
+
+    app.setLoginItemSettings({
+        openAtLogin: enabled === true,
+        path: process.execPath
+    });
 }
 
 function loadAppearanceSettings() {
@@ -93,6 +110,7 @@ function saveAppearanceSettings(value) {
     const normalizedSettings = normalizeAppearanceSettings(value);
     store.set(APPEARANCE_SETTINGS_KEY, normalizedSettings);
     syncFullscreenMode(normalizedSettings);
+    applyLaunchAtStartup(normalizedSettings.launchAtStartup);
     return normalizedSettings;
 }
 
@@ -100,6 +118,7 @@ function clearAppearanceSettings() {
     store.delete(APPEARANCE_SETTINGS_KEY);
     const settings = loadAppearanceSettings();
     syncFullscreenMode(settings);
+    applyLaunchAtStartup(settings.launchAtStartup);
     return settings;
 }
 
@@ -734,6 +753,7 @@ function createWindow() {
         frame: false,
         transparent: true,
         resizable: false,
+        skipTaskbar: true,
         icon: APP_ICON_PATH,
         x: Math.round((displayWidth - WINDOW_WIDTH) / 2),
         y: Math.max(0, launcherY - WEATHER_WIDGET_SPACE),
@@ -858,9 +878,34 @@ app.whenReady().then(() => {
 
     createWindow();
     setupDevReload();
-    stopAutoUpdater = setupGitHubAutoUpdater({
-        getWindow: () => mainWindow
+    autoUpdaterController = setupGitHubAutoUpdater({
+        getWindow: () => mainWindow,
+        onStateChange: () => {
+            appTray?.update();
+        }
     });
+    stopAutoUpdater = () => autoUpdaterController.stop();
+    try {
+        appTray = createAppTray({
+            iconPath: APP_ICON_PATH,
+            getState: () => autoUpdaterController.getState(),
+            onShow: () => {
+                showMainWindow();
+            },
+            onCheckForUpdates: () => {
+                autoUpdaterController.checkForUpdates();
+            },
+            onInstallUpdate: () => {
+                autoUpdaterController.installUpdate();
+            },
+            onQuit: () => {
+                app.quit();
+            }
+        });
+    } catch (error) {
+        console.warn('Tray setup failed:', error?.message || error);
+    }
+    applyLaunchAtStartup(loadAppearanceSettings().launchAtStartup);
     syncFullscreenMode();
 
     app.on('activate', () => {
@@ -1020,6 +1065,8 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
     stopAutoUpdater();
+    appTray?.destroy();
+    appTray = null;
     stopShortcutWatch();
     foregroundProbe?.stop();
     globalShortcut.unregisterAll();

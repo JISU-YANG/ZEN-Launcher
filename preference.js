@@ -15,7 +15,8 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     themeMode: 'dark',
     revealOnHover: false,
     suppressShortcutDuringFullscreen: false,
-    minimizeResourcesDuringFullscreen: true
+    minimizeResourcesDuringFullscreen: true,
+    launchAtStartup: false
 });
 const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
 const SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS = 180;
@@ -31,13 +32,15 @@ function normalizeAppearanceSettings(value = {}) {
     const revealOnHover = value?.revealOnHover === true;
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
     const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
+    const launchAtStartup = value?.launchAtStartup === true;
 
     return {
         launcherTransparency,
         themeMode,
         revealOnHover,
         suppressShortcutDuringFullscreen,
-        minimizeResourcesDuringFullscreen
+        minimizeResourcesDuringFullscreen,
+        launchAtStartup
     };
 }
 
@@ -183,7 +186,8 @@ class ZenLauncherPreferences {
             && left?.themeMode === right?.themeMode
             && left?.revealOnHover === right?.revealOnHover
             && left?.suppressShortcutDuringFullscreen === right?.suppressShortcutDuringFullscreen
-            && left?.minimizeResourcesDuringFullscreen === right?.minimizeResourcesDuringFullscreen;
+            && left?.minimizeResourcesDuringFullscreen === right?.minimizeResourcesDuringFullscreen
+            && left?.launchAtStartup === right?.launchAtStartup;
     }
 
     #isAppearanceCategoryDirty(category) {
@@ -201,7 +205,8 @@ class ZenLauncherPreferences {
 
         if (category === ZenLauncherPreferences.ShortcutCategory) {
             return draft.suppressShortcutDuringFullscreen !== saved.suppressShortcutDuringFullscreen
-                || draft.minimizeResourcesDuringFullscreen !== saved.minimizeResourcesDuringFullscreen;
+                || draft.minimizeResourcesDuringFullscreen !== saved.minimizeResourcesDuringFullscreen
+                || draft.launchAtStartup !== saved.launchAtStartup;
         }
 
         return false;
@@ -254,7 +259,7 @@ class ZenLauncherPreferences {
         ElementPath.clearButton?.addEventListener('click', async () => {
             const response = await window.zenLauncher.showMessage({
                 type: 'warning',
-                message: '저장된 모든 항목과 테마, 단축키, 자원 설정을 초기화할까요?',
+                message: '저장된 모든 항목과 테마, 단축키, 자원, 시작 설정을 초기화할까요?',
                 buttons: ['취소', '전체 초기화'],
                 defaultId: 0,
                 cancelId: 0
@@ -1604,15 +1609,36 @@ class ZenLauncherPreferences {
             )
         );
 
+        const startupToggle = document.createElement('label');
+        startupToggle.className = 'theme-toggle-card';
+
+        const startupCheckbox = document.createElement('input');
+        startupCheckbox.type = 'checkbox';
+        startupCheckbox.id = 'launch-at-startup';
+        startupCheckbox.checked = this.#draftAppearance.launchAtStartup === true;
+
+        const startupCopy = document.createElement('div');
+        startupCopy.className = 'theme-toggle-copy';
+        startupCopy.append(
+            this.#createStaticElement('div', 'theme-toggle-title', 'Windows 시작 시 자동 실행'),
+            this.#createStaticElement(
+                'div',
+                'theme-toggle-description',
+                '켜 두면 로그인할 때 런처가 시스템 트레이에서 실행됩니다. 기본값은 꺼짐입니다.'
+            )
+        );
+
         toggle.append(checkbox, copy);
         resourceToggle.append(resourceCheckbox, resourceCopy);
-        panel.append(header, description, toggle, resourceToggle);
+        startupToggle.append(startupCheckbox, startupCopy);
+        panel.append(header, description, toggle, resourceToggle, startupToggle);
 
         const syncShortcutPanel = () => {
             const shortcutEnabled = this.#draftAppearance.suppressShortcutDuringFullscreen === true;
             const resourcesMinimized = this.#draftAppearance.minimizeResourcesDuringFullscreen !== false;
             checkbox.checked = shortcutEnabled;
             resourceCheckbox.checked = resourcesMinimized;
+            startupCheckbox.checked = this.#draftAppearance.launchAtStartup === true;
             header.querySelector('.theme-control-value').textContent = resourcesMinimized ? '최소화' : '유지';
         };
 
@@ -1623,6 +1649,11 @@ class ZenLauncherPreferences {
 
         resourceCheckbox.addEventListener('change', () => {
             this.#updateAppearanceDraft({ minimizeResourcesDuringFullscreen: resourceCheckbox.checked });
+            syncShortcutPanel();
+        });
+
+        startupCheckbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ launchAtStartup: startupCheckbox.checked });
             syncShortcutPanel();
         });
 
