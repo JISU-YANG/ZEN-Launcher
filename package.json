@@ -6,8 +6,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build:win32": "electron-builder --win portable --ia32",
-    "build:win64": "electron-builder --win portable --x64"
+    "build:win32": "electron-builder --win nsis --ia32 --publish never",
+    "build:win64": "electron-builder --win nsis --x64 --publish never",
+    "build:win": "electron-builder --win nsis --ia32 --x64 --publish never",
+    "release:win": "electron-builder --win nsis --ia32 --x64 --publish always"
   },
   "repository": {
     "type": "git",
@@ -21,15 +23,50 @@
     "electron-devtools-installer": "^3.2.0"
   },
   "build": {
-    "artifactName": "${name}-${version}_windows-${arch}.${ext}",
+    "appId": "com.jisuyang.zenlauncher",
+    "artifactName": "${name}-${version}-setup-${arch}.${ext}",
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!doc/**",
+      "!**/*.md"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "JISU-YANG",
+      "repo": "NP-Launcher",
+      "releaseType": "release"
+    },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ZEN Launcher",
+      "uninstallDisplayName": "ZEN Launcher",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
     }
   },
   "dependencies": {
     "electron-shutdown-command": "^2.0.1",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.11"
   },
   "bugs": {
     "url": "https://github.com/JISU-YANG/NP-Launcher/issues"

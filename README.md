@@ -10,7 +10,14 @@ ZEN Launcher는 자주 사용하는 프로그램, 웹사이트, 폴더, 검색, 
 
 ### 설치
 
-배포된 실행 파일을 내려받아 원하는 위치에 두고 바로 실행하면 됩니다.
+GitHub Releases에서 Windows 설치 파일을 받아 실행합니다.
+
+- 64비트: `zen-launcher-<version>-setup-x64.exe`
+- 32비트: `zen-launcher-<version>-setup-ia32.exe`
+
+설치 경로는 바꿀 수 있고, 기본값은 사용자 폴더입니다. 관리자 권한 없이 설치됩니다. 이미 설치한 앱은 실행할 때 GitHub Releases를 확인하고, 새 버전이 있으면 받은 뒤 재시작으로 설치합니다.
+
+이전에 쓰던 portable 실행 파일에는 자동 업데이트가 없습니다. 설치 파일을 한 번 설치하면 이후 버전부터 자동 업데이트가 이어집니다.
 
 ### 개발 실행
 
@@ -29,6 +36,7 @@ npm start
 - Quick Tools 위젯
 - 예약 종료 위젯
 - Windows 설정 및 기본 도구 바로가기
+- GitHub Releases 기반 자동 업데이트
 
 ## 사용 기술
 
@@ -37,6 +45,18 @@ npm start
 - Electron
 - electron-store
 - electron-shutdown-command
+- electron-updater
+
+## 설치 파일 만들기
+
+로컬에서 설치 파일만 만들 때는 아래를 실행합니다. 64비트 메타데이터는 `latest.yml`, 32비트 메타데이터는 `latest-ia32.yml`이며, 앱에 들어가는 업데이트 주소는 GitHub Releases입니다.
+
+```bash
+npm run build:win64
+npm run build:win32
+```
+
+`v`와 `package.json`의 `version`을 맞춘 태그(예: `v2.1.0`)를 푸시하면 GitHub Actions가 32비트/64비트 설치 파일과 업데이트 메타데이터를 릴리스에 올립니다.
 
 ## 릴리스 노트
 

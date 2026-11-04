@@ -11,6 +11,7 @@ const { ProgramScanCacheRepository } = require('./src/main/infrastructure/reposi
 const { RemoteImageCacheRepository } = require('./src/main/infrastructure/repositories/remoteImageCacheRepository');
 const { LauncherCategoryService } = require('./src/main/application/services/launcherCategoryService');
 const { ProgramCatalogService } = require('./src/main/application/services/programCatalogService');
+const { setupGitHubAutoUpdater } = require('./src/main/infrastructure/updates/githubAutoUpdater');
 
 const store = new Store();
 const WINDOW_WIDTH = 1150;
@@ -77,9 +78,9 @@ function clearAppearanceSettings() {
     return loadAppearanceSettings();
 }
 
-function focusLauncherSearch() {
+function showMainWindow() {
     if (!mainWindow || mainWindow.isDestroyed()) {
-        return;
+        return false;
     }
 
     if (mainWindow.isMinimized()) {
@@ -88,6 +89,14 @@ function focusLauncherSearch() {
 
     mainWindow.show();
     mainWindow.focus();
+    return true;
+}
+
+function focusLauncherSearch() {
+    if (!showMainWindow()) {
+        return;
+    }
+
     mainWindow.webContents.send('zen-launcher:focus-search');
 }
 
@@ -612,13 +621,31 @@ function setupDevReload() {
     );
 }
 
+const hasSingleInstanceLock = !app.isPackaged || app.requestSingleInstanceLock();
+let stopAutoUpdater = () => {};
+
+if (!hasSingleInstanceLock) {
+    app.quit();
+} else if (app.isPackaged) {
+    app.on('second-instance', () => {
+        showMainWindow();
+    });
+}
+
 app.whenReady().then(() => {
+    if (!hasSingleInstanceLock) {
+        return;
+    }
+
     if (process.platform === 'win32') {
         app.setAppUserModelId('com.jisuyang.zenlauncher');
     }
 
     createWindow();
     setupDevReload();
+    stopAutoUpdater = setupGitHubAutoUpdater({
+        getWindow: () => mainWindow
+    });
     globalShortcut.register('CommandOrControl+Space', () => {
         focusLauncherSearch();
     });
@@ -779,6 +806,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+    stopAutoUpdater();
     globalShortcut.unregisterAll();
     devWatchers.forEach((watcher) => watcher.close());
     devWatchers = [];
