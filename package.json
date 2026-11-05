@@ -1,7 +1,7 @@
 {
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "releaseDate": "2026-11-06",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
@@ -40,8 +40,8 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseName": "v2.3.4",
-      "releaseNotes": "갤러리 세로를 32px 줄이고, 아이콘 바를 52px에서 84px로 키웠습니다. 아이콘 그림은 26px입니다. 런처 전체 높이는 그대로입니다."
+      "releaseName": "v2.3.5",
+      "releaseNotes": "글꼴을 Pretendard로 바꿔 오프라인에서도 굵기가 유지됩니다. 아이콘 모서리는 12px 라운드이고, 날씨 온도는 본문과 같은 굵기·자간입니다."
     },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
