@@ -5669,8 +5669,9 @@
             --zen-plate: #262626;
             --zen-tile: #303030;
             --zen-hover: #3a3a3a;
-            --zen-ink: #f3f3f3;
-            --zen-muted: #8f8f8f;
+            --zen-ink: #ffffff;
+            --zen-soft: #c8c8c8;
+            --zen-muted: #8c8c8c;
             --zen-gap: 24px;
             --zen-side: 240px;
         }
@@ -5681,7 +5682,8 @@
             --zen-tile: #ffffff;
             --zen-hover: #e4e9ef;
             --zen-ink: #1c1c1c;
-            --zen-muted: #5c6570;
+            --zen-soft: #3d4650;
+            --zen-muted: #6a7380;
         }
 
         #launcher-shell,
@@ -5862,12 +5864,13 @@
         .icon-name,
         #icon-area > .icon-entry:hover .icon-name {
             max-width: 100%;
-            color: var(--zen-muted);
+            color: var(--zen-soft);
             font-size: 12px;
             text-decoration: none;
         }
 
-        #icon-area > .icon-entry:hover .icon-name {
+        #icon-area > .icon-entry:hover .icon-name,
+        #icon-area > .icon-entry:focus-within .icon-name {
             color: var(--zen-ink);
         }
 
@@ -5942,12 +5945,20 @@
 
         #search-area input,
         #input-search,
+        body[data-theme="light"] #search-area input,
         body[data-theme="light"] #input-search {
             height: 40px;
-            color: var(--zen-muted);
+            color: var(--zen-ink);
             font-size: 13px;
             font-weight: 700;
             line-height: 40px;
+        }
+
+        #search-area input::placeholder,
+        #input-search::placeholder,
+        body[data-theme="light"] #search-area input::placeholder,
+        body[data-theme="light"] #input-search::placeholder {
+            color: var(--zen-muted);
         }
 
         .list-view {
@@ -6335,6 +6346,90 @@
             min-height: 40px;
             border-radius: 10px;
             background: var(--zen-tile);
+        }
+
+        #gallery-area .gallery-name,
+        #folder-area .list-item,
+        #folder-area .list-item span,
+        body[data-theme="light"] #folder-area .list-item,
+        body[data-theme="light"] #folder-area .list-item span,
+        #launcher-brand,
+        body[data-theme="light"] #launcher-brand,
+        #search-area > div:first-child > a,
+        body[data-theme="light"] #search-area > div:first-child > a,
+        #weather-bar .weather-temp,
+        body[data-theme="light"] #weather-bar .weather-temp,
+        .weather-precip strong,
+        body[data-theme="light"] .weather-precip strong,
+        .weather-hover-card .weather-bar-stat strong,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat strong {
+            color: var(--zen-ink);
+        }
+
+        #icon-area .icon-name,
+        body[data-theme="light"] #icon-area .icon-name,
+        #weather-bar .weather-condition,
+        body[data-theme="light"] #weather-bar .weather-condition,
+        #weather-bar .weather-location,
+        body[data-theme="light"] #weather-bar .weather-location {
+            color: var(--zen-soft);
+        }
+
+        #icon-area > .icon-entry:hover .icon-name,
+        #icon-area > .icon-entry:focus-within .icon-name,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-name,
+        body[data-theme="light"] #icon-area > .icon-entry:focus-within .icon-name {
+            color: var(--zen-ink);
+        }
+
+        .weather-hover-card .weather-bar-stat,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat {
+            color: var(--zen-muted);
+        }
+
+        #icon-area .icon-img.icon-glyph,
+        #icon-area > .icon-entry:hover .icon-img.icon-glyph,
+        #folder-area .list-item img,
+        #footer .zen-icon-button img,
+        #footer-folder .zen-icon-button img,
+        .weather-precip img {
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #icon-area .icon-img.icon-glyph,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img.icon-glyph,
+        body[data-theme="light"] #folder-area .list-item img,
+        body[data-theme="light"] #footer .zen-icon-button img,
+        body[data-theme="light"] #footer-folder .zen-icon-button img,
+        body[data-theme="light"] .weather-precip img {
+            filter: brightness(0);
+        }
+
+        #gallery-area > button.zen-slot-add img,
+        #icon-area > button.zen-slot-add img,
+        #folder-area > button.zen-slot-add img {
+            filter: brightness(0) invert(0.78);
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add img,
+        body[data-theme="light"] #icon-area > button.zen-slot-add img,
+        body[data-theme="light"] #folder-area > button.zen-slot-add img {
+            filter: brightness(0) invert(0.28);
+        }
+
+        .weather-hover-card .weather-bar-stat img,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat img {
+            filter: brightness(0) invert(0.55);
+        }
+
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat img {
+            filter: brightness(0) invert(0.42);
+        }
+
+        .weather-hover-card,
+        body[data-theme="light"] .weather-hover-card {
+            background: var(--zen-hover);
+            border-color: var(--hairline);
         }
 
     </style>
