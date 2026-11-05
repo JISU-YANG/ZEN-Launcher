@@ -9,13 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --page: #080808;
-            --shell: #101010;
-            --plate: #2a2a2a;
-            --hover: color-mix(in srgb, var(--plate) 78%, white);
-            --ink: #d7d7d7;
-            --muted: #9a9a9a;
-            --line: rgba(255, 255, 255, 0.18);
+            --page: #000000;
+            --shell: #050505;
+            --plate: #0e0e0e;
+            --hover: #161616;
+            --ink: #d0d0d0;
+            --muted: #8f8f8f;
+            --line: rgba(255, 255, 255, 0.16);
             --gap: 8px;
             --foot-h: 64px;
         }
@@ -47,16 +47,16 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            padding: 20px 18px 16px 24px;
+            gap: 32px;
+            padding: 32px 36px 28px 40px;
         }
 
         .gallery {
-            flex: 1 1 auto;
-            min-height: 0;
+            flex: 0 0 208px;
+            height: 208px;
             display: flex;
             align-items: stretch;
-            gap: 16px;
+            gap: 28px;
         }
 
         .g-item {
@@ -82,7 +82,7 @@
             align-items: center;
             justify-content: center;
             padding: 0 10px;
-            background: rgba(12, 12, 12, 0.9);
+            background: #000000;
             color: #f3f3f3;
             font-size: 13px;
             font-weight: 700;
@@ -95,16 +95,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid var(--line);
             background: transparent;
         }
+        .g-item.slot:hover { background: #000000; }
         .g-item.slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.62); }
 
         .icons {
             flex: 0 0 auto;
             display: flex;
             align-items: stretch;
-            gap: 10px;
+            gap: 18px;
         }
         .i-item {
             flex: 1 1 0;
@@ -116,16 +116,15 @@
             justify-content: center;
             gap: 4px;
             padding: 6px 4px;
-            border: 1px solid var(--line);
+            border: none;
             border-radius: 12px;
             background: transparent;
             color: var(--muted);
         }
         .i-item:hover,
         .i-item.on {
-            background: var(--hover);
-            border-color: var(--hover);
-            color: #f3f3f3;
+            background: #000000;
+            color: #ffffff;
         }
         .glyph { width: 26px; height: 26px; filter: brightness(0) invert(1); }
         .i-name {
@@ -145,25 +144,27 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            gap: 10px;
-            padding: 20px 14px 16px 8px;
+            gap: 16px;
+            padding: 32px 24px 28px 16px;
             background: var(--shell);
         }
         .search {
             display: flex;
             align-items: center;
             width: 100%;
-            height: 48px;
-            border-radius: 12px;
-            background: var(--plate);
+            height: auto;
+            padding: 2px 2px 0;
+            background: none;
         }
         .engine, .query {
             min-width: 0;
-            padding: 0 12px;
+            padding: 0;
             font-size: 13px;
             font-weight: 700;
             white-space: nowrap;
         }
+        .engine { margin-right: 12px; }
+        .query { margin-left: 12px; }
         .engine { color: var(--ink); }
         .query { flex: 1; color: #8d8d8d; }
         .vbar { width: 1px; height: 16px; background: var(--line); flex: 0 0 auto; }
@@ -194,7 +195,7 @@
             height: 8px;
             border-radius: 2px;
             flex: 0 0 auto;
-            background: color-mix(in srgb, var(--plate) 50%, white);
+            background: #2a2a2a;
         }
         .folder-row:hover,
         .folder-row.on,
@@ -218,9 +219,9 @@
             display: grid;
             grid-template-columns: auto 1fr auto;
             align-items: center;
-            padding: 0 12px;
+            padding: 0 20px;
         }
-        .footer-folder { justify-content: space-between; padding: 0 12px 0 8px; }
+        .footer-folder { justify-content: space-between; padding: 0 20px 0 16px; }
         .cluster, .weather, .gear { background: var(--plate); border-radius: 10px; }
         .cluster { display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 8px; }
         .weather {
@@ -230,6 +231,7 @@
             gap: var(--gap);
             height: 40px;
             padding: 0 12px;
+            color: #f2f2f2;
             font-size: 13px;
             font-weight: 700;
         }
@@ -238,10 +240,10 @@
         .tool { width: 28px; height: 28px; border-radius: 8px; }
         .gear { width: 36px; height: 36px; }
         .tool:hover, .gear:hover { background: var(--hover); }
-        .tools img, .gear img, .weather img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
+        .cluster img, .gear img, .weather img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
         .weather img { width: 14px; height: 14px; }
-        .split { width: 1px; height: 16px; background: var(--line); }
-        .brand { color: var(--muted); font-size: 13px; font-weight: 900; line-height: 1; }
+        .split { width: 1px; height: 16px; background: rgba(255, 255, 255, 0.28); }
+        .brand { color: #ffffff; font-size: 13px; font-weight: 900; line-height: 1; }
         .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
         .note { margin-top: 18px; color: #8d8d8d; font-size: 13px; }
     </style>
@@ -250,8 +252,8 @@
     <div class="page">
         <h1>묶음, 검색은 폴더 위</h1>
         <div class="intro">
-            <p>3번 묶음을 기준으로 검색만 폴더 열 맨 위로 옮겼다. 열 너비에 맞춘 48px 판이고, 엔진과 구분선과 입력은 그대로다. 검색이 비운 자리는 갤러리 높이가 채운다.</p>
-            <p>갤러리 이름은 쉬고 있으면 없다. 마우스를 올리면 46px 띠가 아래에서 올라온다. 아이콘은 높이 76px, 안쪽 여백 6px이다. 쉬고 있을 때는 배경 없이 테두리만 있고, 올리면 연한 판이 된다. 참고와 시계, 폴더의 참고는 올려 둔 상태다.</p>
+            <p>검색은 판을 벗기고 엔진, 구분선, 입력만 폴더 위에 둔다. 갤러리는 높이 208px, 사이는 28px이다. 런처 안쪽 여백도 늘렸다.</p>
+            <p>배경은 #050505다. 폴더 줄과 하단 묶음은 #0e0e0e, 그 호버는 #161616이라 단계는 좁고 눈으로는 갈린다. 갤러리 이름과 아이콘 호버는 검은 배경이다. 아이콘은 쉬고 있을 때 테두리가 없다. 하단 아이콘과 ZEN Launcher는 흰색이다. 참고, 시계, 폴더의 참고는 올려 둔 상태다.</p>
         </div>
         <div class="dock">
             <div class="main">
@@ -305,7 +307,7 @@
                 </div>
             </footer>
         </div>
-        <p class="note">런처 화면에는 아직 반영하지 않았다. 갤러리 이름 띠는 참고에만 올라와 있다.</p>
+        <p class="note">런처 화면에는 아직 반영하지 않았다. 갤러리 이름 띠는 참고에만 올라와 있고, 시계만 검은 배경이다.</p>
     </div>
 </body>
 </html>
