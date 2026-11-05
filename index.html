@@ -4869,16 +4869,20 @@
         }
 
         #icon-area .icon-img,
-        #icon-area > .icon-entry:hover .icon-img {
+        #icon-area > .icon-entry:hover .icon-img,
+        body[data-theme="light"] #icon-area .icon-img,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img {
+            filter: none;
+        }
+
+        #icon-area .icon-img.icon-glyph,
+        #icon-area > .icon-entry:hover .icon-img.icon-glyph {
             filter: brightness(0) invert(1);
         }
 
-        body[data-theme="light"] #icon-area .icon-img {
-            filter: grayscale(100%);
-        }
-
-        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img {
-            filter: grayscale(0);
+        body[data-theme="light"] #icon-area .icon-img.icon-glyph,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img.icon-glyph {
+            filter: brightness(0);
         }
 
         #icon-area > .icon-entry:hover .icon-img,
@@ -4962,7 +4966,7 @@
 
         .launcher-brand-zen {
             letter-spacing: 0.06em;
-            margin-right: -0.06em;
+            margin-right: 0.35em;
         }
 
         #footer-folder {
@@ -5661,10 +5665,10 @@
         }
 
         :root {
-            --zen-shell: #050505;
-            --zen-plate: #101010;
-            --zen-tile: #1a1a1a;
-            --zen-hover: #262626;
+            --zen-shell: #1c1c1c;
+            --zen-plate: #262626;
+            --zen-tile: #303030;
+            --zen-hover: #3a3a3a;
             --zen-ink: #f3f3f3;
             --zen-muted: #8f8f8f;
             --zen-gap: 24px;
@@ -5746,9 +5750,9 @@
 
         #gallery-area > .gallery-entry {
             position: relative;
-            flex: 1 1 0;
-            width: auto;
-            max-width: none;
+            flex: 0 0 calc((100% - (var(--zen-gap) * 5)) / 6);
+            width: calc((100% - (var(--zen-gap) * 5)) / 6);
+            max-width: calc((100% - (var(--zen-gap) * 5)) / 6);
             min-width: 0;
             height: 100%;
             padding: 0;
@@ -5820,9 +5824,10 @@
         }
 
         #icon-area > .icon-entry {
-            flex: 1 1 0;
-            width: auto;
-            max-width: none;
+            flex: 0 0 calc((100% - (12px * 7)) / 8);
+            width: calc((100% - (12px * 7)) / 8);
+            max-width: calc((100% - (12px * 7)) / 8);
+            min-width: 0;
             height: 52px;
             padding: 0;
             background: transparent;
@@ -6351,7 +6356,7 @@
                     <div id="folder-area"></div>
                 </div>
                 <div id="footer-folder">
-                    <a id="launcher-brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span class="launcher-brand-zen">ZEN</span> Launcher</a>
+                    <a id="launcher-brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span class="launcher-brand-zen">ZEN</span><span>Launcher</span></a>
                     <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>런처</span></button>
                 </div>
             </div>

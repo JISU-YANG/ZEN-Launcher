@@ -2295,7 +2295,7 @@ class ZenLauncherPreferences {
             const maxCount = ZenLauncherPreferences.MaxCount[category] || items.length;
             const visibleItems = items.filter((item) => item && item.link);
 
-            if (category === ZenLauncherPreferences.Category.ICON) {
+            if (category === ZenLauncherPreferences.Category.ICON || category === ZenLauncherPreferences.Category.GALLERY) {
                 for (let index = 0; index < maxCount; index += 1) {
                     const item = visibleItems[index];
                     const element = this.#createLauncherItem(item, category) || this.#createLauncherPlaceholder(category);
@@ -2367,6 +2367,9 @@ class ZenLauncherPreferences {
             image.className = `${category}-img`;
             image.src = item.img;
             image.alt = item.name || '';
+            if (category === ZenLauncherPreferences.Category.ICON && /(^|[\\/])src[\\/]icon[\\/]/.test(String(item.img))) {
+                image.classList.add('icon-glyph');
+            }
             return image;
         }
 
