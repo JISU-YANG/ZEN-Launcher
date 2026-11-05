@@ -28,6 +28,7 @@
             font-family: "Noto Sans KR", sans-serif;
             line-height: 1.5;
         }
+        a { color: inherit; text-decoration: none; }
 
         .page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 72px; }
         h1 { margin: 0 0 12px; font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
@@ -40,6 +41,7 @@
             margin-top: 22px;
             background: var(--shell);
             color: var(--ink);
+            border-radius: 18px;
             overflow: hidden;
         }
 
@@ -47,8 +49,8 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 32px;
-            padding: 32px 36px 28px 40px;
+            gap: 40px;
+            padding: 44px 44px 36px 52px;
         }
 
         .gallery {
@@ -56,7 +58,7 @@
             height: 208px;
             display: flex;
             align-items: stretch;
-            gap: 28px;
+            gap: 36px;
         }
 
         .g-item {
@@ -104,7 +106,7 @@
             flex: 0 0 auto;
             display: flex;
             align-items: stretch;
-            gap: 18px;
+            gap: 22px;
         }
         .i-item {
             flex: 1 1 0;
@@ -144,8 +146,8 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            gap: 16px;
-            padding: 32px 24px 28px 16px;
+            gap: 20px;
+            padding: 44px 28px 36px 24px;
             background: var(--shell);
         }
         .search {
@@ -219,9 +221,9 @@
             display: grid;
             grid-template-columns: auto 1fr auto;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 28px;
         }
-        .footer-folder { justify-content: space-between; padding: 0 20px 0 16px; }
+        .footer-folder { justify-content: space-between; padding: 0 22px 0 24px; }
         .cluster, .weather, .gear { background: var(--plate); border-radius: 10px; }
         .cluster { display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 8px; }
         .weather {
@@ -243,7 +245,19 @@
         .cluster img, .gear img, .weather img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
         .weather img { width: 14px; height: 14px; }
         .split { width: 1px; height: 16px; background: rgba(255, 255, 255, 0.28); }
-        .brand { color: #ffffff; font-size: 13px; font-weight: 900; line-height: 1; }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 10px;
+            background: var(--plate);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .brand:hover { background: var(--hover); }
         .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
         .note { margin-top: 18px; color: #8d8d8d; font-size: 13px; }
     </style>
@@ -252,8 +266,8 @@
     <div class="page">
         <h1>묶음, 검색은 폴더 위</h1>
         <div class="intro">
-            <p>검색은 판을 벗기고 엔진, 구분선, 입력만 폴더 위에 둔다. 갤러리는 높이 208px, 사이는 28px이다. 런처 안쪽 여백도 늘렸다.</p>
-            <p>배경은 #050505다. 폴더 줄과 하단 묶음은 #0e0e0e, 그 호버는 #161616이라 단계는 좁고 눈으로는 갈린다. 갤러리 이름과 아이콘 호버는 검은 배경이다. 아이콘은 쉬고 있을 때 테두리가 없다. 하단 아이콘과 ZEN Launcher는 흰색이다. 참고, 시계, 폴더의 참고는 올려 둔 상태다.</p>
+            <p>검색은 판을 벗기고 엔진, 구분선, 입력만 폴더 위에 둔다. 갤러리는 높이 208px, 사이는 36px이다. 런처 안쪽 여백을 더 넓혔고, 바깥 모서리는 18px이다.</p>
+            <p>배경은 #050505다. 폴더 줄과 하단 묶음은 #0e0e0e, 그 호버는 #161616이라 단계는 좁고 눈으로는 갈린다. 갤러리 이름과 아이콘 호버는 검은 배경이다. ZEN Launcher도 같은 묶음 배경이고, 누르면 GitHub로 간다. 참고, 시계, 폴더의 참고는 올려 둔 상태다.</p>
         </div>
         <div class="dock">
             <div class="main">
@@ -302,7 +316,7 @@
                     </div>
                 </div>
                 <div class="footer-folder">
-                    <div class="brand"><span>ZEN</span> Launcher</div>
+                    <a class="brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span>ZEN</span> Launcher</a>
                     <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
                 </div>
             </footer>
