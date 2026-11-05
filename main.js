@@ -15,6 +15,7 @@ const {
     computeLauncherFrame,
     sheetHeightForFit,
     boundsForSheet,
+    shapeForSheet,
     normalizeSheetFit
 } = require('./src/main/domain/launcher/launcherFrame');
 const { setupGitHubAutoUpdater } = require('./src/main/infrastructure/updates/githubAutoUpdater');
@@ -747,7 +748,8 @@ async function runTarget(target) {
 }
 
 function readLauncherLayout() {
-    const frame = computeLauncherFrame(screen.getPrimaryDisplay().workArea);
+    const display = screen.getPrimaryDisplay();
+    const frame = computeLauncherFrame(display.workArea, display.bounds);
     const sheetHeight = activeSheetFit === 'closed'
         ? 0
         : sheetHeightForFit(activeSheetFit, frame.availableAbove);
@@ -767,13 +769,34 @@ function readLauncherLayout() {
     };
 }
 
+function applyWindowShape(layout) {
+    if (!mainWindow || mainWindow.isDestroyed() || typeof mainWindow.setShape !== 'function') {
+        return;
+    }
+
+    try {
+        mainWindow.setShape([shapeForSheet(layout.frame, layout.sheetHeight)]);
+    } catch (error) {
+        console.warn('Window shape update failed:', error?.message || error);
+    }
+}
+
 function applyLauncherLayout() {
     if (!mainWindow || mainWindow.isDestroyed()) {
         return null;
     }
 
     const layout = readLauncherLayout();
-    mainWindow.setBounds(layout.bounds, false);
+    const next = layout.bounds;
+    const current = mainWindow.getBounds();
+    const moved = current.x !== next.x
+        || current.y !== next.y
+        || current.width !== next.width
+        || current.height !== next.height;
+    if (moved) {
+        mainWindow.setBounds(next, false);
+    }
+    applyWindowShape(layout);
     return layout.metrics;
 }
 
@@ -794,6 +817,7 @@ function createWindow() {
         height: initialLayout.bounds.height,
         frame: false,
         transparent: true,
+        thickFrame: false,
         resizable: false,
         skipTaskbar: true,
         icon: APP_ICON_PATH,
@@ -837,8 +861,9 @@ function createWindow() {
     });
 
     win.removeMenu();
-    win.loadFile('index.html');
     mainWindow = win;
+    applyLauncherLayout();
+    win.loadFile('index.html');
     win.webContents.on('did-finish-load', () => {
         if (win.isDestroyed() || win.webContents.isDestroyed()) {
             return;
@@ -1003,6 +1028,16 @@ ipcMain.handle('zen-launcher:clear-data', async () => {
 
 ipcMain.handle('zen-launcher:get-layout-metrics', () => {
     return readLauncherLayout().metrics;
+});
+
+ipcMain.handle('zen-launcher:get-app-info', () => {
+    const releaseDate = require('./package.json').releaseDate || '';
+    return {
+        version: app.getVersion(),
+        releaseDate,
+        author: 'JISU YANG',
+        productName: 'ZEN Launcher'
+    };
 });
 
 ipcMain.handle('zen-launcher:apply-sheet-fit', (_event, fit) => {

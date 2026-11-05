@@ -3,19 +3,32 @@ const assert = require('node:assert/strict');
 const {
     computeLauncherFrame,
     sheetHeightForFit,
-    boundsForSheet
+    boundsForSheet,
+    shapeForSheet
 } = require('./launcherFrame');
 const { resolveInitialIcons, DEFAULT_ICONS } = require('./defaultIcons');
 
-test('places a 1080p work area dock on the bottom at the design width', () => {
+test('places a 1080p dock with the previous bottom gap', () => {
     const frame = computeLauncherFrame({ x: 0, y: 0, width: 1920, height: 1080 });
 
     assert.equal(frame.width, 1200);
     assert.equal(frame.dockHeight, 420);
     assert.equal(frame.x, 360);
-    assert.equal(frame.y, 660);
+    assert.equal(frame.y, 528);
+    assert.equal(frame.dockBottom, 948);
     assert.equal(frame.scale, 1);
-    assert.equal(frame.availableAbove, 1080 - 420 - 16);
+    assert.equal(frame.availableAbove, 528 - 16);
+});
+
+test('keeps the same gap above a bottom taskbar', () => {
+    const frame = computeLauncherFrame(
+        { x: 0, y: 0, width: 1920, height: 1040 },
+        { x: 0, y: 0, width: 1920, height: 1080 }
+    );
+
+    assert.equal(frame.dockBottom, 948);
+    assert.equal(frame.y, 528);
+    assert.ok(frame.dockBottom < 1040);
 });
 
 test('keeps the dock inside a narrower logical work area', () => {
@@ -23,19 +36,25 @@ test('keeps the dock inside a narrower logical work area', () => {
 
     assert.equal(frame.width, 1000 - 32);
     assert.ok(frame.dockHeight <= 420);
-    assert.equal(frame.y + frame.dockHeight, 760);
+    assert.ok(frame.dockBottom <= 760);
+    assert.ok(frame.y >= 40);
     assert.ok(frame.scale < 1);
     assert.ok(frame.x >= 0);
 });
 
-test('grows the window upward by the sheet and never past the work area', () => {
+test('keeps the window bounds still while the sheet only changes shape', () => {
     const frame = computeLauncherFrame({ x: 10, y: 0, width: 1920, height: 1080 });
-    const bounds = boundsForSheet(frame, 300);
+    const closed = boundsForSheet(frame, 0);
+    const open = boundsForSheet(frame, 300);
 
-    assert.equal(bounds.width, frame.width);
-    assert.equal(bounds.height, frame.dockHeight + 300);
-    assert.equal(bounds.y + bounds.height, frame.workAreaY + frame.workAreaHeight);
-    assert.equal(boundsForSheet(frame, 5000).height, frame.dockHeight + frame.availableAbove);
+    assert.deepEqual(closed, open);
+    assert.equal(closed.y + closed.height, frame.dockBottom);
+    assert.equal(closed.y, 16);
+
+    const shape = shapeForSheet(frame, 300);
+    assert.equal(shape.height, frame.dockHeight + 300);
+    assert.equal(shape.y + shape.height, closed.height);
+    assert.equal(shapeForSheet(frame, 5000).height, closed.height);
 });
 
 test('sizes peek, panel, and workspace from the space above the dock', () => {

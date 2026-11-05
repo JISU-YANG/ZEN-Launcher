@@ -2,6 +2,7 @@
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
   "version": "2.3.0",
+  "releaseDate": "2026-11-05",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
   "scripts": {

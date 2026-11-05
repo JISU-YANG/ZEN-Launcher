@@ -108,6 +108,7 @@ class ZenLauncherPreferences {
     static TransparencyCategory = 'transparency';
     static ThemeCategory = 'theme';
     static ShortcutCategory = 'shortcut';
+    static CreditCategory = 'credit';
 
     static MaxCount = {
         gallery: 6,
@@ -176,6 +177,10 @@ class ZenLauncherPreferences {
 
         if (button.dataset.tab === ZenLauncherPreferences.ShortcutCategory) {
             return ZenLauncherPreferences.ShortcutCategory;
+        }
+
+        if (button.dataset.tab === ZenLauncherPreferences.CreditCategory) {
+            return ZenLauncherPreferences.CreditCategory;
         }
 
         return ZenLauncherPreferences.Category[button.dataset.category] || '';
@@ -1315,6 +1320,7 @@ class ZenLauncherPreferences {
             category === ZenLauncherPreferences.TransparencyCategory
             || category === ZenLauncherPreferences.ThemeCategory
             || category === ZenLauncherPreferences.ShortcutCategory
+            || category === ZenLauncherPreferences.CreditCategory
         ) {
             this.#closeItemEditor({ closeProgramBrowser: false });
         }
@@ -1371,7 +1377,8 @@ class ZenLauncherPreferences {
             const isActive = category === ZenLauncherPreferences.activeCategory;
             const isAppearanceCategory = category === ZenLauncherPreferences.TransparencyCategory
                 || category === ZenLauncherPreferences.ThemeCategory
-                || category === ZenLauncherPreferences.ShortcutCategory;
+                || category === ZenLauncherPreferences.ShortcutCategory
+                || category === ZenLauncherPreferences.CreditCategory;
             const isDirty = isAppearanceCategory
                 ? this.#isAppearanceCategoryDirty(category)
                 : this.#dirtyCategories.has(category);
@@ -1396,6 +1403,12 @@ class ZenLauncherPreferences {
 
         if (category === ZenLauncherPreferences.ShortcutCategory) {
             ElementPath.editorContext.replaceChildren(this.#createShortcutPanel());
+            this.#closeItemEditor();
+            return;
+        }
+
+        if (category === ZenLauncherPreferences.CreditCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createCreditPanel());
             this.#closeItemEditor();
             return;
         }
@@ -1493,6 +1506,47 @@ class ZenLauncherPreferences {
         });
 
         syncThemePanel();
+        return panel;
+    }
+
+    #createCreditPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'maker-panel';
+
+        const version = this.#createStaticElement('dd', '', '확인 중');
+        const date = this.#createStaticElement('dd', '', '확인 중');
+        const versionRow = document.createElement('div');
+        versionRow.append(this.#createStaticElement('dt', '', '버전'), version);
+        const dateRow = document.createElement('div');
+        dateRow.append(this.#createStaticElement('dt', '', '날짜'), date);
+        const meta = document.createElement('dl');
+        meta.className = 'maker-meta';
+        meta.append(versionRow, dateRow);
+
+        panel.append(
+            this.#createStaticElement('div', 'maker-kicker', '제작자'),
+            this.#createStaticElement('div', 'maker-name', 'JISU YANG'),
+            this.#createStaticElement('div', 'maker-product', 'ZEN Launcher'),
+            meta
+        );
+
+        window.zenLauncher.getAppInfo?.().then((info) => {
+            if (!info || !panel.isConnected) {
+                return;
+            }
+            if (info.version) {
+                version.textContent = `v${info.version}`;
+            }
+            if (info.author) {
+                panel.querySelector('.maker-name').textContent = info.author;
+            }
+            if (info.releaseDate) {
+                date.textContent = String(info.releaseDate).replace(/-/g, '.');
+            }
+        }).catch(() => {
+            version.textContent = 'v2.3.0';
+        });
+
         return panel;
     }
 

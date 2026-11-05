@@ -9,6 +9,7 @@
     const launcherShell = document.getElementById('launcher-shell');
     const preferenceButton = document.getElementById('btn-preference');
     const weatherWidget = document.getElementById('weather-widget');
+    const weatherBar = document.getElementById('weather-bar');
     const quickWidget = document.getElementById('quick-widget');
     const shutdownScheduler = document.getElementById('shutdown-scheduler');
     const footerCompactPanel = document.getElementById('footer-compact-panel');
@@ -122,12 +123,13 @@
         99: { title: '강한 우박성 뇌우', description: '매우 거친 날씨라 주의가 필요해요.' }
     };
     const setWeatherStatus = (message, state = 'idle') => {
-        if (!weatherStatus) {
-            return;
+        if (weatherStatus) {
+            weatherStatus.dataset.state = state;
+            weatherStatus.textContent = message;
         }
-
-        weatherStatus.dataset.state = state;
-        weatherStatus.textContent = message;
+        if (state === 'error' && weatherCondition) {
+            weatherCondition.textContent = message;
+        }
     };
     const setShutdownSchedulerStatus = (message, state = 'idle') => {
         if (!shutdownSchedulerStatus) {
@@ -253,8 +255,12 @@
     };
     const renderWeather = (payload) => {
         const summary = getWeatherSummary(payload.current.weather_code, payload.current.is_day);
+        const visual = getWeatherVisual(payload.current.weather_code, payload.current.is_day);
+        if (weatherBar) {
+            weatherBar.dataset.visual = visual;
+        }
         if (weatherWidget) {
-            weatherWidget.dataset.visual = getWeatherVisual(payload.current.weather_code, payload.current.is_day);
+            weatherWidget.dataset.visual = visual;
         }
         if (weatherLocation) {
             weatherLocation.textContent = payload.locationLabel;
@@ -965,7 +971,7 @@
             closeFooterCompactPanel();
         }
 
-        if (event.key === 'F5' && isWeatherWidgetOpen) {
+        if (event.key === 'F5' && weatherBar) {
             event.preventDefault();
             await loadWeatherData({ force: true });
         }
@@ -1231,6 +1237,7 @@
         });
 
     updateSearchEngineDisplay();
+    loadWeatherData().catch(() => {});
 
     window.addEventListener('beforeunload', () => {
         if (widgetSyncFrame) {

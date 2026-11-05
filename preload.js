@@ -71,6 +71,9 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     getLayoutMetrics() {
         return ipcRenderer.invoke('zen-launcher:get-layout-metrics');
     },
+    getAppInfo() {
+        return ipcRenderer.invoke('zen-launcher:get-app-info');
+    },
     applySheetFit(fit) {
         return ipcRenderer.invoke('zen-launcher:apply-sheet-fit', fit);
     },
