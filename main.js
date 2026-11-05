@@ -25,6 +25,7 @@ const {
     readNativeWindowHandle,
     shouldReduceResourcesDuringFullscreen
 } = require('./src/main/infrastructure/windows/foregroundFullscreen');
+const { readMasterMute } = require('./src/main/infrastructure/windows/masterMute');
 
 const store = new Store();
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
@@ -692,6 +693,10 @@ async function runTarget(target) {
     }
 
     if (normalizedTarget === 'volume-up' || normalizedTarget === 'volume-down' || normalizedTarget === 'volume-mute') {
+        if (process.platform !== 'win32') {
+            return;
+        }
+
         const keyCode = normalizedTarget === 'volume-up'
             ? 175
             : normalizedTarget === 'volume-down'
@@ -1061,6 +1066,13 @@ ipcMain.handle('zen-launcher:show-message', async (_event, options) => {
 ipcMain.handle('zen-launcher:run', async (_event, target) => {
     await runTarget(target);
     return true;
+});
+
+ipcMain.handle('zen-launcher:get-mute-state', async () => {
+    return readMasterMute({
+        powershellPath: POWERSHELL_PATH,
+        execFileText
+    });
 });
 
 ipcMain.handle('zen-launcher:open-external', async (_event, target) => {

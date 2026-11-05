@@ -4973,6 +4973,24 @@
             filter: brightness(0) invert(0.78);
         }
 
+        #footer .zen-icon-button {
+            width: var(--control-h-sm);
+            min-width: var(--control-h-sm);
+            padding: 0;
+            gap: 0;
+        }
+
+        #footer .zen-icon-button span {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
         .zen-icon-button:hover,
         .zen-icon-button:active,
         .widget-toggle-btn:hover,
@@ -5078,10 +5096,6 @@
             cursor: pointer;
         }
 
-        #folder-area {
-            justify-content: flex-start;
-        }
-
         #folder-area .zen-slot-add {
             width: 100%;
             min-height: 44px;
@@ -5156,12 +5170,42 @@
             pointer-events: none;
         }
 
-        #weather-bar .weather-location {
+        #launcher-brand {
             color: #9a9a9a;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
             line-height: 1;
             white-space: nowrap;
+        }
+
+        .weather-temp-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        #weather-bar .weather-location {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 40;
+            padding: 6px 8px;
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            background: #101010;
+            color: #d7d7d7;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        #weather-bar .weather-temp-wrap:hover .weather-location,
+        #weather-bar .weather-temp-wrap:focus-within .weather-location {
+            display: block;
         }
 
         #weather-bar .weather-location::before,
@@ -5332,34 +5376,13 @@
             color: #1d232b;
         }
 
-        .list-view {
-            justify-content: flex-start;
-            align-items: stretch;
+        body[data-theme="light"] #launcher-brand {
+            color: #5c6670;
         }
 
-        #folder-area {
-            flex: 0 1 auto;
-            min-height: 0;
-            width: 100%;
-            justify-content: flex-start;
-        }
-
-        #folder-watermark {
-            margin-top: auto;
-            align-self: center;
-            color: rgba(255, 255, 255, 0.16);
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: -0.03em;
-            line-height: 1;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
-            pointer-events: none;
-            user-select: none;
-        }
-
-        body[data-theme="light"] #folder-watermark {
-            color: rgba(29, 35, 43, 0.28);
-            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+        body[data-theme="light"] #weather-bar .weather-location {
+            background: #c5ced6;
+            color: #1d232b;
         }
 
         #right-box {
@@ -5541,10 +5564,13 @@
     <div id="container">
         <div id="launcher-shell">
             <div id="weather-bar" aria-live="polite">
-                <span class="weather-location" id="weather-location">위치 확인 중</span>
-                <span class="weather-temp" id="weather-temperature">--°</span>
-                <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
+                <span id="launcher-brand">ZEN Launcher</span>
                 <span class="weather-bar-stats">
+                    <span class="weather-temp-wrap">
+                        <span class="weather-temp" id="weather-temperature">--°</span>
+                        <span class="weather-location" id="weather-location" role="tooltip">위치 확인 중</span>
+                    </span>
+                    <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
                     <span class="weather-bar-stat" title="체감">
                         <img src="src/icon/icon-temperature.svg" alt="체감">
                         <strong id="weather-feels-like">--°</strong>
@@ -5574,7 +5600,6 @@
             <div id="right-box">
                 <div class="item-box list-view">
                     <div id="folder-area"></div>
-                    <div id="folder-watermark">ZEN Launcher</div>
                 </div>
             </div>
             <div id="footer">
@@ -5585,7 +5610,7 @@
                     <span class="footer-divider" aria-hidden="true"></span>
                     <button class="zen-icon-button launcher-basic" type="button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><img src="src/icon/icon-volume-low.svg" alt=""><span>볼륨 -</span></button>
                     <button class="zen-icon-button launcher-basic" type="button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><img src="src/icon/icon-volume-high.svg" alt=""><span>볼륨 +</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume-mute.svg" alt=""><span>음소거</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume-high.svg" alt=""><span>음소거</span></button>
                 </div>
                 <div id="footer-right">
                     <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
@@ -5640,7 +5665,7 @@
             <a class="launcher-basic compact-panel-icon-button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><span class="compact-panel-icon"><img src="src/icon/icon-audio.svg" alt=""></span><span class="compact-panel-item-label">오디오</span></a>
             <a class="launcher-basic compact-panel-icon-button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><span class="compact-panel-icon"><img src="src/icon/icon-volume-low.svg" alt=""></span><span class="compact-panel-item-label">볼륨 -</span></a>
             <a class="launcher-basic compact-panel-icon-button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><span class="compact-panel-icon"><img src="src/icon/icon-volume-high.svg" alt=""></span><span class="compact-panel-item-label">볼륨 +</span></a>
-            <a class="launcher-basic compact-panel-icon-button" data-link="volume-mute" aria-label="음소거" title="음소거"><span class="compact-panel-icon"><img src="src/icon/icon-volume-mute.svg" alt=""></span><span class="compact-panel-item-label">음소거</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><span class="compact-panel-icon"><img src="src/icon/icon-volume-high.svg" alt=""></span><span class="compact-panel-item-label">음소거</span></a>
             </div>
         </div>
         <div id="shutdown-scheduler" aria-label="예약 종료 설정">

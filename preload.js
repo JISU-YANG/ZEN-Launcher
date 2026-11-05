@@ -74,6 +74,9 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     getAppInfo() {
         return ipcRenderer.invoke('zen-launcher:get-app-info');
     },
+    getMuteState() {
+        return ipcRenderer.invoke('zen-launcher:get-mute-state');
+    },
     applySheetFit(fit) {
         return ipcRenderer.invoke('zen-launcher:apply-sheet-fit', fit);
     },

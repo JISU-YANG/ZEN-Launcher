@@ -84,6 +84,7 @@
     let expandedPanelCloseTarget = null;
     let expandedPanelOpenReadyTimer = 0;
     let currentAppearanceSettings = null;
+    let masterMuted = false;
     const SUPPORTED_PANEL_SIZES = new Set(['s', 'm', 'l']);
     const normalizePanelSize = (size) => SUPPORTED_PANEL_SIZES.has(size) ? size : 'm';
     const widgetOrigins = new Map([
@@ -294,6 +295,29 @@
         }
 
         setWeatherStatus('', 'idle');
+    };
+    const applyMasterMute = (muted) => {
+        masterMuted = muted === true;
+        const label = masterMuted ? '음소거 해제' : '음소거';
+        document.querySelectorAll('[data-link="volume-mute"]').forEach((button) => {
+            const image = button.querySelector('img');
+            if (image) {
+                image.src = masterMuted ? 'src/icon/icon-volume-mute.svg' : 'src/icon/icon-volume-high.svg';
+            }
+            button.setAttribute('aria-pressed', masterMuted ? 'true' : 'false');
+            button.setAttribute('aria-label', label);
+            button.title = label;
+        });
+    };
+    const refreshMasterMute = async () => {
+        if (typeof window.zenLauncher?.getMuteState !== 'function') {
+            return;
+        }
+
+        const state = await window.zenLauncher.getMuteState();
+        if (typeof state === 'boolean') {
+            applyMasterMute(state);
+        }
     };
     const scheduleWidgetPositionSync = () => {
         if (widgetSyncFrame) {
@@ -1049,9 +1073,19 @@
             return;
         }
 
+        const target = trigger.dataset.link || '';
+        const previousMuted = masterMuted;
+        if (target === 'volume-mute') {
+            applyMasterMute(!masterMuted);
+        } else if (target === 'volume-up') {
+            applyMasterMute(false);
+        }
+
         try {
-            const target = trigger.dataset.link || '';
             await window.zenLauncher.run(target);
+            if (target === 'volume-up' || target === 'volume-down' || target === 'volume-mute') {
+                await refreshMasterMute();
+            }
             if (trigger.closest('#quick-widget')) {
                 closeQuickWidget();
             }
@@ -1059,6 +1093,9 @@
                 closeFooterCompactPanel();
             }
         } catch (error) {
+            if (target === 'volume-mute' || target === 'volume-up') {
+                applyMasterMute(previousMuted);
+            }
             await window.zenLauncher.showMessage({
                 type: 'error',
                 message: error.message || '대상을 실행하지 못했습니다.'
@@ -1238,6 +1275,7 @@
 
     updateSearchEngineDisplay();
     loadWeatherData().catch(() => {});
+    refreshMasterMute().catch(() => {});
 
     window.addEventListener('beforeunload', () => {
         if (widgetSyncFrame) {
