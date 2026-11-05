@@ -41,7 +41,7 @@
     },
     "releaseInfo": {
       "releaseName": "v2.3.4",
-      "releaseNotes": "갤러리 세로를 32px 줄이고, 아이콘 바를 52px에서 84px로 키웠습니다. 런처 전체 높이는 그대로입니다."
+      "releaseNotes": "갤러리 세로를 32px 줄이고, 아이콘 바를 52px에서 84px로 키웠습니다. 아이콘 그림은 26px입니다. 런처 전체 높이는 그대로입니다."
     },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
