@@ -11,15 +11,17 @@ const { ProgramScanCacheRepository } = require('./src/main/infrastructure/reposi
 const { RemoteImageCacheRepository } = require('./src/main/infrastructure/repositories/remoteImageCacheRepository');
 const { LauncherCategoryService } = require('./src/main/application/services/launcherCategoryService');
 const { ProgramCatalogService } = require('./src/main/application/services/programCatalogService');
+const {
+    computeLauncherFrame,
+    sheetHeightForFit,
+    boundsForSheet,
+    normalizeSheetFit
+} = require('./src/main/domain/launcher/launcherFrame');
 
 const store = new Store();
-const WINDOW_WIDTH = 1150;
-const LAUNCHER_HEIGHT = 420;
-const WEATHER_WIDGET_SPACE = 620;
-const WINDOW_HEIGHT = LAUNCHER_HEIGHT + WEATHER_WIDGET_SPACE;
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
 const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
-const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js'];
+const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js', 'sheetMotion.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
 const APPEARANCE_SETTINGS_KEY = 'ZENL.Appearance';
@@ -47,6 +49,7 @@ const programCatalogService = new ProgramCatalogService({
 let mainWindow = null;
 let devWatchers = [];
 let pendingRelaunch = false;
+let activeSheetFit = 'closed';
 const reverseGeocodeCache = new Map();
 
 function normalizeAppearanceSettings(value = {}) {
@@ -507,19 +510,58 @@ async function runTarget(target) {
     }
 }
 
-function createWindow() {
-    const { width: displayWidth, height: displayHeight } = screen.getPrimaryDisplay().size;
-    const launcherY = Math.round((displayHeight - LAUNCHER_HEIGHT) * 0.8);
+function readLauncherLayout() {
+    const frame = computeLauncherFrame(screen.getPrimaryDisplay().workArea);
+    const sheetHeight = activeSheetFit === 'closed'
+        ? 0
+        : sheetHeightForFit(activeSheetFit, frame.availableAbove);
 
+    return {
+        frame,
+        sheetHeight,
+        bounds: boundsForSheet(frame, sheetHeight),
+        metrics: {
+            width: frame.width,
+            dockHeight: frame.dockHeight,
+            availableAbove: frame.availableAbove,
+            scale: frame.scale,
+            sheetHeight,
+            fit: activeSheetFit
+        }
+    };
+}
+
+function applyLauncherLayout() {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        return null;
+    }
+
+    const layout = readLauncherLayout();
+    mainWindow.setBounds(layout.bounds, false);
+    return layout.metrics;
+}
+
+function publishLauncherLayout() {
+    const metrics = applyLauncherLayout();
+    if (!metrics || !mainWindow || mainWindow.isDestroyed()) {
+        return null;
+    }
+
+    mainWindow.webContents.send('zen-launcher:layout-metrics', metrics);
+    return metrics;
+}
+
+function createWindow() {
+    const initialLayout = readLauncherLayout();
     const win = new BrowserWindow({
-        width: WINDOW_WIDTH,
-        height: WINDOW_HEIGHT,
+        width: initialLayout.bounds.width,
+        height: initialLayout.bounds.height,
         frame: false,
         transparent: true,
         resizable: false,
         icon: APP_ICON_PATH,
-        x: Math.round((displayWidth - WINDOW_WIDTH) / 2),
-        y: Math.max(0, launcherY - WEATHER_WIDGET_SPACE),
+        x: initialLayout.bounds.x,
+        y: initialLayout.bounds.y,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
@@ -619,6 +661,9 @@ app.whenReady().then(() => {
 
     createWindow();
     setupDevReload();
+    screen.on('display-metrics-changed', () => {
+        publishLauncherLayout();
+    });
     globalShortcut.register('CommandOrControl+Space', () => {
         focusLauncherSearch();
     });
@@ -668,7 +713,16 @@ ipcMain.handle('zen-launcher:save-appearance-settings', async (_event, settings)
 ipcMain.handle('zen-launcher:clear-data', async () => {
     await launcherCategoryService.clearAll();
     clearAppearanceSettings();
-    return true;
+    return launcherCategoryService.loadAll();
+});
+
+ipcMain.handle('zen-launcher:get-layout-metrics', () => {
+    return readLauncherLayout().metrics;
+});
+
+ipcMain.handle('zen-launcher:apply-sheet-fit', (_event, fit) => {
+    activeSheetFit = normalizeSheetFit(fit);
+    return applyLauncherLayout();
 });
 
 ipcMain.handle('zen-launcher:show-message', async (_event, options) => {

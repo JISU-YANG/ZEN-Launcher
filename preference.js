@@ -226,11 +226,14 @@ class ZenLauncherPreferences {
                 return;
             }
 
-            await window.zenLauncher.clearData();
+            const clearedData = await window.zenLauncher.clearData();
 
             Object.values(ZenLauncherPreferences.Category).forEach((category) => {
-                this.#savedData.set(category, []);
-                this.#drafts.set(category, []);
+                const items = Array.isArray(clearedData?.[category])
+                    ? clearedData[category].map((item) => this.#normalizeItem(item, category)).filter((item) => item.link)
+                    : [];
+                this.#savedData.set(category, items);
+                this.#drafts.set(category, items.map((item) => ({ ...item })));
             });
             this.#savedAppearance = { ...DEFAULT_APPEARANCE_SETTINGS };
             this.#draftAppearance = { ...this.#savedAppearance };
@@ -1212,30 +1215,10 @@ class ZenLauncherPreferences {
             window.dispatchEvent(new CustomEvent('zen-launcher:settings-panel-switch'));
         }
         if (ElementPath.editorElement) {
-            ElementPath.editorElement.classList.remove('closing');
             ElementPath.editorElement.dataset.panel = 'settings';
-            ElementPath.editorElement.dataset.size = 'm';
-            if (wasEditorOpen && !isPanelSwitch) {
-                ElementPath.editorElement.classList.remove('expanding');
-                ElementPath.editorElement.classList.add('open-ready');
-            } else {
-                ElementPath.editorElement.classList.remove('open-ready');
-                ElementPath.editorElement.classList.add('expanding');
-                const openReadyDelay = isPanelSwitch
-                    ? SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS
-                    : EXPANDED_PANEL_OPEN_READY_DELAY_MS;
-                this.#editorOpenReadyTimer = window.setTimeout(() => {
-                    this.#editorOpenReadyTimer = 0;
-                    if (!ElementPath.editorElement?.classList.contains('open') || ElementPath.editorElement?.classList.contains('closing')) {
-                        return;
-                    }
-
-                    ElementPath.editorElement.classList.remove('expanding');
-                    ElementPath.editorElement.classList.add('open-ready');
-                }, openReadyDelay);
-            }
+            const fit = ElementPath.editorElement.classList.contains('program-browser-active') ? 'workspace' : 'panel';
+            window.zenSheet?.openSheet(ElementPath.editorElement, { fit });
         }
-        ElementPath.editorElement?.classList.add('open');
         this.#refreshStatus();
     }
 
@@ -1270,22 +1253,13 @@ class ZenLauncherPreferences {
             window.clearTimeout(this.#editorOpenReadyTimer);
             this.#editorOpenReadyTimer = 0;
         }
-        editor?.classList.remove('expanding');
-        editor?.classList.remove('open-ready');
         if (this.#editorCloseTimer) {
             window.clearTimeout(this.#editorCloseTimer);
             this.#editorCloseTimer = 0;
         }
-        editor?.classList.add('closing');
-        editor?.classList.remove('open');
-        this.#editorCloseTimer = window.setTimeout(() => {
-            if (editor?.dataset.panel === 'settings') {
-                delete editor.dataset.panel;
-                delete editor.dataset.size;
-            }
-            editor?.classList.remove('closing');
-            this.#editorCloseTimer = 0;
-        }, 420);
+        if (editor?.dataset.panel === 'settings') {
+            window.zenSheet?.closeSheet(editor);
+        }
         this.#refreshStatus();
     }
 
@@ -1420,7 +1394,7 @@ class ZenLauncherPreferences {
         rangeHeader.className = 'theme-range-header';
         rangeHeader.append(
             this.#createStaticElement('div', 'theme-range-label', '투명도'),
-            this.#createStaticElement('div', 'theme-range-caption', 'Launcher Surface')
+            this.#createStaticElement('div', 'theme-range-caption', '런처 표면')
         );
 
         const scale = document.createElement('div');
@@ -2104,11 +2078,24 @@ class ZenLauncherPreferences {
             listArea.replaceChildren();
             const fragment = document.createDocumentFragment();
             const maxCount = ZenLauncherPreferences.MaxCount[category] || items.length;
+            const visibleItems = items.filter((item) => item && item.link);
 
-            for (let index = 0; index < maxCount; index += 1) {
-                const item = items[index];
-                const element = this.#createLauncherItem(item, category) || this.#createLauncherPlaceholder(category, index);
-                fragment.appendChild(element);
+            if (category === ZenLauncherPreferences.Category.ICON) {
+                for (let index = 0; index < maxCount; index += 1) {
+                    const item = visibleItems[index];
+                    const element = this.#createLauncherItem(item, category) || this.#createLauncherPlaceholder(category);
+                    fragment.appendChild(element);
+                }
+            } else {
+                visibleItems.forEach((item) => {
+                    const element = this.#createLauncherItem(item, category);
+                    if (element) {
+                        fragment.appendChild(element);
+                    }
+                });
+                if (visibleItems.length < maxCount) {
+                    fragment.appendChild(this.#createLauncherPlaceholder(category));
+                }
             }
 
             listArea.appendChild(fragment);
@@ -2183,20 +2170,34 @@ class ZenLauncherPreferences {
         return state;
     }
 
-    #createLauncherPlaceholder(category, index) {
-        if (category === ZenLauncherPreferences.Category.FOLDER) {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'list-item launcher-slot-empty';
-            return placeholder;
+    #openEmptySlot(category) {
+        const items = this.#drafts.get(category) || [];
+        const filledCount = items.filter((item) => item?.link).length;
+        if (filledCount >= ZenLauncherPreferences.MaxCount[category]) {
+            this.#openEditor(category);
+            return;
         }
 
-        const wrapper = document.createElement('div');
-        wrapper.className = `${category}-entry launcher-slot-empty`;
+        const hole = items.findIndex((item) => !item?.link);
+        const target = hole >= 0 ? hole : items.length;
+        this.#openEditor(category);
+        this.#addItem(category, target);
+    }
 
-        const shell = document.createElement('div');
-        shell.className = 'launcher-slot-empty-shell';
-        wrapper.appendChild(shell);
-        return wrapper;
+    #createLauncherPlaceholder(category) {
+        const label = category === ZenLauncherPreferences.Category.FOLDER
+            ? '폴더 추가'
+            : '추가';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = category === ZenLauncherPreferences.Category.FOLDER
+            ? 'list-item zen-slot-add'
+            : `${category}-entry zen-slot-add`;
+        button.textContent = label;
+        button.addEventListener('click', () => {
+            this.#openEmptySlot(category);
+        });
+        return button;
     }
 
     #refreshStatus() {
@@ -2313,6 +2314,7 @@ class ZenLauncherPreferences {
         if (ElementPath.editorElement?.dataset.panel === 'settings') {
             ElementPath.editorElement.dataset.size = 'l';
             ElementPath.editorElement.classList.add('program-browser-active');
+            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'workspace' });
         }
         browser.classList.add('open');
         search.value = '';
@@ -2330,6 +2332,7 @@ class ZenLauncherPreferences {
         browser.classList.remove('open');
         if (restoreSize && ElementPath.editorElement?.dataset.panel === 'settings') {
             ElementPath.editorElement.dataset.size = 'm';
+            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'panel' });
         }
         this.#programBrowserContext = null;
         this.#programBrowserFilter = '';
@@ -2534,7 +2537,7 @@ class ZenLauncherPreferences {
     #getCategoryMeta() {
         return {
             [ZenLauncherPreferences.Category.GALLERY]: {
-                title: 'Gallery',
+                title: '갤러리',
                 namePlaceholder: '예: Photoshop',
                 linkLabel: '실행 경로 또는 URL',
                 linkPlaceholder: '예: C:\\Apps\\app.exe 또는 https://example.com',
@@ -2542,7 +2545,7 @@ class ZenLauncherPreferences {
                 selectButtonLabel: '경로 지정'
             },
             [ZenLauncherPreferences.Category.ICON]: {
-                title: 'Icons',
+                title: '아이콘',
                 namePlaceholder: '예: 메모장',
                 linkLabel: '실행 경로 또는 URL',
                 linkPlaceholder: '예: C:\\Windows\\notepad.exe 또는 https://mail.google.com',
@@ -2550,7 +2553,7 @@ class ZenLauncherPreferences {
                 selectButtonLabel: '경로 지정'
             },
             [ZenLauncherPreferences.Category.FOLDER]: {
-                title: 'Folders',
+                title: '폴더',
                 namePlaceholder: '예: 프로젝트 폴더',
                 linkLabel: '폴더 경로',
                 linkPlaceholder: '예: C:\\Users\\name\\Documents\\Project',

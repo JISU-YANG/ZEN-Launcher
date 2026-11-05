@@ -4734,6 +4734,368 @@
             background: linear-gradient(180deg, #393939, #1f1f1f);
         }
 
+        :root {
+            --control-h: 32px;
+            --control-h-sm: 28px;
+            --radius-control: 8px;
+            --icon-size: 16px;
+            --hover-fill: rgba(255, 255, 255, 0.08);
+            --press-fill: rgba(255, 255, 255, 0.12);
+            --focus-ring: rgba(220, 220, 220, 0.85);
+            --hairline: rgba(255, 255, 255, 0.12);
+            --dock-height: 420px;
+            --layout-scale: 1;
+            --sheet-size: 0px;
+            --sheet-duration: 320ms;
+        }
+
+        body[data-theme="light"] {
+            --hover-fill: rgba(0, 0, 0, 0.06);
+            --press-fill: rgba(0, 0, 0, 0.1);
+            --focus-ring: rgba(40, 40, 40, 0.55);
+            --hairline: rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            font-weight: 600;
+        }
+
+        #container {
+            height: var(--dock-height);
+        }
+
+        #launcher-shell,
+        body[data-theme="light"] #launcher-shell {
+            background-image: none;
+            background-size: auto;
+        }
+
+        #launcher-shell {
+            background-color: rgba(28, 28, 28, var(--launcher-shell-alpha));
+        }
+
+        body[data-theme="light"] #launcher-shell {
+            background-color: rgba(232, 236, 241, var(--launcher-shell-alpha));
+        }
+
+        #left-box {
+            width: auto;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        #right-box {
+            width: clamp(180px, 22vw, 280px);
+        }
+
+        #gallery-area,
+        #icon-area {
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        #gallery-area > .gallery-entry {
+            width: auto;
+            flex: 0 1 calc(132px * var(--layout-scale));
+            max-width: calc(132px * var(--layout-scale));
+            min-width: calc(96px * var(--layout-scale));
+        }
+
+        #icon-area > .icon-entry {
+            width: auto;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: calc(104px * var(--layout-scale));
+            height: calc(92px * var(--layout-scale));
+        }
+
+        #icon-area > .icon-entry:hover .icon-img,
+        #gallery-area > .gallery-entry:hover .gallery-img {
+            transform: none;
+        }
+
+        #center-box {
+            display: flex;
+            gap: 12px;
+            width: calc(100% - 48px);
+            margin: 0 24px;
+        }
+
+        #center-box > #link-area {
+            width: 64px;
+            flex: none;
+        }
+
+        #center-box > #search-area {
+            width: auto;
+            flex: 1 1 auto;
+        }
+
+        #center-box > #link-area,
+        #center-box > #search-area {
+            box-shadow: none;
+            border: 1px solid var(--hairline);
+        }
+
+        #footer {
+            display: flex;
+            justify-content: space-between;
+            grid-template-columns: none;
+            height: 50px;
+            padding: 0 12px;
+            gap: 12px;
+        }
+
+        #footer-left,
+        #footer-right {
+            width: auto;
+            min-width: 0;
+            gap: 4px;
+            padding: 0;
+        }
+
+        #footer-right {
+            margin-left: auto;
+            justify-content: flex-end;
+        }
+
+        .footer-divider {
+            width: 1px;
+            height: 18px;
+            margin: 0 4px;
+            background: var(--hairline);
+            flex: 0 0 auto;
+        }
+
+        .zen-icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: var(--control-h-sm);
+            min-height: var(--control-h-sm);
+            padding: 0 8px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            background: transparent;
+            color: #c8c8c8;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .zen-icon-button img {
+            width: var(--icon-size);
+            height: var(--icon-size);
+            margin: 0;
+            padding: 0;
+            filter: brightness(0) invert(0.78);
+        }
+
+        .zen-icon-button:hover,
+        .zen-icon-button:active,
+        .widget-toggle-btn:hover,
+        .widget-toggle-btn:active,
+        .setting-action-button:hover,
+        .quick-link-button:hover,
+        .compact-panel-icon-button:hover {
+            transform: none;
+            box-shadow: none;
+            text-decoration: none;
+        }
+
+        .zen-icon-button:hover,
+        .widget-toggle-btn:hover {
+            background: var(--hover-fill);
+        }
+
+        .zen-icon-button:active,
+        .widget-toggle-btn:active {
+            background: var(--press-fill);
+        }
+
+        .zen-icon-button:focus-visible,
+        .widget-toggle-btn:focus-visible,
+        .zen-slot-add:focus-visible,
+        .setting-action-button:focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        .zen-icon-button[aria-expanded="true"] {
+            background: var(--hover-fill);
+            border-color: var(--hairline);
+        }
+
+        body[data-theme="light"] .zen-icon-button {
+            color: #3a3a3a;
+        }
+
+        body[data-theme="light"] .zen-icon-button img,
+        body[data-theme="light"] #link-area button.widget-toggle-btn img {
+            filter: brightness(0) invert(0.28);
+        }
+
+        .setting-action-button,
+        .btn-row .setting-action-button {
+            height: var(--control-h);
+            min-height: var(--control-h);
+            border-radius: var(--radius-control);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: none;
+            font-weight: 600;
+            transform: none;
+        }
+
+        .setting-action-button.primary-button {
+            background: #f2f2f2;
+            color: #171717;
+        }
+
+        .setting-action-button.danger-button {
+            background: rgba(255, 255, 255, 0.04);
+            color: #e7c5cb;
+        }
+
+        body[data-theme="light"] .setting-action-button {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1c1c1c;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .setting-action-button.primary-button {
+            background: #1f1f1f;
+            color: #f5f5f5;
+        }
+
+        body[data-theme="light"] .setting-action-button.danger-button {
+            background: rgba(0, 0, 0, 0.04);
+            color: #8a3d49;
+        }
+
+        body[data-theme="light"] #setting-credit,
+        body[data-theme="light"] #setting-credit strong {
+            color: #4d4d4d;
+        }
+
+        .list-item:hover {
+            text-decoration: none;
+            background: var(--hover-fill);
+        }
+
+        .zen-slot-add {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed var(--hairline);
+            border-radius: var(--radius-control);
+            background: transparent;
+            color: #8f8f8f;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #folder-area {
+            justify-content: flex-start;
+        }
+
+        #folder-area .zen-slot-add {
+            width: 100%;
+            min-height: 44px;
+        }
+
+        .weather-pill,
+        .quick-widget-pill,
+        .shutdown-scheduler-pill {
+            display: none;
+        }
+
+        #editor {
+            bottom: var(--dock-height);
+            height: var(--sheet-size);
+            transition: height var(--sheet-duration) cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        #editor::before,
+        #editor.open::before,
+        #editor.closing::before {
+            top: 0;
+            height: 1px;
+            animation: none;
+            background: var(--hairline);
+            opacity: 1;
+        }
+
+        #editor-s-surface {
+            clip-path: none;
+        }
+
+        #editor-widget-shell,
+        #setting-container,
+        .btn-row,
+        #editor.closing #editor-widget-shell,
+        #editor.closing #setting-container,
+        #editor.closing .btn-row {
+            transform: none;
+        }
+
+        #editor[data-fit="panel"] #editor-widget-body,
+        #editor[data-fit="workspace"] #editor-widget-body {
+            overflow: auto;
+        }
+
+        #editor.is-exchange.open-ready #editor-widget-shell,
+        #editor.is-exchange.open-ready #setting-container,
+        #editor.is-exchange.open-ready .btn-row {
+            animation: zen-sheet-fade var(--sheet-duration) ease;
+        }
+
+        #setting-content {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        #setting-credit {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-top: auto;
+            padding: 8px 4px 0;
+            color: #8d8d8d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        #setting-credit strong {
+            color: #d5d5d5;
+            font-weight: 700;
+        }
+
+        @keyframes zen-sheet-fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #editor,
+            #editor-widget-shell,
+            #setting-container,
+            .btn-row,
+            .zen-icon-button,
+            .setting-action-button {
+                transition: none;
+                animation: none;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -4749,23 +5111,11 @@
                                 <img src="src/icon/icon-weather.svg" alt="날씨">
                             </button>
                         </div>
-                        <div class="vertical-divider"></div>
-                        <div>
-                            <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 도구 위젯 열기" aria-expanded="false" title="빠른 도구">
-                                <img src="src/icon/icon-quicktools.svg" alt="빠른 도구">
-                            </button>
-                        </div>
-                        <div class="vertical-divider"></div>
-                        <div>
-                            <button id="btn-footer-compact" class="widget-toggle-btn" type="button" aria-label="시스템 설정 열기" aria-expanded="false" title="시스템 설정">
-                                <img src="src/icon/icon-setting.svg" alt="시스템 설정">
-                            </button>
-                        </div>
                     </div>
                     <div id="search-area">
                         <div><a href="https://www.google.com">Google</a></div>
                         <div class="vertical-divider"></div>
-                        <div><input type="text" id="input-search" placeholder="Type to search"></div>
+                        <div><input type="text" id="input-search" placeholder="검색"></div>
                     </div>
                 </div>
             </div>
@@ -4776,19 +5126,21 @@
             </div>
             <div id="footer">
                 <div id="footer-left">
-                    <div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="shutdown" aria-label="종료" title="종료"><img src="src/icon/icon-power-off.svg" alt=""></a></div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="reboot" aria-label="재시작" title="재시작"><img src="src/icon/icon-rotate-right.svg" alt=""></a></div>
-                        <div><button class="footer-btn icon-only" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt="예약 종료"></button></div>
-                    </div>
-                    <div>
-                        <div><button class="footer-btn icon-only" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt="런처 설정"></button></div>
-                    </div>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="shutdown" aria-label="종료" title="종료"><img src="src/icon/icon-power-off.svg" alt=""><span>종료</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="reboot" aria-label="재시작" title="재시작"><img src="src/icon/icon-rotate-right.svg" alt=""><span>재시작</span></button>
+                    <button class="zen-icon-button" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt=""><span>예약</span></button>
+                    <span class="footer-divider" aria-hidden="true"></span>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><img src="src/icon/icon-volume-low.svg" alt=""><span>볼륨 -</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><img src="src/icon/icon-volume-high.svg" alt=""><span>볼륨 +</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume-mute.svg" alt=""><span>음소거</span></button>
                 </div>
                 <div id="footer-right">
-                    <div>JISU YANG</div>
-                    <div>|</div>
-                    <div>ZEN Launcher</div>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><img src="src/icon/icon-mouse.svg" alt=""><span>마우스</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
+                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
+                    <span class="footer-divider" aria-hidden="true"></span>
+                    <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>설정</span></button>
                 </div>
             </div>
         </div>
@@ -4830,7 +5182,7 @@
         <div id="weather-widget" aria-live="polite">
             <div class="weather-widget-header">
                 <div>
-                    <div class="weather-widget-title">Weather</div>
+                    <div class="weather-widget-title">날씨</div>
                     <div class="weather-widget-caption" id="weather-updated">현재 위치와 날씨 정보를 불러옵니다.</div>
                 </div>
                 <div class="weather-pill" id="weather-pill">LIVE</div>
@@ -4941,7 +5293,7 @@
         </div>
         <div class="shutdown-scheduler-actions">
             <div id="shutdown-scheduler-status" class="shutdown-scheduler-status" data-state="idle">
-                <div class="shutdown-scheduler-status-label">Active Shutdown</div>
+                <div class="shutdown-scheduler-status-label">예약 상태</div>
                 <div class="shutdown-scheduler-status-message">예약 종료 또는 예약 취소를 선택할 수 있습니다.</div>
             </div>
             <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
@@ -4970,6 +5322,11 @@
 	                </div>
 	            </div>
             <div id="setting-row"></div>
+            <div id="setting-credit">
+                <span>제작</span>
+                <strong>JISU YANG</strong>
+                <span>ZEN Launcher</span>
+            </div>
         </div>
         <div class="btn-row">
             <div>
@@ -4981,6 +5338,7 @@
             </div>
         </div>
     </div>
+    <script src="./sheetMotion.js"></script>
     <script src="./preference.js"></script>
     <script src="./renderer.js"></script>
 </body>

@@ -56,5 +56,22 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     },
     reloadWindow() {
         return ipcRenderer.invoke('zen-launcher:reload-window');
+    },
+    getLayoutMetrics() {
+        return ipcRenderer.invoke('zen-launcher:get-layout-metrics');
+    },
+    applySheetFit(fit) {
+        return ipcRenderer.invoke('zen-launcher:apply-sheet-fit', fit);
+    },
+    onLayoutMetrics(handler) {
+        if (typeof handler !== 'function') {
+            return () => {};
+        }
+
+        const listener = (_event, metrics) => handler(metrics);
+        ipcRenderer.on('zen-launcher:layout-metrics', listener);
+        return () => {
+            ipcRenderer.removeListener('zen-launcher:layout-metrics', listener);
+        };
     }
 });
