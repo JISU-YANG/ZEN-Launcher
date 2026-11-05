@@ -1,6 +1,17 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('zenLauncher', {
+    onResourceSaver(handler) {
+        if (typeof handler !== 'function') {
+            return () => {};
+        }
+
+        const listener = (_event, active) => handler(active === true);
+        ipcRenderer.on('zen-launcher:resource-saver', listener);
+        return () => {
+            ipcRenderer.removeListener('zen-launcher:resource-saver', listener);
+        };
+    },
     onFocusSearch(handler) {
         if (typeof handler !== 'function') {
             return () => {};
@@ -56,5 +67,28 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     },
     reloadWindow() {
         return ipcRenderer.invoke('zen-launcher:reload-window');
+    },
+    getLayoutMetrics() {
+        return ipcRenderer.invoke('zen-launcher:get-layout-metrics');
+    },
+    getAppInfo() {
+        return ipcRenderer.invoke('zen-launcher:get-app-info');
+    },
+    getMuteState() {
+        return ipcRenderer.invoke('zen-launcher:get-mute-state');
+    },
+    applySheetFit(fit) {
+        return ipcRenderer.invoke('zen-launcher:apply-sheet-fit', fit);
+    },
+    onLayoutMetrics(handler) {
+        if (typeof handler !== 'function') {
+            return () => {};
+        }
+
+        const listener = (_event, metrics) => handler(metrics);
+        ipcRenderer.on('zen-launcher:layout-metrics', listener);
+        return () => {
+            ipcRenderer.removeListener('zen-launcher:layout-metrics', listener);
+        };
     }
 });

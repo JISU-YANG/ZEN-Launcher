@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>영역 구분 다섯 가지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page: #000;
+            --shell: #050505;
+            --plate: #0e0e0e;
+            --hover: #161616;
+            --ink: #d0d0d0;
+            --muted: #8f8f8f;
+            --line: rgba(255, 255, 255, 0.16);
+            --gap: 8px;
+            --inset: 36px;
+            --foot-h: 76px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--page);
+            color: #ececec;
+            font-family: "Noto Sans KR", sans-serif;
+            line-height: 1.5;
+        }
+        a { color: inherit; text-decoration: none; }
+        .page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 80px; }
+        h1 { margin: 0 0 12px; font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+        .intro p { max-width: 78ch; margin: 0 0 8px; color: #bdbdbd; font-size: 15px; }
+        nav {
+            position: sticky; top: 0; z-index: 5;
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin: 22px 0 8px; padding: 10px 0;
+            background: linear-gradient(180deg, var(--page) 70%, transparent);
+        }
+        nav a {
+            padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px;
+            background: #121212; color: #cfcfcf; font-size: 13px; font-weight: 700;
+        }
+        .study { margin-top: 36px; }
+        .study-head { display: grid; grid-template-columns: 52px 1fr; gap: 8px; margin-bottom: 14px; }
+        .num { padding-top: 6px; color: #8d8d8d; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; }
+        .study-head h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.03em; }
+        .study-head p { margin: 4px 0 0; max-width: 78ch; color: #a3a3a3; font-size: 14px; }
+
+        .dock {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            grid-template-rows: auto var(--foot-h);
+            background: var(--shell);
+            color: var(--ink);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--inset);
+            padding: var(--inset) 18px var(--inset) var(--inset);
+        }
+        .gallery { flex: 0 0 208px; height: 208px; display: flex; align-items: stretch; gap: 36px; }
+        .g-item { position: relative; flex: 1 1 0; min-width: 0; height: 100%; border-radius: 12px; overflow: hidden; }
+        .poster { position: absolute; inset: 0; }
+        .p1 { background: radial-gradient(90px 70px at 72% 24%, rgba(255,255,255,0.22), transparent 70%), linear-gradient(165deg, #6a625c, #2c2926 46%, #141312); }
+        .p2 { background: linear-gradient(180deg, transparent 58%, rgba(0,0,0,0.28)), linear-gradient(125deg, #4e5963, #243039 42%, #14181b); }
+        .p3 { background: radial-gradient(140px 50px at 50% 58%, rgba(255,255,255,0.12), transparent 70%), linear-gradient(200deg, #5c5348, #2a241e 50%, #161310); }
+        .p4 { background: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 18px 100%, linear-gradient(180deg, #3c3c3c, #1a1a1a); }
+        .g-name {
+            position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
+            display: flex; align-items: center; justify-content: center; padding: 0 10px;
+            background: #000; color: #f3f3f3; font-size: 13px; font-weight: 700;
+            transform: translateY(100%); transition: transform 0.2s ease;
+        }
+        .g-item:hover .g-name, .g-item.on .g-name { transform: translateY(0); }
+        .g-item.slot { display: flex; align-items: center; justify-content: center; background: transparent; }
+        .g-item.slot:hover { background: #000; }
+        .g-item.slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.62); }
+        .icons { flex: 0 0 auto; display: flex; align-items: stretch; gap: 22px; }
+        .i-item {
+            flex: 1 1 0; min-width: 0; height: 76px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; padding: 6px 4px; border-radius: 12px; background: transparent; color: var(--muted);
+        }
+        .i-item:hover, .i-item.on { background: #000; color: #fff; }
+        .glyph { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+        .i-name { max-width: 100%; font-size: 12px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .i-item.slot img { width: 16px; height: 16px; filter: brightness(0) invert(0.62); }
+        .i-item.slot:hover img, .i-item.on img.glyph { filter: brightness(0) invert(1); }
+        .folder {
+            grid-column: 2; grid-row: 1 / -1;
+            display: flex; flex-direction: column; align-items: stretch; gap: 20px;
+            padding: var(--inset) var(--inset) var(--inset) 18px; background: var(--shell);
+        }
+        .side-foot {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: auto; min-height: 40px;
+        }
+        .search { display: flex; align-items: center; width: 100%; min-height: 28px; background: none; }
+        .engine, .query { min-width: 0; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .engine { margin-right: 12px; color: var(--ink); }
+        .query { margin-left: 12px; flex: 1; color: #8d8d8d; }
+        .vbar { width: 1px; height: 16px; background: var(--line); flex: 0 0 auto; }
+        .folder-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 0; color: var(--muted); font-size: 11px; font-weight: 700; }
+        .folder-head b { color: var(--ink); font-weight: 900; }
+        .folder-row, .folder-add {
+            display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px;
+            border-radius: 12px; background: var(--plate); color: #d2d2d2; font-size: 13px; font-weight: 700;
+        }
+        .folder-row i { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; background: #2a2a2a; }
+        .folder-row:hover, .folder-row.on, .folder-add:hover { background: var(--hover); color: #f3f3f3; }
+        .folder-add { color: var(--muted); }
+        .folder-add img { width: 14px; height: 14px; filter: brightness(0) invert(0.75); }
+        .footer {
+            grid-column: 1; grid-row: 2;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: start;
+            min-width: 0; padding: 0 18px 0 var(--inset); background: var(--shell);
+        }
+        .cluster, .weather, .gear { background: var(--plate); border-radius: 10px; }
+        .cluster { display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 8px; }
+        .weather { justify-self: center; display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 12px; color: #f2f2f2; font-size: 13px; font-weight: 700; }
+        .weather b { font-weight: 900; }
+        .tool, .gear { display: inline-flex; align-items: center; justify-content: center; }
+        .tool { width: 28px; height: 28px; border-radius: 8px; }
+        .gear { width: 36px; height: 36px; }
+        .tool:hover, .gear:hover { background: var(--hover); }
+        .cluster img, .gear img, .weather img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
+        .weather img { width: 14px; height: 14px; }
+        .split { width: 1px; height: 16px; background: rgba(255, 255, 255, 0.28); }
+        .brand {
+            display: inline-flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 10px;
+            background: var(--plate); color: #fff; font-size: 13px; font-weight: 900; line-height: 1;
+        }
+        .brand:hover { background: var(--hover); }
+        .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
+        .note { margin-top: 28px; color: #8d8d8d; font-size: 13px; }
+
+        /* 01 선: 채움 없이 1px만. 폴더 줄, 하단 묶음, 호버도 선이다. */
+        .s1 .folder { border-left: 1px solid var(--line); }
+        .s1 .footer { border-top: 1px solid var(--line); }
+        .s1 .icons {
+            margin: 0 -18px 0 calc(var(--inset) * -1);
+            padding: 10px 18px 10px var(--inset);
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+        .s1 .search { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+        .s1 .vbar, .s1 .split { background: var(--line); }
+        .s1 .folder-row i { display: none; }
+        .s1 .folder-row, .s1 .folder-add,
+        .s1 .cluster, .s1 .weather, .s1 .gear, .s1 .brand {
+            background: transparent;
+            border-radius: 0;
+        }
+        .s1 .folder-row, .s1 .folder-add {
+            min-height: 40px;
+            padding: 0 2px;
+            border-bottom: 1px solid var(--line);
+        }
+        .s1 .folder-row:hover, .s1 .folder-row.on, .s1 .folder-add:hover {
+            background: transparent;
+            color: #fff;
+            box-shadow: inset 2px 0 0 #fff;
+        }
+        .s1 .i-item, .s1 .i-item:hover, .s1 .i-item.on { background: transparent; color: var(--muted); border-radius: 0; }
+        .s1 .i-item:hover, .s1 .i-item.on { color: #fff; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line); }
+        .s1 .g-name { height: 40px; background: transparent; border-top: 1px solid var(--line); }
+        .s1 .tool:hover, .s1 .gear:hover, .s1 .brand:hover { background: transparent; }
+        .s1 .gear { width: 28px; height: 28px; }
+
+        /* 02 단: 선은 없다. 모든 면이 같은 계단이다. 모서리는 12. */
+        .s2 .g-item, .s2 .search, .s2 .folder-row, .s2 .folder-add,
+        .s2 .cluster, .s2 .weather, .s2 .gear, .s2 .brand, .s2 .i-item { border-radius: 12px; }
+        .s2 .icons {
+            margin: 0 -18px 0 calc(var(--inset) * -1);
+            padding: 10px 18px 10px var(--inset);
+            background: #0c0c0c;
+        }
+        .s2 .folder { background: #111111; }
+        .s2 .footer { background: #171717; }
+        .s2 .g-name { background: #111111; }
+        .s2 .i-item:hover, .s2 .i-item.on { background: #161616; }
+        .s2 .search { height: 44px; padding: 0 14px; background: #1e1e1e; }
+        .s2 .folder-row, .s2 .folder-add { min-height: 44px; background: #1a1a1a; }
+        .s2 .folder-row:hover, .s2 .folder-row.on, .s2 .folder-add:hover { background: #242424; }
+        .s2 .folder-row i { background: #3a3a3a; }
+        .s2 .cluster, .s2 .weather, .s2 .gear, .s2 .brand { background: #222222; }
+        .s2 .tool:hover, .s2 .gear:hover, .s2 .brand:hover { background: #2c2c2c; }
+
+        /* 03 칸: 큰 판 16, 그 안의 칸 10. 간격은 밖 16, 안 12. */
+        .s3 { padding: var(--inset); gap: 16px; grid-template-rows: auto auto; }
+        .s3 .main { padding: 0; gap: 16px; }
+        .s3 .g-item { border-radius: 16px; }
+        .s3 .g-name { background: #101010; }
+        .s3 .icons { gap: 12px; padding: 12px; border-radius: 16px; background: #101010; }
+        .s3 .i-item { height: 64px; border-radius: 10px; }
+        .s3 .i-item:hover, .s3 .i-item.on { background: #1c1c1c; }
+        .s3 .folder { gap: 12px; margin: 0; padding: 16px; border-radius: 16px; background: #101010; }
+        .s3 .search, .s3 .folder-row, .s3 .folder-add,
+        .s3 .cluster, .s3 .weather, .s3 .gear, .s3 .brand { border-radius: 10px; background: #1a1a1a; }
+        .s3 .search { height: 44px; padding: 0 14px; border: none; }
+        .s3 .folder-row, .s3 .folder-add { min-height: 44px; }
+        .s3 .folder-row:hover, .s3 .folder-row.on, .s3 .folder-add:hover { background: #262626; }
+        .s3 .footer { height: 76px; border-radius: 16px; background: #101010; align-items: center; }
+        .s3 .cluster, .s3 .weather, .s3 .brand { height: 44px; }
+        .s3 .gear { width: 44px; height: 44px; }
+        .s3 .tool:hover, .s3 .gear:hover, .s3 .brand:hover { background: #262626; }
+
+        /* 04 홈: 우물만 어둡다. 안의 줄과 아이콘은 판을 두지 않는다. */
+        .s4 { grid-template-rows: auto auto; padding-bottom: var(--inset); }
+        .s4 .main { padding-bottom: 16px; }
+        .s4 .icons, .s4 .folder, .s4 .footer, .s4 .search {
+            background: #000;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+        }
+        .s4 .icons { padding: 8px 12px; border-radius: 14px; }
+        .s4 .i-item:hover, .s4 .i-item.on { background: #1a1a1a; border-radius: 10px; }
+        .s4 .folder { margin: var(--inset) var(--inset) 0 0; padding: 16px 14px; border-radius: 14px; gap: 0; }
+        .s4 .search { height: 36px; margin-bottom: 8px; padding: 0 12px; border-radius: 8px; }
+        .s4 .folder-row i { display: none; }
+        .s4 .folder-row, .s4 .folder-add {
+            min-height: 40px; padding: 0 4px; border-radius: 0; background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .s4 .folder-row:hover, .s4 .folder-row.on, .s4 .folder-add:hover {
+            background: #141414; border-radius: 8px; border-bottom-color: transparent; color: #fff;
+        }
+        .s4 .footer { height: 64px; margin: 0 18px 0 var(--inset); border-radius: 14px; align-items: center; }
+        .s4 .cluster, .s4 .weather, .s4 .gear, .s4 .brand { background: transparent; border-radius: 0; }
+        .s4 .gear { width: 28px; height: 28px; }
+        .s4 .tool:hover, .s4 .gear:hover, .s4 .brand:hover { background: transparent; }
+        .s4 .g-name { background: #000; }
+
+        /* 05 띠: 띠 위에 또 판을 올리지 않는다. 호버도 알약이다. */
+        .s5 { padding-bottom: var(--inset); grid-template-rows: auto auto; }
+        .s5 .main { padding-bottom: 16px; }
+        .s5 .icons {
+            height: 60px; align-items: center; padding: 0 8px;
+            border-radius: 999px; background: #141414;
+        }
+        .s5 .i-item { height: 48px; border-radius: 999px; }
+        .s5 .i-item:hover, .s5 .i-item.on { background: #242424; border-radius: 999px; }
+        .s5 .folder { box-shadow: inset 10px 0 0 #141414; padding-left: 24px; padding-bottom: 0; }
+        .s5 .side-foot { min-height: 52px; }
+        .s5 .folder-row i { display: none; }
+        .s5 .folder-row, .s5 .folder-add {
+            min-height: 36px; padding: 0 4px; border-radius: 0; background: transparent;
+        }
+        .s5 .folder-row:hover, .s5 .folder-row.on, .s5 .folder-add:hover {
+            background: transparent; color: #fff; box-shadow: inset 2px 0 0 #fff;
+        }
+        .s5 .search { padding-bottom: 10px; border-bottom: 2px solid #141414; }
+        .s5 .footer {
+            height: 52px; margin: 0 18px 0 var(--inset); border-radius: 999px; background: #141414;
+            align-items: center;
+        }
+        .s5 .cluster, .s5 .weather, .s5 .gear, .s5 .brand { background: transparent; border-radius: 0; }
+        .s5 .gear { width: 28px; height: 28px; }
+        .s5 .tool:hover, .s5 .gear:hover, .s5 .brand:hover { background: transparent; }
+        .s5 .g-name { height: 32px; background: rgba(0, 0, 0, 0.78); }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h1>영역을 나누는 다섯 가지</h1>
+        <div class="intro">
+            <p>하단 바는 본문 아래에서 끝나고 사이드바로 넘어가지 않는다. 이름과 설정은 사이드바 맨 아래에 있다. 바깥 여백 36px과 모서리 18px은 같다.</p>
+            <p>참고, 시계, 폴더의 참고는 그 시안의 호버다. 런처 화면에는 아직 반영하지 않았다.</p>
+        </div>
+        <nav>
+            <a href="#s1">01 선</a>
+            <a href="#s2">02 단</a>
+            <a href="#s3">03 칸</a>
+            <a href="#s4">04 홈</a>
+            <a href="#s5">05 띠</a>
+        </nav>
+
+        <section class="study" id="s1">
+            <div class="study-head">
+                <div class="num">01</div>
+                <div>
+                    <h2>선</h2>
+                    <p>구분은 1px 선뿐이다. 폴더 줄과 하단 묶음은 판을 벗겼다. 고른 줄은 왼쪽 2px, 아이콘 호버와 갤러리 이름은 같은 1px 선이다.</p>
+                </div>
+            </div>
+            <div class="dock s1"></div>
+        </section>
+        <section class="study" id="s2">
+            <div class="study-head">
+                <div class="num">02</div>
+                <div>
+                    <h2>단</h2>
+                    <p>선은 없다. 아이콘 바 #0c0c0c, 사이드바 #111111, 하단 바 #171717이고, 그 위의 검색, 폴더 줄, 묶음은 한 단 더 밝다. 모서리는 모두 12다.</p>
+                </div>
+            </div>
+            <div class="dock s2"></div>
+        </section>
+        <section class="study" id="s3">
+            <div class="study-head">
+                <div class="num">03</div>
+                <div>
+                    <h2>칸</h2>
+                    <p>큰 판의 모서리는 16, 그 안 칸은 10이다. 판 사이는 16px, 칸 사이는 12px이다. 검색, 폴더 줄, 하단 묶음은 같은 안쪽 칸이다.</p>
+                </div>
+            </div>
+            <div class="dock s3"></div>
+        </section>
+        <section class="study" id="s4">
+            <div class="study-head">
+                <div class="num">04</div>
+                <div>
+                    <h2>홈</h2>
+                    <p>아이콘 바, 사이드바, 하단 바, 검색이 검은 우물이다. 우물 안의 폴더 줄과 하단 아이콘은 판 없이 놓인다. 고른 줄만 우물 안에서 한 단 떠오른다.</p>
+                </div>
+            </div>
+            <div class="dock s4"></div>
+        </section>
+        <section class="study" id="s5">
+            <div class="study-head">
+                <div class="num">05</div>
+                <div>
+                    <h2>띠</h2>
+                    <p>아이콘 바와 하단 바는 알약 띠이고, 그 위 묶음 판은 걷어 냈다. 사이드바는 왼쪽 10px 띠, 검색은 같은 색의 2px 밑줄이다. 아이콘 호버도 알약이다.</p>
+                </div>
+            </div>
+            <div class="dock s5"></div>
+        </section>
+        <p class="note">내용물은 같다. 각 장의 줄, 묶음, 호버는 그 장이 영역을 나누는 방식과 같다.</p>
+    </div>
+    <template id="dock-body">
+        <div class="main">
+            <div class="gallery">
+                <article class="g-item"><div class="poster p1"></div><span class="g-name">작업</span></article>
+                <article class="g-item on"><div class="poster p2"></div><span class="g-name">참고</span></article>
+                <article class="g-item"><div class="poster p3"></div><span class="g-name">회의</span></article>
+                <article class="g-item"><div class="poster p4"></div><span class="g-name">자료</span></article>
+                <article class="g-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+            </div>
+            <div class="icons">
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""><span class="i-name">계산기</span></article>
+                <article class="i-item on"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""><span class="i-name">시계</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""><span class="i-name">메모장</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""><span class="i-name">캡처도구</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""><span class="i-name">그림판</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""><span class="i-name">화상 키보드</span></article>
+                <article class="i-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+                <article class="i-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+            </div>
+        </div>
+        <aside class="folder">
+            <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+            <div class="folder-head"><span>폴더</span><b>2</b></div>
+            <div class="folder-row"><i></i>작업</div>
+            <div class="folder-row on"><i></i>참고</div>
+            <div class="folder-add"><img src="../src/icon/icon-plus.svg" alt="">폴더 추가</div>
+            <div class="side-foot">
+                <a class="brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span>ZEN</span> Launcher</a>
+                <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+            </div>
+        </aside>
+        <footer class="footer">
+                <div class="cluster">
+                    <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                    <span class="split"></span>
+                    <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                </div>
+                <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                <div class="cluster">
+                    <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                </div>
+        </footer>
+    </template>
+    <script>
+        const body = document.getElementById("dock-body");
+        document.querySelectorAll(".dock").forEach((dock) => {
+            dock.append(body.content.cloneNode(true));
+        });
+    </script>
+</body>
+</html>

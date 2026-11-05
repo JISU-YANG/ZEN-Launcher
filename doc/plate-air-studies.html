@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>한 겹, 여백과 검색</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --shell: #1c1c1c;
+            --dock: #101010;
+            --folder: #262626;
+            --ink: #d7d7d7;
+            --hairline: rgba(255, 255, 255, 0.12);
+            --page: #0e0e0e;
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            color: #ececec;
+            font-family: "Noto Sans KR", sans-serif;
+            line-height: 1.5;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        .page {
+            width: min(1180px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 36px 0 80px;
+        }
+
+        .intro h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .intro p {
+            max-width: 72ch;
+            margin: 0 0 10px;
+            color: #bdbdbd;
+            font-size: 15px;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 22px 0 8px;
+            padding: 10px 0;
+            background: linear-gradient(180deg, var(--page) 70%, transparent);
+        }
+
+        nav a {
+            padding: 6px 10px;
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            background: #161616;
+            color: #cfcfcf;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        nav a:hover { background: #222; }
+
+        .study { margin-top: 36px; }
+
+        .study-head {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .num {
+            padding-top: 6px;
+            color: #8d8d8d;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+        }
+
+        .study-head h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .study-head p {
+            margin: 4px 0 0;
+            max-width: 78ch;
+            color: #a3a3a3;
+            font-size: 14px;
+        }
+
+        .dock {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            grid-template-rows: 460px 50px;
+            background: var(--shell);
+            color: var(--ink);
+            overflow: hidden;
+        }
+
+        .main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 26px 28px 22px;
+        }
+
+        .folder { background: var(--folder); padding: 18px 12px; }
+        .folder-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            border: 1px dashed rgba(255, 255, 255, 0.16);
+            border-radius: 8px;
+            color: #8f8f8f;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .footer {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            background: var(--dock);
+        }
+
+        .footer-main, .footer-folder {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            height: 50px;
+        }
+
+        .footer-main { position: relative; justify-content: space-between; padding: 0 16px 0 8px; }
+        .footer-folder { justify-content: space-between; padding: 0 8px 0 18px; }
+        .tools { display: flex; align-items: center; gap: 2px; }
+        .tool, .gear {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+        }
+        .tools img, .gear img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
+        .split { width: 1px; height: 16px; margin: 0 6px; background: var(--hairline); }
+        .weather {
+            position: absolute;
+            left: 50%;
+            top: calc(50% - 2px);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            transform: translate(-50%, -50%);
+        }
+        .weather img { width: 14px; height: 14px; filter: brightness(0) invert(1); }
+        .weather b { font-weight: 900; }
+        .brand { color: #9a9a9a; font-size: 13px; font-weight: 900; line-height: 1; }
+        .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
+
+        .row { display: flex; align-items: stretch; gap: 16px; min-width: 0; }
+
+        .g-item, .i-item {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 0;
+            min-width: 0;
+            background: #101010;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .i-item { border: 1px solid rgba(255, 255, 255, 0.06); }
+
+        .media {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .poster { width: 100%; height: 100%; }
+        .p1 { background:
+            radial-gradient(90px 60px at 72% 28%, rgba(255,255,255,0.22), transparent 70%),
+            linear-gradient(165deg, #6a625c 0%, #2c2926 46%, #141312 100%); }
+        .p2 { background:
+            linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.35)),
+            linear-gradient(125deg, #4e5963 0%, #243039 42%, #14181b 100%); }
+        .p3 { background:
+            radial-gradient(120px 40px at 50% 62%, rgba(255,255,255,0.12), transparent 70%),
+            linear-gradient(200deg, #5c5348 0%, #2a241e 50%, #161310 100%); }
+        .p4 { background:
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 18px 100%,
+            linear-gradient(180deg, #3c3c3c 0%, #1a1a1a 100%); }
+
+        .g-name, .i-name {
+            flex: 0 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 0 8px;
+            color: #9a9a9a;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .glyph { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+        .slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.62); }
+
+        .g-item:hover, .i-item:hover, .on { background: #1a1a1a; }
+        .g-item:hover .g-name, .i-item:hover .i-name,
+        .on .g-name, .on .i-name { color: #f2f2f2; }
+
+        .g-item { height: 132px; }
+        .i-item { height: 112px; }
+
+        .search {
+            align-self: center;
+            display: flex;
+            align-items: center;
+            width: 440px;
+            max-width: 100%;
+            height: 56px;
+            border: 1px solid var(--hairline);
+            border-radius: 10px;
+            background: transparent;
+        }
+
+        .engine, .query {
+            padding: 0 20px;
+            color: #8d8d8d;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .engine { color: #d7d7d7; }
+        .query { flex: 1; min-width: 0; }
+        .vbar { width: 1px; height: 18px; background: var(--hairline); flex: 0 0 auto; }
+
+        /* 01 사이: 판은 그대로, 줄 사이만 넓다 */
+        .s1 .row { gap: 20px; }
+        .s1 .main { padding: 32px 32px 26px; }
+
+        /* 02 속: 판 안과 검색 안을 넓힌다 */
+        .s2 .row { gap: 18px; }
+        .s2 .g-item, .s2 .i-item { padding: 10px 10px 0; background: #101010; }
+        .s2 .g-item { height: 148px; }
+        .s2 .i-item { height: 124px; }
+        .s2 .media { border-radius: 8px; overflow: hidden; }
+        .s2 .i-item .media { border-radius: 0; }
+        .s2 .g-name, .s2 .i-name { flex-basis: 36px; }
+        .s2 .search { width: 500px; height: 64px; border-radius: 12px; }
+        .s2 .engine, .s2 .query { padding: 0 28px; }
+        .s2 .vbar { height: 22px; }
+
+        /* 03 넓은 칸: 검색이 줄 너비에 가깝고 높이는 낮다 */
+        .s3 .row { gap: 18px; }
+        .s3 .main { padding-right: 36px; padding-left: 36px; }
+        .s3 .search {
+            width: 100%;
+            height: 50px;
+            background: #101010;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .s3 .engine {
+            flex: 0 0 124px;
+            padding: 0 24px;
+            text-align: center;
+        }
+        .s3 .query { padding: 0 24px; }
+
+        /* 04 같은 판: 검색도 한 겹. 포커스일 때만 RGB */
+        .s4 .row { gap: 18px; }
+        .s4 .search {
+            position: relative;
+            width: 520px;
+            height: 60px;
+            border: none;
+            border-radius: 12px;
+            background: #101010;
+        }
+        .s4 .engine, .s4 .query { padding: 0 24px; }
+        .s4 .search::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(90deg, #ff6b8a, #ffd36a, #7dffb3, #67d4ff, #9a86ff, #ff6b8a);
+            background-size: 220% 100%;
+            animation: rgb 4.8s linear infinite;
+            pointer-events: none;
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        @keyframes rgb {
+            from { background-position: 0 0; }
+            to { background-position: 220% 0; }
+        }
+
+        /* 05 한가운데: 객체를 조금만 낮추고 빈 공간 가운데에 검색 */
+        .s5 .g-item { height: 116px; }
+        .s5 .i-item { height: 100px; }
+        .s5 .row { gap: 16px; }
+        .s5 .g-name, .s5 .i-name { flex-basis: 28px; }
+        .s5 .search {
+            width: 400px;
+            height: 48px;
+            border-radius: 10px;
+            background: rgba(16, 16, 16, 0.72);
+        }
+        .s5 .engine, .s5 .query { padding: 0 24px; font-size: 12px; }
+
+        .note { margin-top: 28px; color: #8d8d8d; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="intro">
+            <h1>한 겹을 여백으로</h1>
+            <p>한 겹은 갤러리와 아이콘을 판 하나로 두는 안이다. 이미지가 위를 채우고, 이름은 판의 마지막 줄에 항상 있다. 이번 다섯 장은 그 요소를 빼지 않는다. 이미지, 이름, 아이콘 그림, 추가 칸, 검색의 엔진과 구분선과 입력칸을 모두 둔 채 사이 여백만 늘린다.</p>
+            <p>검색바의 폭, 높이, 안쪽 여백, 면과 테두리도 같이 바꿔 본다. 호버는 판 색만 한 단계 밝아진다. 각 줄의 둘째 칸이 그 상태다. 넷째 시안의 검색만 포커스 상태라 RGB 테두리가 흐른다.</p>
+        </header>
+        <nav>
+            <a href="#s1">01 사이</a>
+            <a href="#s2">02 속</a>
+            <a href="#s3">03 넓은 칸</a>
+            <a href="#s4">04 같은 판</a>
+            <a href="#s5">05 한가운데</a>
+        </nav>
+
+        <section class="study" id="s1">
+            <div class="study-head">
+                <div class="num">01</div>
+                <div>
+                    <h2>사이</h2>
+                    <p>판의 생김은 한 겹 그대로다. 판과 판 사이는 20px, 도크 안쪽은 32px이다. 검색은 지금과 같은 440×56, 모서리 10, 헤어라인이다. 넓어진 것은 줄과 줄 사이의 빈 공간뿐이다.</p>
+                </div>
+            </div>
+            <div class="dock s1"></div>
+        </section>
+
+        <section class="study" id="s2">
+            <div class="study-head">
+                <div class="num">02</div>
+                <div>
+                    <h2>속</h2>
+                    <p>여백을 판 안으로 넣는다. 이미지는 판 가장자리에서 10px 떨어지고, 이름 줄은 36px이다. 검색은 500×64로 커지고, 엔진 글자와 입력칸의 좌우 여백은 20px에서 28px로 늘어난다. 구분선은 그 가운데에 있다.</p>
+                </div>
+            </div>
+            <div class="dock s2"></div>
+        </section>
+
+        <section class="study" id="s3">
+            <div class="study-head">
+                <div class="num">03</div>
+                <div>
+                    <h2>넓은 칸</h2>
+                    <p>검색만 본문 너비에 가깝게 넓히고 높이는 50px로 낮춘다. 그래서 검색 위아래 빈 공간이 더 커 보인다. 엔진 칸은 124px로 고정하고, 그 좌우는 24px이다. 면은 하단 바와 같은 #101010이다.</p>
+                </div>
+            </div>
+            <div class="dock s3"></div>
+        </section>
+
+        <section class="study" id="s4">
+            <div class="study-head">
+                <div class="num">04</div>
+                <div>
+                    <h2>같은 판</h2>
+                    <p>검색도 갤러리와 같은 한 겹 판이다. 면은 #101010, 모서리는 12, 높이는 60, 안쪽 여백은 24px이다. 쉬고 있을 때는 테두리가 없고, 포커스일 때만 RGB가 흐른다. 이 시안은 포커스 상태다.</p>
+                </div>
+            </div>
+            <div class="dock s4"></div>
+        </section>
+
+        <section class="study" id="s5">
+            <div class="study-head">
+                <div class="num">05</div>
+                <div>
+                    <h2>한가운데</h2>
+                    <p>갤러리와 아이콘 판을 조금 낮춰, 줄어든 높이를 세 줄 사이의 빈 공간으로 쓴다. 검색은 그 빈 공간의 세로 한가운데에 둔다. 폭 400, 높이 48, 안쪽 여백 24px이다. 요소의 수는 그대로다.</p>
+                </div>
+            </div>
+            <div class="dock s5"></div>
+        </section>
+
+        <p class="note">한 겹을 이어서 본 시안이다. 런처 화면에는 아직 반영하지 않았다.</p>
+    </div>
+
+    <template id="dock-body">
+        <div class="main">
+            <div class="row gallery"></div>
+            <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+            <div class="row icons"></div>
+        </div>
+        <aside class="folder"><div class="folder-add">폴더 추가</div></aside>
+        <footer class="footer">
+            <div class="footer-main">
+                <div class="tools">
+                    <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                    <span class="split"></span>
+                    <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                </div>
+                <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                <div class="tools">
+                    <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                </div>
+            </div>
+            <div class="footer-folder">
+                <div class="brand"><span>ZEN</span> Launcher</div>
+                <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+            </div>
+        </footer>
+    </template>
+    <script>
+        const galleries = [
+            ["p1", "작업"],
+            ["p2", "참고", true],
+            ["p3", "회의"],
+            ["p4", "자료"]
+        ];
+        const icons = [
+            ["icon-tool-calculator.svg", "계산기"],
+            ["icon-tool-clock.svg", "시계", true],
+            ["icon-tool-notepad.svg", "메모장"],
+            ["icon-tool-snipping.svg", "캡처도구"],
+            ["icon-tool-paint.svg", "그림판"],
+            ["icon-tool-keyboard.svg", "화상 키보드"]
+        ];
+
+        const plate = (kind, media, name, on) => {
+            const item = document.createElement("article");
+            item.className = `${kind}-item${on ? " on" : ""}`;
+            const face = document.createElement("div");
+            face.className = "media";
+            face.append(media);
+            const label = document.createElement("span");
+            label.className = `${kind}-name`;
+            label.textContent = name;
+            item.append(face, label);
+            return item;
+        };
+
+        const plus = (kind) => {
+            const img = document.createElement("img");
+            img.src = "../src/icon/icon-plus.svg";
+            img.alt = "";
+            const item = plate(kind, img, "", false);
+            item.classList.add("slot");
+            return item;
+        };
+
+        document.querySelectorAll(".dock").forEach((dock) => {
+            dock.append(document.getElementById("dock-body").content.cloneNode(true));
+            const gallery = dock.querySelector(".gallery");
+            const iconRow = dock.querySelector(".icons");
+            galleries.forEach(([tone, name, on]) => {
+                const poster = document.createElement("div");
+                poster.className = `poster ${tone}`;
+                gallery.append(plate("g", poster, name, on));
+            });
+            gallery.append(plus("g"));
+            icons.forEach(([file, name, on]) => {
+                const img = document.createElement("img");
+                img.className = "glyph";
+                img.src = `../src/icon/${file}`;
+                img.alt = "";
+                iconRow.append(plate("i", img, name, on));
+            });
+            iconRow.append(plus("i"), plus("i"));
+        });
+    </script>
+</body>
+</html>
