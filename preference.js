@@ -2315,6 +2315,12 @@ class ZenLauncherPreferences {
 
             listArea.appendChild(fragment);
             listArea.classList.remove('is-empty');
+            if (category === ZenLauncherPreferences.Category.FOLDER) {
+                const count = document.getElementById('folder-count');
+                if (count) {
+                    count.textContent = String(visibleItems.length);
+                }
+            }
         });
     }
 
