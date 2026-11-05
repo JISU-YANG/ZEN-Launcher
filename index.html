@@ -4750,6 +4750,7 @@
             --focus-ring: rgba(220, 220, 220, 0.85);
             --hairline: rgba(255, 255, 255, 0.12);
             --dock-height: 420px;
+            --folder-column: clamp(180px, 22vw, 280px);
             --layout-scale: 1;
             --sheet-size: 0px;
             --sheet-duration: 320ms;
@@ -4791,7 +4792,7 @@
         }
 
         #right-box {
-            width: clamp(180px, 22vw, 280px);
+            width: var(--folder-column);
         }
 
         #gallery-area,
@@ -4908,31 +4909,57 @@
         }
 
         #footer {
-            display: flex;
-            justify-content: space-between;
-            grid-template-columns: none;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) var(--folder-column);
+            justify-content: stretch;
             height: 50px;
-            padding: 0 12px;
-            gap: 12px;
+            padding: 0;
+            gap: 0;
             background: #101010;
         }
 
-        body[data-theme="light"] #footer,
-        body[data-theme="light"] #weather-bar {
-            background: #c5ced6;
-        }
-
-        #footer-left,
-        #footer-right {
-            width: auto;
+        #footer-main,
+        #footer-folder,
+        #footer-power,
+        #footer-settings {
+            display: flex;
+            align-items: center;
             min-width: 0;
-            gap: 4px;
-            padding: 0;
+            height: 100%;
         }
 
-        #footer-right {
-            margin-left: auto;
+        #footer-main {
+            position: relative;
+            justify-content: space-between;
+            padding: 0 16px 0 8px;
+        }
+
+        #footer-power,
+        #footer-settings {
+            gap: 2px;
+        }
+
+        #footer-settings {
             justify-content: flex-end;
+        }
+
+        #launcher-brand {
+            position: absolute;
+            left: 50%;
+            color: #9a9a9a;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            white-space: nowrap;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        #footer-folder {
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 8px 0 0;
         }
 
         .footer-divider {
@@ -5154,43 +5181,35 @@
         }
 
         #weather-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 24;
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 10px;
-            height: 40px;
-            padding: 0 16px;
-            box-sizing: border-box;
-            background: #101010;
+            min-width: 0;
+            height: auto;
+            padding: 0;
+            background: transparent;
             color: #d7d7d7;
-            pointer-events: none;
+            pointer-events: auto;
         }
 
-        #launcher-brand {
-            color: #9a9a9a;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: -0.03em;
-            line-height: 1;
-            white-space: nowrap;
+        .weather-readout {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
         }
 
         .weather-temp-wrap {
             position: relative;
             display: inline-flex;
             align-items: center;
-            pointer-events: auto;
         }
 
         .weather-hover-card {
             display: none;
             position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
+            bottom: calc(100% + 10px);
+            left: 0;
             z-index: 40;
             width: 196px;
             padding: 10px 12px;
@@ -5224,28 +5243,52 @@
 
         #weather-bar .weather-temp {
             width: auto;
-            align-self: center;
-            text-align: left;
-            color: #f3f3f3;
-            font-size: 14px;
+            color: #f7f7f7;
+            font-size: 16px;
             font-weight: 700;
             line-height: 1;
-            letter-spacing: 0;
+            letter-spacing: -0.03em;
         }
 
         #weather-bar .weather-condition {
+            max-width: 72px;
+            overflow: hidden;
             color: #c8c8c8;
             font-size: 12px;
             font-weight: 600;
             line-height: 1;
+            text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        .weather-bar-stats {
-            display: flex;
+        #weather-bar .weather-condition::before,
+        .weather-precip::before {
+            content: '';
+            width: 3px;
+            height: 3px;
+            margin-right: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.28);
+            flex: none;
+        }
+
+        #weather-bar .weather-condition,
+        .weather-precip {
+            display: inline-flex;
             align-items: center;
-            gap: 14px;
-            margin-left: auto;
+        }
+
+        .weather-precip img {
+            width: 13px;
+            height: 13px;
+            margin-right: 3px;
+            filter: brightness(0) invert(0.82);
+        }
+
+        .weather-precip strong {
+            color: #f2f2f2;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .weather-bar-stat {
@@ -5263,18 +5306,15 @@
 
         .weather-hover-card .weather-bar-stat strong {
             margin-left: auto;
+            color: #f2f2f2;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .weather-bar-stat img {
             width: 14px;
             height: 14px;
             filter: brightness(0) invert(0.82);
-        }
-
-        .weather-bar-stat strong {
-            color: #f2f2f2;
-            font-size: 12px;
-            font-weight: 700;
         }
 
         #weather-bar .weather-status {
@@ -5285,25 +5325,36 @@
             clip: rect(0 0 0 0);
         }
 
+        body[data-theme="light"] #footer {
+            background: #c5ced6;
+        }
+
         body[data-theme="light"] #weather-bar {
             color: #3d4550;
         }
 
         body[data-theme="light"] #weather-bar .weather-temp,
-        body[data-theme="light"] .weather-bar-stat strong {
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat strong,
+        body[data-theme="light"] .weather-precip strong {
             color: #1d232b;
         }
 
         body[data-theme="light"] .weather-bar-stat img,
+        body[data-theme="light"] .weather-precip img,
         body[data-theme="light"] .shutdown-step-button img {
             filter: brightness(0) invert(0.2);
+        }
+
+        body[data-theme="light"] #weather-bar .weather-condition::before,
+        body[data-theme="light"] .weather-precip::before {
+            background: rgba(29, 35, 43, 0.28);
         }
 
         #search-area {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 0 12px 0 14px;
+            gap: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
@@ -5344,8 +5395,9 @@
             align-items: center;
             flex: none;
             width: auto;
-            height: auto;
+            height: 100%;
             margin: 0;
+            padding: 0 20px;
             line-height: 1;
         }
 
@@ -5373,6 +5425,7 @@
             width: auto;
             height: 100%;
             margin: 0;
+            padding: 0 20px;
             min-width: 0;
             line-height: 1;
             text-align: left;
@@ -5421,12 +5474,9 @@
             justify-content: flex-start;
         }
 
-        #right-box {
-            padding-top: 40px;
-        }
-
+        #right-box,
         #left-box {
-            padding-top: 44px;
+            padding-top: 16px;
         }
 
         #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-top > div {
@@ -5599,33 +5649,6 @@
 <body>
     <div id="container">
         <div id="launcher-shell">
-            <div id="weather-bar" aria-live="polite">
-                <span id="launcher-brand">ZEN Launcher</span>
-                <span class="weather-bar-stats">
-                    <span class="weather-temp-wrap">
-                        <span class="weather-temp" id="weather-temperature">--°</span>
-                        <span class="weather-hover-card">
-                            <span class="weather-location" id="weather-location">위치 확인 중</span>
-                            <span class="weather-bar-stat">
-                                <img src="src/icon/icon-temperature.svg" alt="">
-                                <span>체감</span>
-                                <strong id="weather-feels-like">--°</strong>
-                            </span>
-                            <span class="weather-bar-stat">
-                                <img src="src/icon/icon-humidity.svg" alt="">
-                                <span>습도</span>
-                                <strong id="weather-humidity">--</strong>
-                            </span>
-                        </span>
-                    </span>
-                    <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
-                    <span class="weather-bar-stat" title="강수">
-                        <img src="src/icon/icon-cloud.svg" alt="강수">
-                        <strong id="weather-precipitation">--</strong>
-                    </span>
-                </span>
-                <div class="weather-status" id="weather-status" data-state="loading">날씨를 확인하고 있습니다.</div>
-            </div>
             <div id="left-box">
                 <div class="item-box" id="gallery-area"></div>
                 <div class="item-box" id="icon-area"></div>
@@ -5643,20 +5666,51 @@
                 </div>
             </div>
             <div id="footer">
-                <div id="footer-left">
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="shutdown" aria-label="종료" title="종료"><img src="src/icon/icon-power-off.svg" alt=""><span>종료</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="reboot" aria-label="재시작" title="재시작"><img src="src/icon/icon-rotate-right.svg" alt=""><span>재시작</span></button>
-                    <button class="zen-icon-button" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt=""><span>예약</span></button>
-                    <span class="footer-divider" aria-hidden="true"></span>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><img src="src/icon/icon-volume-low.svg" alt=""><span>볼륨 -</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><img src="src/icon/icon-volume-high.svg" alt=""><span>볼륨 +</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume.svg" alt=""><span>음소거</span></button>
+                <div id="footer-main">
+                    <div id="footer-power">
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="shutdown" aria-label="종료" title="종료"><img src="src/icon/icon-power-off.svg" alt=""><span>종료</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="reboot" aria-label="재시작" title="재시작"><img src="src/icon/icon-rotate-right.svg" alt=""><span>재시작</span></button>
+                        <button class="zen-icon-button" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt=""><span>예약</span></button>
+                        <span class="footer-divider" aria-hidden="true"></span>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><img src="src/icon/icon-volume-low.svg" alt=""><span>볼륨 -</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><img src="src/icon/icon-volume-high.svg" alt=""><span>볼륨 +</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume.svg" alt=""><span>음소거</span></button>
+                    </div>
+                    <span id="launcher-brand">ZEN Launcher</span>
+                    <div id="footer-settings">
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><img src="src/icon/icon-mouse.svg" alt=""><span>마우스</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
+                    </div>
                 </div>
-                <div id="footer-right">
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><img src="src/icon/icon-mouse.svg" alt=""><span>마우스</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
-                    <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
+                <div id="footer-folder">
+                    <div id="weather-bar" aria-live="polite">
+                        <span class="weather-readout">
+                            <span class="weather-temp-wrap">
+                                <span class="weather-temp" id="weather-temperature">--°</span>
+                                <span class="weather-hover-card">
+                                    <span class="weather-location" id="weather-location">위치 확인 중</span>
+                                    <span class="weather-bar-stat">
+                                        <img src="src/icon/icon-temperature.svg" alt="">
+                                        <span>체감</span>
+                                        <strong id="weather-feels-like">--°</strong>
+                                    </span>
+                                    <span class="weather-bar-stat">
+                                        <img src="src/icon/icon-humidity.svg" alt="">
+                                        <span>습도</span>
+                                        <strong id="weather-humidity">--</strong>
+                                    </span>
+                                </span>
+                            </span>
+                            <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
+                            <span class="weather-precip" title="강수">
+                                <img src="src/icon/icon-cloud.svg" alt="">
+                                <strong id="weather-precipitation">--</strong>
+                            </span>
+                        </span>
+                        <div class="weather-status" id="weather-status" data-state="loading">날씨를 확인하고 있습니다.</div>
+                    </div>
                     <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>런처</span></button>
                 </div>
             </div>
