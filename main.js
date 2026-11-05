@@ -39,6 +39,7 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
     themeMode: 'dark',
     revealOnHover: false,
+    grayscaleUntilHover: true,
     suppressShortcutDuringFullscreen: false,
     minimizeResourcesDuringFullscreen: true,
     launchAtStartup: false
@@ -82,6 +83,7 @@ function normalizeAppearanceSettings(value = {}) {
         ? 'light'
         : DEFAULT_APPEARANCE_SETTINGS.themeMode;
     const revealOnHover = value?.revealOnHover === true;
+    const grayscaleUntilHover = value?.grayscaleUntilHover !== false;
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
     const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
     const launchAtStartup = value?.launchAtStartup === true;
@@ -90,6 +92,7 @@ function normalizeAppearanceSettings(value = {}) {
         launcherTransparency,
         themeMode,
         revealOnHover,
+        grayscaleUntilHover,
         suppressShortcutDuringFullscreen,
         minimizeResourcesDuringFullscreen,
         launchAtStartup

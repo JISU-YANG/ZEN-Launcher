@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-media-grayscale="true">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6430,6 +6430,18 @@
         body[data-theme="light"] .weather-hover-card {
             background: var(--zen-hover);
             border-color: var(--hairline);
+        }
+
+        html[data-media-grayscale="true"] #gallery-area .gallery-img,
+        html[data-media-grayscale="true"] #icon-area .icon-img:not(.icon-glyph) {
+            filter: grayscale(1);
+        }
+
+        html[data-media-grayscale="true"] #gallery-area > .gallery-entry:hover .gallery-img,
+        html[data-media-grayscale="true"] #gallery-area > .gallery-entry:focus-within .gallery-img,
+        html[data-media-grayscale="true"] #icon-area > .icon-entry:hover .icon-img:not(.icon-glyph),
+        html[data-media-grayscale="true"] #icon-area > .icon-entry:focus-within .icon-img:not(.icon-glyph) {
+            filter: none;
         }
 
     </style>

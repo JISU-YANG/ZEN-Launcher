@@ -14,6 +14,7 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     launcherTransparency: 0,
     themeMode: 'dark',
     revealOnHover: false,
+    grayscaleUntilHover: true,
     suppressShortcutDuringFullscreen: false,
     minimizeResourcesDuringFullscreen: true,
     launchAtStartup: false
@@ -30,6 +31,7 @@ function normalizeAppearanceSettings(value = {}) {
         ? 'light'
         : DEFAULT_APPEARANCE_SETTINGS.themeMode;
     const revealOnHover = value?.revealOnHover === true;
+    const grayscaleUntilHover = value?.grayscaleUntilHover !== false;
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
     const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
     const launchAtStartup = value?.launchAtStartup === true;
@@ -38,6 +40,7 @@ function normalizeAppearanceSettings(value = {}) {
         launcherTransparency,
         themeMode,
         revealOnHover,
+        grayscaleUntilHover,
         suppressShortcutDuringFullscreen,
         minimizeResourcesDuringFullscreen,
         launchAtStartup
@@ -46,7 +49,7 @@ function normalizeAppearanceSettings(value = {}) {
 
 function applyAppearanceSettingsToDocument(settings) {
     const normalizedSettings = normalizeAppearanceSettings(settings);
-    const { launcherTransparency, themeMode, revealOnHover } = normalizedSettings;
+    const { launcherTransparency, themeMode, revealOnHover, grayscaleUntilHover } = normalizedSettings;
     const effectiveTransparencyRatio = (launcherTransparency / 100) * (MAX_EFFECTIVE_LAUNCHER_TRANSPARENCY / 100);
     const baseSurfaceOpacity = `${(1 - effectiveTransparencyRatio).toFixed(3)}`;
     const surfaceOpacity = revealOnHover && document.documentElement.dataset.launcherHovered === 'true'
@@ -59,9 +62,11 @@ function applyAppearanceSettingsToDocument(settings) {
 
     document.documentElement.dataset.theme = themeMode;
     document.documentElement.dataset.hoverRevealEnabled = revealOnHover ? 'true' : 'false';
+    document.documentElement.dataset.mediaGrayscale = grayscaleUntilHover ? 'true' : 'false';
     if (document.body) {
         document.body.dataset.theme = themeMode;
         document.body.dataset.hoverRevealEnabled = revealOnHover ? 'true' : 'false';
+        document.body.dataset.mediaGrayscale = grayscaleUntilHover ? 'true' : 'false';
     }
 
     rootStyle.setProperty('--launcher-shell-alpha', surfaceOpacity);
@@ -190,6 +195,7 @@ class ZenLauncherPreferences {
         return left?.launcherTransparency === right?.launcherTransparency
             && left?.themeMode === right?.themeMode
             && left?.revealOnHover === right?.revealOnHover
+            && left?.grayscaleUntilHover === right?.grayscaleUntilHover
             && left?.suppressShortcutDuringFullscreen === right?.suppressShortcutDuringFullscreen
             && left?.minimizeResourcesDuringFullscreen === right?.minimizeResourcesDuringFullscreen
             && left?.launchAtStartup === right?.launchAtStartup;
@@ -205,7 +211,8 @@ class ZenLauncherPreferences {
         }
 
         if (category === ZenLauncherPreferences.ThemeCategory) {
-            return draft.themeMode !== saved.themeMode;
+            return draft.themeMode !== saved.themeMode
+                || draft.grayscaleUntilHover !== saved.grayscaleUntilHover;
         }
 
         if (category === ZenLauncherPreferences.ShortcutCategory) {
@@ -1579,7 +1586,26 @@ class ZenLauncherPreferences {
             })
         );
 
-        panel.append(title, description, group);
+        const grayscaleToggle = document.createElement('label');
+        grayscaleToggle.className = 'theme-toggle-card';
+
+        const grayscaleCheckbox = document.createElement('input');
+        grayscaleCheckbox.type = 'checkbox';
+        grayscaleCheckbox.checked = this.#draftAppearance.grayscaleUntilHover !== false;
+
+        const grayscaleCopy = document.createElement('div');
+        grayscaleCopy.className = 'theme-toggle-copy';
+        grayscaleCopy.append(
+            this.#createStaticElement('div', 'theme-toggle-title', '평소에는 흑백으로 보기'),
+            this.#createStaticElement('div', 'theme-toggle-description', '갤러리와 아이콘 이미지는 마우스를 올리면 원래 색이 보입니다.')
+        );
+
+        grayscaleCheckbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ grayscaleUntilHover: grayscaleCheckbox.checked });
+        });
+
+        grayscaleToggle.append(grayscaleCheckbox, grayscaleCopy);
+        panel.append(title, description, group, grayscaleToggle);
         return panel;
     }
 
