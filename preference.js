@@ -2315,12 +2315,6 @@ class ZenLauncherPreferences {
 
             listArea.appendChild(fragment);
             listArea.classList.remove('is-empty');
-            if (category === ZenLauncherPreferences.Category.FOLDER) {
-                const count = document.getElementById('folder-count');
-                if (count) {
-                    count.textContent = String(visibleItems.length);
-                }
-            }
         });
     }
 
@@ -2333,7 +2327,12 @@ class ZenLauncherPreferences {
             const folderItem = document.createElement('div');
             folderItem.className = 'launcher-basic list-item';
             folderItem.dataset.link = item.link;
-            folderItem.textContent = item.name || item.link;
+            const folderIcon = document.createElement('img');
+            folderIcon.src = 'src/icon/icon-folder.svg';
+            folderIcon.alt = '';
+            const folderLabel = document.createElement('span');
+            folderLabel.textContent = item.name || item.link;
+            folderItem.append(folderIcon, folderLabel);
             return folderItem;
         }
 
@@ -2374,7 +2373,7 @@ class ZenLauncherPreferences {
         const fallback = document.createElement('div');
         fallback.className = `launcher-fallback ${category}-fallback`;
         fallback.textContent = category === ZenLauncherPreferences.Category.GALLERY
-            ? (item.name || this.#summarizeLink(item.link) || 'APP')
+            ? ''
             : this.#getItemInitial(item);
         return fallback;
     }
@@ -2412,7 +2411,11 @@ class ZenLauncherPreferences {
             ? 'list-item zen-slot-add'
             : `${category}-entry zen-slot-add`;
         if (category === ZenLauncherPreferences.Category.FOLDER) {
-            button.textContent = '폴더 추가';
+            const icon = document.createElement('img');
+            icon.src = 'src/icon/icon-plus.svg';
+            icon.alt = '';
+            button.appendChild(icon);
+            button.setAttribute('aria-label', '폴더 추가');
         } else {
             const icon = document.createElement('img');
             icon.src = 'src/icon/icon-plus.svg';

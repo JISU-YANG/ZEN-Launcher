@@ -6013,7 +6013,58 @@
         }
 
         #folder-area .zen-slot-add {
+            justify-content: center;
             color: var(--zen-muted);
+        }
+
+        #gallery-area .gallery-fallback {
+            color: transparent;
+            font-size: 0;
+        }
+
+        .list-view,
+        body[data-theme="light"] .list-view {
+            background: transparent;
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #folder-area .list-item,
+        #folder-area .zen-slot-add,
+        body[data-theme="light"] #folder-area .list-item,
+        body[data-theme="light"] #folder-area .zen-slot-add {
+            background: var(--zen-tile);
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #folder-area .list-item:hover,
+        #folder-area .zen-slot-add:hover,
+        body[data-theme="light"] #folder-area .list-item:hover,
+        body[data-theme="light"] #folder-area .zen-slot-add:hover {
+            background: var(--zen-hover);
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #folder-area .list-item img,
+        #folder-area .zen-slot-add img {
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #folder-area .list-item img,
+        body[data-theme="light"] #folder-area .zen-slot-add img {
+            filter: brightness(0);
+        }
+
+        #folder-area .list-item span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         #footer,
@@ -6166,7 +6217,6 @@
                     <div><input type="text" id="input-search" placeholder="검색"></div>
                 </div>
                 <div class="item-box list-view">
-                    <div class="folder-head"><span>폴더</span><b id="folder-count">0</b></div>
                     <div id="folder-area"></div>
                 </div>
                 <div id="footer-folder">
