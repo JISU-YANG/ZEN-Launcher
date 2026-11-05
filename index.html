@@ -4935,6 +4935,14 @@
         }
 
         #footer-power,
+        #footer-settings,
+        #launcher-brand,
+        #footer-folder > .zen-icon-button {
+            position: relative;
+            top: -2px;
+        }
+
+        #footer-power,
         #footer-settings {
             gap: 2px;
         }
@@ -5183,6 +5191,7 @@
 
         #weather-bar {
             position: absolute;
+            top: calc(50% - 2px);
             left: 50%;
             display: flex;
             align-items: center;
@@ -5192,7 +5201,7 @@
             background: transparent;
             color: #d7d7d7;
             pointer-events: auto;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
         }
 
         .weather-readout {
