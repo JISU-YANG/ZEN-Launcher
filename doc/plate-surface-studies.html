@@ -47,11 +47,14 @@
         .study-head p { margin: 4px 0 0; max-width: 78ch; color: #a3a3a3; font-size: 14px; }
 
         .dock {
-            --shell: #1c1c1c;
-            --plate: #101010;
-            --folder: #262626;
-            --foot: #101010;
-            --foot-h: 50px;
+            --shell: #101010;
+            --surface: #1a1a1a;
+            --plate: #242424;
+            --folder: var(--surface);
+            --foot: var(--surface);
+            --hover: color-mix(in srgb, var(--plate) 82%, white);
+            --foot-h: 56px;
+            --gap: 8px;
             --ink: #d7d7d7;
             --muted: #9a9a9a;
             display: grid;
@@ -78,24 +81,38 @@
         .g-item, .i-item {
             display: flex; flex-direction: column; flex: 1 1 0; min-width: 0; overflow: hidden;
         }
-        .g-item { height: 128px; }
-        .i-item { height: 108px; }
+        .g-item { height: 154px; }
+        .i-item {
+            height: 108px;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
         .media { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+        .i-item .media { flex: 0 0 auto; }
         .poster { width: 100%; height: 100%; }
         .p1 { background: radial-gradient(90px 60px at 72% 28%, rgba(255,255,255,0.22), transparent 70%), linear-gradient(165deg, #6a625c, #2c2926 46%, #141312); }
         .p2 { background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.35)), linear-gradient(125deg, #4e5963, #243039 42%, #14181b); }
         .p3 { background: radial-gradient(120px 40px at 50% 62%, rgba(255,255,255,0.12), transparent 70%), linear-gradient(200deg, #5c5348, #2a241e 50%, #161310); }
         .p4 { background: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 18px 100%, linear-gradient(180deg, #3c3c3c, #1a1a1a); }
         .g-name, .i-name {
-            flex: 0 0 30px; display: flex; align-items: center; justify-content: center;
-            min-width: 0; padding: 0 8px; color: var(--muted); font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            min-width: 0; color: var(--muted); font-weight: 700;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+        .g-name {
+            flex: 0 0 46px; padding: 0 10px; font-size: 13px;
+            background: color-mix(in srgb, var(--plate) 78%, white);
+        }
+        .i-name { flex: 0 0 auto; max-width: 100%; padding: 0 6px; font-size: 12px; }
+        .g-name:empty, .i-name:empty { display: none; }
         .glyph { width: 26px; height: 26px; filter: brightness(0) invert(1); }
         .slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.62); }
         .g-item:hover, .i-item:hover, .g-item.on, .i-item.on,
-        .folder-row:hover, .folder-row.on { background: color-mix(in srgb, var(--plate) 86%, white); }
-        .g-item:hover .g-name, .i-item:hover .i-name, .g-item.on .g-name, .i-item.on .i-name { color: #f3f3f3; }
+        .folder-row:hover, .folder-row.on, .folder-add:hover { background: var(--hover); }
+        .g-item:hover .g-name, .g-item.on .g-name { background: transparent; }
+        .g-item:hover .g-name, .i-item:hover .i-name, .g-item.on .g-name, .i-item.on .i-name,
+        .folder-row.on { color: #f3f3f3; }
 
         .search {
             align-self: center; display: flex; align-items: center;
@@ -111,25 +128,36 @@
             display: flex; flex-direction: column; gap: 8px;
             padding: 16px 12px;
         }
-        .folder-row, .folder-add {
-            display: flex; align-items: center; min-height: 44px; padding: 0 14px;
-            color: #c8c8c8; font-size: 13px; font-weight: 700;
+        .folder-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 2px 4px 6px; color: var(--muted); font-size: 11px; font-weight: 700;
         }
-        .folder-add { justify-content: center; color: var(--muted); border: 1px dashed rgba(255,255,255,0.16); background: transparent; }
-        .add-mark { display: none; }
+        .folder-head b { color: var(--ink); font-weight: 900; }
+        .folder-row, .folder-add {
+            display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px;
+            color: #d2d2d2; font-size: 13px; font-weight: 700;
+            background: var(--plate); border-radius: 12px;
+        }
+        .folder-row i {
+            width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto;
+            background: color-mix(in srgb, var(--plate) 55%, white);
+        }
+        .folder-add { justify-content: flex-start; color: var(--muted); }
+        .folder-add img { width: 14px; height: 14px; filter: brightness(0) invert(0.75); }
 
         .footer { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 220px; background: var(--foot); }
         .footer-main, .footer-folder { display: flex; align-items: center; min-width: 0; height: 100%; }
-        .footer-main { position: relative; justify-content: space-between; padding: 0 16px 0 10px; }
-        .footer-folder { justify-content: space-between; padding: 0 10px 0 18px; }
-        .tools { display: flex; align-items: center; gap: 2px; }
-        .tool, .gear { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
+        .footer-main { position: relative; justify-content: space-between; padding: 0 12px; }
+        .footer-folder { justify-content: space-between; padding: 0 12px; }
+        .tools { display: flex; align-items: center; gap: var(--gap); }
+        .tool, .gear { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; }
+        .tool:hover, .gear:hover { background: var(--hover); }
         .tools img, .gear img, .weather img { filter: brightness(0) invert(1); }
         .tools img, .gear img { width: 16px; height: 16px; }
-        .split { width: 1px; height: 16px; margin: 0 6px; background: var(--hairline); }
+        .split { width: 1px; height: 16px; margin: 0; background: var(--hairline); }
         .weather {
             position: absolute; left: 50%; top: calc(50% - 1px);
-            display: flex; align-items: center; gap: 7px;
+            display: flex; align-items: center; gap: var(--gap);
             font-size: 13px; font-weight: 700; transform: translate(-50%, -50%);
         }
         .weather img { width: 14px; height: 14px; }
@@ -137,52 +165,37 @@
         .brand { color: var(--muted); font-size: 13px; font-weight: 900; line-height: 1; }
         .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
 
-        /* 01 한 면 */
-        .s1 { --shell: #1a1a1a; --plate: #101010; --folder: #1a1a1a; --foot: #1a1a1a; }
-        .s1 .folder { border-left: 1px solid var(--hairline); padding: 18px 14px; gap: 10px; }
+        /* 배경이 가장 어둡고, 폴더와 하단 바가 한 단, 판이 한 단 더 연하다. */
+        .s1 { --shell: #101010; --surface: #1a1a1a; --plate: #262626; }
+        .s1 .folder { border-left: 1px solid var(--hairline); }
         .s1 .footer { border-top: 1px solid var(--hairline); }
-        .s1 .folder-add { background: var(--plate); border: none; }
 
-        /* 02 단 */
-        .s2 { --shell: #2a2a2a; --plate: #161616; --folder: #202020; --foot: #0e0e0e; --foot-h: 56px; }
-        .s2 .footer { border-top: 1px solid rgba(255,255,255,0.08); }
-        .s2 .folder { padding: 18px 14px; gap: 10px; }
-        .s2 .footer-main { padding-left: 14px; padding-right: 18px; }
-        .s2 .tools { gap: 4px; }
+        .s2 { --shell: #0e0e0e; --surface: #1c1c1c; --plate: #2c2c2c; }
+        .s2 .footer { box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
 
-        /* 03 묶음 */
-        .s3 { --shell: #1e1e1e; --plate: #111111; --folder: #1e1e1e; --foot: #1e1e1e; --foot-h: 62px; }
-        .s3 .folder { padding: 18px 14px; gap: 8px; }
-        .s3 .folder-add { background: var(--plate); border: none; }
-        .s3 .footer-main { display: grid; grid-template-columns: auto 1fr auto; align-items: center; padding: 0 12px; }
-        .s3 .cluster { display: flex; align-items: center; height: 40px; padding: 0 6px; border-radius: 10px; background: var(--plate); }
+        .s3 { --shell: #101010; --surface: #101010; --plate: #2a2a2a; --foot-h: 64px; }
+        .s3 .footer-main { display: grid; grid-template-columns: auto 1fr auto; align-items: center; }
+        .s3 .cluster {
+            display: flex; align-items: center; gap: var(--gap);
+            height: 40px; padding: 0 8px; border-radius: 10px; background: var(--plate);
+        }
         .s3 .weather {
             position: static; transform: none; justify-self: center;
-            height: 40px; padding: 0 16px; border-radius: 10px; background: var(--plate);
+            height: 40px; padding: 0 12px; border-radius: 10px; background: var(--plate);
         }
-        .s3 .footer-folder { padding-left: 14px; }
         .s3 .gear { width: 36px; height: 36px; border-radius: 10px; background: var(--plate); }
 
-        /* 04 선 */
-        .s4 { --shell: #0e0e0e; --plate: #1c1c1c; --folder: #0e0e0e; --foot: #0e0e0e; --foot-h: 58px; }
-        .s4 .folder { gap: 0; padding: 8px 0; border-left: 1px solid var(--hairline); }
-        .s4 .folder-row, .s4 .folder-add {
-            border-radius: 0; background: transparent; min-height: 48px; padding: 0 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-        .s4 .folder-add { justify-content: flex-start; gap: 8px; border-style: none; color: var(--muted); }
-        .s4 .add-mark { display: inline; }
-        .s4 .folder-row.on, .s4 .folder-row:hover { background: rgba(255,255,255,0.06); }
+        .s4 { --shell: #0c0c0c; --surface: #0c0c0c; --plate: #222222; }
+        .s4 .folder { border-left: 1px solid var(--hairline); }
         .s4 .footer { border-top: 1px solid var(--hairline); }
-        .s4 .footer-main { padding: 0 22px; }
-        .s4 .footer-folder { padding: 0 16px 0 22px; }
-        .s4 .tools { gap: 6px; }
 
-        /* 05 온기 */
-        .s5 { --shell: #2a2420; --plate: #1a1613; --folder: #221e1a; --foot: #120f0d; --foot-h: 56px; --ink: #e6dfd8; --muted: #b3a89f; }
+        .s5 {
+            --shell: #14110f; --surface: #221c18; --plate: #322820;
+            --ink: #e6dfd8; --muted: #b3a89f;
+            --hover: color-mix(in srgb, var(--plate) 78%, #f3e6d4);
+        }
         .s5 .query { color: #8d8278; }
-        .s5 .folder { padding: 18px 14px; gap: 10px; }
-        .s5 .footer { border-top: 1px solid rgba(255, 236, 214, 0.08); }
+        .s5 .footer { box-shadow: inset 0 1px 0 rgba(255, 236, 214, 0.08); }
         .s5 .p1 { background: radial-gradient(90px 60px at 72% 28%, rgba(255,236,214,0.18), transparent 70%), linear-gradient(165deg, #6a5c52, #2c241f 46%, #161210); }
         .s5 .p2 { background: linear-gradient(125deg, #5c534c, #2a241e 46%, #161310); }
         .s5 .p3 { background: linear-gradient(200deg, #6a5848, #2a221c 50%, #161210); }
@@ -195,8 +208,8 @@
     <div class="page">
         <header class="intro">
             <h1>같은 판에서 면까지</h1>
-            <p>4번 시안은 검색도 갤러리와 같은 판으로 두는 안이다. 면은 하단 바보다 어두운 한 색, 모서리는 12, 높이는 60, 안쪽 여백은 24px이다. 쉬고 있을 때는 테두리가 없다.</p>
-            <p>이번 다섯 장은 그 판을 유지한 채 런처 배경, 하단 바, 폴더 열을 같이 정리한다. 이미지, 이름, 아이콘, 추가 칸, 검색의 엔진과 구분선과 입력칸, 폴더, 하단의 종료·소리·날씨·설정·이름은 그대로다. 둘째 칸과 폴더의 둘째 줄이 호버 상태다.</p>
+            <p>가까울수록 연하고, 런처 배경이 가장 어둡다. 폴더와 하단 바는 배경보다 한 단 연하고, 그 위의 판은 한 단 더 연하다. 호버는 그 판보다 앞으로 나온 듯 더 연하다.</p>
+            <p>갤러리 이름 띠는 46px이다. 아이콘과 이름은 6px만 띄운 한 덩어리다. 하단 바의 아이콘, 구분선, 날씨 사이는 모두 8px이다. 둘째 칸과 폴더의 둘째 줄이 호버 상태다.</p>
         </header>
         <nav>
             <a href="#s1">01 한 면</a>
@@ -211,7 +224,7 @@
                 <div class="num">01</div>
                 <div>
                     <h2>한 면</h2>
-                    <p>배경, 폴더, 하단 바를 #1a1a1a 하나로 둔다. 갈라짐은 색이 아니라 1px 선이다. 갤러리, 아이콘, 검색, 폴더 줄은 그보다 어두운 #101010 판이다. 폴더 추가도 점선 대신 같은 판이다.</p>
+                    <p>배경 #101010이 가장 어둡다. 폴더와 하단 바는 #1a1a1a, 판은 #262626이다. 구역은 1px 선으로만 갈라지고, 폴더 줄은 점 표시가 있는 판이다.</p>
                 </div>
             </div>
             <div class="dock s1"></div>
@@ -222,7 +235,7 @@
                 <div class="num">02</div>
                 <div>
                     <h2>단</h2>
-                    <p>면을 세 단으로 나눈다. 배경 #2a2a2a, 폴더 #202020, 하단 바 #0e0e0e. 판은 #161616이라 배경 위에 놓인다. 하단 바는 56px로 조금 높고, 아이콘 사이는 4px이다.</p>
+                    <p>단 차이가 가장 분명하다. 배경 #0e0e0e, 폴더와 하단 바 #1c1c1c, 판 #2c2c2c. 호버는 판보다 연하다. 하단 바 안쪽 간격은 다른 시안과 같이 8px이다.</p>
                 </div>
             </div>
             <div class="dock s2"></div>
@@ -233,7 +246,7 @@
                 <div class="num">03</div>
                 <div>
                     <h2>묶음</h2>
-                    <p>배경과 폴더와 하단 바는 같은 #1e1e1e다. 그 위의 물건만 판이다. 종료와 소리, 날씨, 설정, 런처 설정이 각각 높이 40px 판이 된다. 폴더 줄도 같은 판이고 8px씩 떨어져 있다.</p>
+                    <p>배경, 폴더 면, 하단 바 면은 가장 어두운 #101010이다. 그 앞에 놓인 종료·소리, 날씨, 설정, 폴더 줄만 #2a2a2a 판이다. 판 안의 간격도 8px이다.</p>
                 </div>
             </div>
             <div class="dock s3"></div>
@@ -244,7 +257,7 @@
                 <div class="num">04</div>
                 <div>
                     <h2>선</h2>
-                    <p>배경, 폴더, 하단 바는 가장 어두운 #0e0e0e다. 판만 #1c1c1c로 한 단 밝다. 폴더는 카드가 아니라 48px 줄이고, 줄 사이는 1px 선이다. 하단 바는 58px, 좌우 여백은 22px이다.</p>
+                    <p>배경과 폴더 면, 하단 바 면은 #0c0c0c다. 판만 #222222로 앞으로 나온다. 폴더 열은 왼쪽 1px 선으로 갈라지고, 줄은 점 표시가 있는 판이다.</p>
                 </div>
             </div>
             <div class="dock s4"></div>
@@ -255,7 +268,7 @@
                 <div class="num">05</div>
                 <div>
                     <h2>온기</h2>
-                    <p>단의 관계를 따뜻한 검정으로 옮긴다. 배경 #2a2420, 판 #1a1613, 폴더 #221e1a, 하단 바 #120f0d. 구조는 같고, 세 면이 한 재료처럼 이어진다.</p>
+                    <p>같은 깊이 규칙을 따뜻한 검정으로 옮긴다. 배경 #14110f, 폴더와 하단 바 #221c18, 판 #322820. 호버는 따뜻한 쪽으로 한 단 연해진다.</p>
                 </div>
             </div>
             <div class="dock s5"></div>
@@ -270,9 +283,10 @@
             <div class="row icons"></div>
         </div>
         <aside class="folder">
-            <div class="folder-row">작업</div>
-            <div class="folder-row on">참고</div>
-            <div class="folder-add"><span class="add-mark">+</span>폴더 추가</div>
+            <div class="folder-head"><span>폴더</span><b>2</b></div>
+            <div class="folder-row"><i></i>작업</div>
+            <div class="folder-row on"><i></i>참고</div>
+            <div class="folder-add"><img src="../src/icon/icon-plus.svg" alt="">폴더 추가</div>
         </aside>
         <footer class="footer">
             <div class="footer-main">
