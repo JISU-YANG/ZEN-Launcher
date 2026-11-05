@@ -1,14 +1,16 @@
 {
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test src/main/domain/launcher/launcherFrame.test.js",
-    "build:win32": "electron-builder --win portable --ia32",
-    "build:win64": "electron-builder --win portable --x64"
+    "test": "node --test src/main/domain/launcher/launcherFrame.test.js src/main/infrastructure/tray/appTray.test.js src/main/infrastructure/windows/foregroundFullscreen.test.js",
+    "build:win32": "electron-builder --win nsis --ia32 --publish never",
+    "build:win64": "electron-builder --win nsis --x64 --publish never",
+    "build:win": "electron-builder --win nsis --ia32 --x64 --publish never",
+    "release:win": "electron-builder --win nsis --ia32 --x64 --publish always"
   },
   "repository": {
     "type": "git",
@@ -22,15 +24,54 @@
     "electron-devtools-installer": "^3.2.0"
   },
   "build": {
-    "artifactName": "${name}-${version}_windows-${arch}.${ext}",
+    "appId": "com.jisuyang.zenlauncher",
+    "artifactName": "${name}-${version}-setup-${arch}.${ext}",
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!doc/**",
+      "!**/*.md"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "JISU-YANG",
+      "repo": "ZEN-Launcher",
+      "releaseType": "release"
+    },
+    "releaseInfo": {
+      "releaseName": "v2.3.0",
+      "releaseNotes": "아이콘 줄은 처음 실행 시 계산기, 시계, 메모장, 캡처도구, 그림판, 화상 키보드로 채워지고, 이후에는 빈 칸부터 직접 바꿀 수 있습니다.\n\n푸터 왼쪽에는 종료, 재시작, 예약, 볼륨이 있고 오른쪽에는 화면, 마우스, 키보드, 소리와 런처 설정이 있습니다. 제작자 이름은 설정 화면에 있습니다.\n\n런처 크기는 작업 영역과 배율에 맞춰 바닥 중앙에 붙고, 확장 시트는 열림, 닫힘, 높이 변경을 따로 움직입니다."
+    },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ZEN Launcher",
+      "uninstallDisplayName": "ZEN Launcher",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
     }
   },
   "dependencies": {
     "electron-shutdown-command": "^2.0.1",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.11"
   },
   "bugs": {
     "url": "https://github.com/JISU-YANG/NP-Launcher/issues"

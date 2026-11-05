@@ -1,6 +1,17 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('zenLauncher', {
+    onResourceSaver(handler) {
+        if (typeof handler !== 'function') {
+            return () => {};
+        }
+
+        const listener = (_event, active) => handler(active === true);
+        ipcRenderer.on('zen-launcher:resource-saver', listener);
+        return () => {
+            ipcRenderer.removeListener('zen-launcher:resource-saver', listener);
+        };
+    },
     onFocusSearch(handler) {
         if (typeof handler !== 'function') {
             return () => {};

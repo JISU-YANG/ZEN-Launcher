@@ -1170,8 +1170,40 @@
         event.preventDefault();
         toggleFooterCompactPanel();
     });
-    updateCompactPanelClock();
-    window.setInterval(updateCompactPanelClock, 60 * 1000);
+    let compactPanelClockTimer = 0;
+    const stopCompactPanelClock = () => {
+        if (!compactPanelClockTimer) {
+            return;
+        }
+
+        window.clearInterval(compactPanelClockTimer);
+        compactPanelClockTimer = 0;
+    };
+    const startCompactPanelClock = () => {
+        updateCompactPanelClock();
+        if (compactPanelClockTimer) {
+            return;
+        }
+
+        compactPanelClockTimer = window.setInterval(updateCompactPanelClock, 60 * 1000);
+    };
+    const applyResourceSaver = (active) => {
+        const enabled = active === true;
+        document.documentElement.dataset.resourceSaver = enabled ? 'active' : 'inactive';
+        if (document.body) {
+            document.body.dataset.resourceSaver = enabled ? 'active' : 'inactive';
+        }
+        if (enabled) {
+            stopCompactPanelClock();
+            return;
+        }
+
+        startCompactPanelClock();
+    };
+    const detachResourceSaverListener = window.zenLauncher.onResourceSaver
+        ? window.zenLauncher.onResourceSaver(applyResourceSaver)
+        : () => {};
+    startCompactPanelClock();
     shutdownMinutesInput?.addEventListener('keydown', async (event) => {
         if (event.key !== 'Enter') {
             return;
@@ -1204,6 +1236,8 @@
         if (widgetSyncFrame) {
             window.cancelAnimationFrame(widgetSyncFrame);
         }
+        stopCompactPanelClock();
+        detachResourceSaverListener();
         detachFocusListener();
     });
 });

@@ -38,6 +38,12 @@
             font: inherit;
         }
 
+        html[data-resource-saver="active"] *,
+        html[data-resource-saver="active"] *::before,
+        html[data-resource-saver="active"] *::after {
+            animation-play-state: paused !important;
+        }
+
         #container {
             position: fixed;
             bottom: 0;
@@ -5319,6 +5325,7 @@
 	                    <button id="btn-preference-folder" data-tab="folder" data-category="FOLDER" type="button">폴더</button>
 	                    <button id="btn-preference-transparency" data-tab="transparency" data-label="투명도" type="button">투명도</button>
 	                    <button id="btn-preference-theme" data-tab="theme" data-label="테마" type="button">테마</button>
+	                    <button id="btn-preference-shortcut" data-tab="shortcut" data-label="단축키" type="button">단축키</button>
 	                </div>
 	            </div>
             <div id="setting-row"></div>
