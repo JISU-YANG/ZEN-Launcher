@@ -93,8 +93,13 @@
         .i-item.slot img { width: 16px; height: 16px; filter: brightness(0) invert(0.62); }
         .i-item.slot:hover img, .i-item.on img.glyph { filter: brightness(0) invert(1); }
         .folder {
+            grid-column: 2; grid-row: 1 / -1;
             display: flex; flex-direction: column; align-items: stretch; gap: 20px;
             padding: var(--inset) var(--inset) var(--inset) 18px; background: var(--shell);
+        }
+        .side-foot {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: auto; min-height: 40px;
         }
         .search { display: flex; align-items: center; width: 100%; min-height: 28px; background: none; }
         .engine, .query { min-width: 0; font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -111,10 +116,11 @@
         .folder-row:hover, .folder-row.on, .folder-add:hover { background: var(--hover); color: #f3f3f3; }
         .folder-add { color: var(--muted); }
         .folder-add img { width: 14px; height: 14px; filter: brightness(0) invert(0.75); }
-        .footer { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 220px; background: var(--shell); }
-        .footer-main, .footer-folder { display: flex; align-items: flex-start; min-width: 0; height: 100%; }
-        .footer-main { display: grid; grid-template-columns: auto 1fr auto; align-items: start; padding: 0 18px 0 var(--inset); }
-        .footer-folder { justify-content: space-between; padding: 0 var(--inset) 0 18px; }
+        .footer {
+            grid-column: 1; grid-row: 2;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: start;
+            min-width: 0; padding: 0 18px 0 var(--inset); background: var(--shell);
+        }
         .cluster, .weather, .gear { background: var(--plate); border-radius: 10px; }
         .cluster { display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 8px; }
         .weather { justify-self: center; display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 12px; color: #f2f2f2; font-size: 13px; font-weight: 700; }
@@ -200,8 +206,7 @@
         .s3 .search { height: 44px; padding: 0 14px; border: none; }
         .s3 .folder-row, .s3 .folder-add { min-height: 44px; }
         .s3 .folder-row:hover, .s3 .folder-row.on, .s3 .folder-add:hover { background: #262626; }
-        .s3 .footer { height: 76px; border-radius: 16px; background: #101010; }
-        .s3 .footer-main, .s3 .footer-folder { align-items: center; }
+        .s3 .footer { height: 76px; border-radius: 16px; background: #101010; align-items: center; }
         .s3 .cluster, .s3 .weather, .s3 .brand { height: 44px; }
         .s3 .gear { width: 44px; height: 44px; }
         .s3 .tool:hover, .s3 .gear:hover, .s3 .brand:hover { background: #262626; }
@@ -225,8 +230,7 @@
         .s4 .folder-row:hover, .s4 .folder-row.on, .s4 .folder-add:hover {
             background: #141414; border-radius: 8px; border-bottom-color: transparent; color: #fff;
         }
-        .s4 .footer { height: 64px; margin: 0 var(--inset); border-radius: 14px; }
-        .s4 .footer-main, .s4 .footer-folder { align-items: center; }
+        .s4 .footer { height: 64px; margin: 0 18px 0 var(--inset); border-radius: 14px; align-items: center; }
         .s4 .cluster, .s4 .weather, .s4 .gear, .s4 .brand { background: transparent; border-radius: 0; }
         .s4 .gear { width: 28px; height: 28px; }
         .s4 .tool:hover, .s4 .gear:hover, .s4 .brand:hover { background: transparent; }
@@ -241,7 +245,8 @@
         }
         .s5 .i-item { height: 48px; border-radius: 999px; }
         .s5 .i-item:hover, .s5 .i-item.on { background: #242424; border-radius: 999px; }
-        .s5 .folder { box-shadow: inset 10px 0 0 #141414; padding-left: 24px; }
+        .s5 .folder { box-shadow: inset 10px 0 0 #141414; padding-left: 24px; padding-bottom: 0; }
+        .s5 .side-foot { min-height: 52px; }
         .s5 .folder-row i { display: none; }
         .s5 .folder-row, .s5 .folder-add {
             min-height: 36px; padding: 0 4px; border-radius: 0; background: transparent;
@@ -251,9 +256,9 @@
         }
         .s5 .search { padding-bottom: 10px; border-bottom: 2px solid #141414; }
         .s5 .footer {
-            height: 52px; margin: 0 var(--inset); border-radius: 999px; background: #141414;
+            height: 52px; margin: 0 18px 0 var(--inset); border-radius: 999px; background: #141414;
+            align-items: center;
         }
-        .s5 .footer-main, .s5 .footer-folder { align-items: center; }
         .s5 .cluster, .s5 .weather, .s5 .gear, .s5 .brand { background: transparent; border-radius: 0; }
         .s5 .gear { width: 28px; height: 28px; }
         .s5 .tool:hover, .s5 .gear:hover, .s5 .brand:hover { background: transparent; }
@@ -264,7 +269,7 @@
     <div class="page">
         <h1>영역을 나누는 다섯 가지</h1>
         <div class="intro">
-            <p>다섯 장은 영역을 나누는 방식이 다르고, 그 방식에 폴더 줄, 하단 묶음, 호버, 이름 띠까지 맞춰 두었다. 바깥 여백 36px과 모서리 18px은 같다.</p>
+            <p>하단 바는 본문 아래에서 끝나고 사이드바로 넘어가지 않는다. 이름과 설정은 사이드바 맨 아래에 있다. 바깥 여백 36px과 모서리 18px은 같다.</p>
             <p>참고, 시계, 폴더의 참고는 그 시안의 호버다. 런처 화면에는 아직 반영하지 않았다.</p>
         </div>
         <nav>
@@ -353,9 +358,12 @@
             <div class="folder-row"><i></i>작업</div>
             <div class="folder-row on"><i></i>참고</div>
             <div class="folder-add"><img src="../src/icon/icon-plus.svg" alt="">폴더 추가</div>
+            <div class="side-foot">
+                <a class="brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span>ZEN</span> Launcher</a>
+                <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+            </div>
         </aside>
         <footer class="footer">
-            <div class="footer-main">
                 <div class="cluster">
                     <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
                     <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
@@ -372,11 +380,6 @@
                     <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
                     <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
                 </div>
-            </div>
-            <div class="footer-folder">
-                <a class="brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span>ZEN</span> Launcher</a>
-                <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
-            </div>
         </footer>
     </template>
     <script>
