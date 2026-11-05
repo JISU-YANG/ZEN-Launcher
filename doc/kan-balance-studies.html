@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>칸의 여백 다섯 가지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page: #000;
+            --shell: #050505;
+            --plate: #101010;
+            --tile: #1a1a1a;
+            --hover: #262626;
+            --ink: #d0d0d0;
+            --muted: #8f8f8f;
+            --line: rgba(255, 255, 255, 0.16);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--page);
+            color: #ececec;
+            font-family: "Noto Sans KR", sans-serif;
+            line-height: 1.5;
+        }
+        a { color: inherit; text-decoration: none; }
+        .page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 80px; }
+        h1 { margin: 0 0 12px; font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+        .intro p { max-width: 78ch; margin: 0 0 8px; color: #bdbdbd; font-size: 15px; }
+        nav {
+            position: sticky; top: 0; z-index: 5;
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin: 22px 0 8px; padding: 10px 0;
+            background: linear-gradient(180deg, var(--page) 70%, transparent);
+        }
+        nav a {
+            padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px;
+            background: #121212; color: #cfcfcf; font-size: 13px; font-weight: 700;
+        }
+        .study { margin-top: 36px; }
+        .study-head { display: grid; grid-template-columns: 52px 1fr; gap: 8px; margin-bottom: 14px; }
+        .num { padding-top: 6px; color: #8d8d8d; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; }
+        .study-head h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.03em; }
+        .study-head p { margin: 4px 0 0; max-width: 78ch; color: #a3a3a3; font-size: 14px; }
+        .note { margin-top: 28px; color: #8d8d8d; font-size: 13px; }
+
+        .dock {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 240px;
+            grid-template-rows: auto auto;
+            background: var(--shell);
+            color: var(--ink);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .main { min-width: 0; display: flex; flex-direction: column; }
+        .gallery { display: flex; align-items: stretch; }
+        .g-item { position: relative; flex: 1 1 0; min-width: 0; height: 100%; overflow: hidden; }
+        .poster { position: absolute; inset: 0; }
+        .p1 { background: radial-gradient(90px 70px at 72% 24%, rgba(255,255,255,0.22), transparent 70%), linear-gradient(165deg, #6a625c, #2c2926 46%, #141312); }
+        .p2 { background: linear-gradient(180deg, transparent 58%, rgba(0,0,0,0.28)), linear-gradient(125deg, #4e5963, #243039 42%, #14181b); }
+        .p3 { background: radial-gradient(140px 50px at 50% 58%, rgba(255,255,255,0.12), transparent 70%), linear-gradient(200deg, #5c5348, #2a241e 50%, #161310); }
+        .p4 { background: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 18px 100%, linear-gradient(180deg, #3c3c3c, #1a1a1a); }
+        .g-name {
+            position: absolute; left: 0; right: 0; bottom: 0; height: 40px;
+            display: flex; align-items: center; justify-content: center; padding: 0 10px;
+            background: #000; color: #f3f3f3; font-size: 13px; font-weight: 700;
+            transform: translateY(100%); transition: transform 0.2s ease;
+        }
+        .g-item:hover .g-name, .g-item.on .g-name { transform: translateY(0); }
+        .g-item.slot { display: flex; align-items: center; justify-content: center; }
+        .g-item.slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.7); }
+        .g-item.slot:hover img { filter: brightness(0) invert(1); }
+        .icons { display: flex; align-items: stretch; }
+        .i-item {
+            flex: 1 1 0; min-width: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; border-radius: 10px; background: var(--tile); color: #bdbdbd;
+        }
+        .i-item:hover, .i-item.on { background: var(--hover); color: #fff; }
+        .glyph { width: 22px; height: 22px; filter: brightness(0) invert(1); }
+        .i-name { max-width: 100%; font-size: 12px; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .i-item.slot img { width: 16px; height: 16px; filter: brightness(0) invert(0.7); }
+        .i-item.slot:hover img { filter: brightness(0) invert(1); }
+        .folder {
+            grid-column: 2; grid-row: 1 / -1;
+            display: flex; flex-direction: column; min-width: 0; min-height: 0;
+        }
+        .side-top, .list { display: flex; flex-direction: column; min-width: 0; }
+        .side-foot { display: flex; align-items: center; justify-content: space-between; }
+        .search, .folder-row, .folder-add, .cluster, .weather, .gear, .brand {
+            background: var(--tile); border-radius: 10px;
+        }
+        .search { display: flex; align-items: center; width: 100%; height: 40px; padding: 0 14px; }
+        .engine, .query { min-width: 0; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .engine { margin-right: 12px; color: var(--ink); }
+        .query { margin-left: 12px; flex: 1; color: #8d8d8d; }
+        .vbar { width: 1px; height: 14px; background: var(--line); flex: 0 0 auto; }
+        .folder-head {
+            display: flex; align-items: center; justify-content: space-between;
+            height: 28px; padding: 0 4px; color: var(--muted); font-size: 11px; font-weight: 700;
+        }
+        .folder-head b { color: var(--ink); font-weight: 900; }
+        .folder-row, .folder-add {
+            display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px;
+            color: #d2d2d2; font-size: 13px; font-weight: 700;
+        }
+        .folder-row i { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; background: #3a3a3a; }
+        .folder-row:hover, .folder-row.on, .folder-add:hover { background: var(--hover); color: #f3f3f3; }
+        .folder-row.on i { background: #f2f2f2; }
+        .folder-add { color: var(--muted); }
+        .folder-add img { width: 14px; height: 14px; filter: brightness(0) invert(0.75); }
+        .folder-add:hover img { filter: brightness(0) invert(1); }
+        .footer {
+            grid-column: 1; grid-row: 2;
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+            min-width: 0; background: var(--plate); border-radius: 16px;
+        }
+        .cluster { display: flex; align-items: center; gap: 2px; height: 40px; padding: 0 6px; }
+        .weather {
+            justify-self: center; display: flex; align-items: center; gap: 8px;
+            height: 40px; padding: 0 12px; color: #f2f2f2; font-size: 13px; font-weight: 700;
+        }
+        .weather b { font-weight: 900; }
+        .tool, .gear { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+        .tool { width: 28px; height: 28px; }
+        .gear { width: 40px; height: 40px; border-radius: 10px; }
+        .tool:hover { background: var(--hover); }
+        .gear:hover, .brand:hover { background: var(--hover); }
+        .cluster img, .gear img, .weather img { width: 16px; height: 16px; filter: brightness(0) invert(1); }
+        .weather img { width: 14px; height: 14px; }
+        .split { width: 1px; height: 14px; margin: 0 4px; background: rgba(255, 255, 255, 0.28); }
+        .brand {
+            display: inline-flex; align-items: center; height: 40px; padding: 0 12px;
+            color: #fff; font-size: 13px; font-weight: 900; line-height: 1;
+        }
+        .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
+
+        /* 01 치수: 바깥 32, 나머진 16. 사이드 칸은 그 16으로 높이를 나눈다. */
+        .s1 { padding: 32px; gap: 16px; }
+        .s1 .main { gap: 16px; }
+        .s1 .gallery { height: 184px; gap: 16px; }
+        .s1 .g-item { border-radius: 16px; }
+        .s1 .g-item.slot { background: var(--plate); }
+        .s1 .g-item.slot:hover { background: var(--tile); }
+        .s1 .icons { gap: 16px; padding: 16px; border-radius: 16px; background: var(--plate); }
+        .s1 .i-item { height: 56px; }
+        .s1 .folder {
+            gap: 16px; padding: 16px; border-radius: 16px; background: var(--plate);
+            justify-content: space-between;
+        }
+        .s1 .side-top, .s1 .list { display: contents; }
+        .s1 .side-foot { margin-top: 0; }
+        .s1 .footer { height: 72px; padding: 16px; }
+
+        /* 02 고른 여백: 밖과 판 사이, 포스터 사이가 모두 24. 판 안은 12. */
+        .s2 { padding: 24px; gap: 24px; }
+        .s2 .main { gap: 24px; }
+        .s2 .gallery { height: 168px; gap: 24px; }
+        .s2 .g-item { border-radius: 16px; }
+        .s2 .g-item.slot { background: var(--plate); }
+        .s2 .g-item.slot:hover { background: var(--tile); }
+        .s2 .icons { gap: 12px; padding: 12px; border-radius: 16px; background: var(--plate); }
+        .s2 .i-item { height: 52px; }
+        .s2 .folder {
+            gap: 12px; padding: 12px; border-radius: 16px; background: var(--plate);
+            justify-content: space-between;
+        }
+        .s2 .side-top { display: contents; }
+        .s2 .list { gap: 8px; }
+        .s2 .side-foot { margin-top: 0; }
+        .s2 .footer { height: 64px; padding: 12px; }
+
+        /* 03 두 판: 목록 판은 내용만큼, 이름 판은 하단 바와 같은 줄. 사이는 배경. */
+        .s3 { padding: 28px; gap: 16px; }
+        .s3 .main { gap: 16px; }
+        .s3 .gallery { height: 196px; gap: 20px; }
+        .s3 .g-item { border-radius: 16px; }
+        .s3 .g-item.slot { background: var(--plate); }
+        .s3 .g-item.slot:hover { background: var(--tile); }
+        .s3 .icons { gap: 12px; padding: 16px; border-radius: 16px; background: var(--plate); }
+        .s3 .i-item { height: 56px; }
+        .s3 .folder { gap: 16px; padding: 0; background: transparent; }
+        .s3 .side-top { gap: 8px; padding: 16px; border-radius: 16px; background: var(--plate); }
+        .s3 .list { gap: 8px; }
+        .s3 .side-foot {
+            margin-top: auto; height: 72px; padding: 0 16px;
+            border-radius: 16px; background: var(--plate);
+        }
+        .s3 .footer { height: 72px; padding: 16px; }
+
+        /* 04 네 판: 갤러리도 같은 판. 안 16, 칸 사이 12, 모서리 16. */
+        .s4 { padding: 28px; gap: 16px; }
+        .s4 .main { gap: 16px; }
+        .s4 .gallery {
+            height: auto; gap: 12px; padding: 16px;
+            border-radius: 16px; background: var(--plate);
+        }
+        .s4 .g-item { height: 168px; border-radius: 12px; }
+        .s4 .g-item.slot { background: var(--tile); }
+        .s4 .g-item.slot:hover { background: var(--hover); }
+        .s4 .g-name { background: #000; }
+        .s4 .icons { gap: 12px; padding: 16px; border-radius: 16px; background: var(--plate); }
+        .s4 .i-item { height: 56px; }
+        .s4 .folder {
+            gap: 12px; padding: 16px; border-radius: 16px; background: var(--plate);
+            justify-content: space-between;
+        }
+        .s4 .side-top, .s4 .list { display: contents; }
+        .s4 .side-foot { margin-top: 0; }
+        .s4 .footer { height: 72px; padding: 16px; }
+
+        /* 05 이음: 아이콘 판과 하단 바 사이 16이 사이드바를 같은 높이에서 가른다. */
+        .s5 { padding: 28px; gap: 16px; }
+        .s5 .main { gap: 16px; }
+        .s5 .gallery { height: 180px; gap: 16px; }
+        .s5 .g-item { border-radius: 16px; }
+        .s5 .g-item.slot { background: var(--plate); }
+        .s5 .g-item.slot:hover { background: var(--tile); }
+        .s5 .icons { gap: 12px; padding: 16px; border-radius: 16px; background: var(--plate); }
+        .s5 .i-item { height: 56px; }
+        .s5 .folder { gap: 16px; padding: 0; background: transparent; }
+        .s5 .side-top {
+            flex: 1; gap: 12px; padding: 16px; justify-content: space-between;
+            border-radius: 16px; background: var(--plate);
+        }
+        .s5 .list { display: contents; }
+        .s5 .side-foot {
+            height: 72px; padding: 0 16px;
+            border-radius: 16px; background: var(--plate);
+        }
+        .s5 .footer { height: 72px; padding: 16px; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h1>칸의 여백 다섯 가지</h1>
+        <div class="intro">
+            <p>3번 칸을 기준으로 여백과 균형만 다르게 잡았다. 큰 판은 #101010에 모서리 16, 안쪽 칸은 #1a1a1a에 모서리 10, 고른 칸은 #262626이다.</p>
+            <p>하단 바는 본문 아래에서 끝나고 사이드바로 넘어가지 않는다. 이름과 설정은 사이드바 맨 아래에 있다. 참고, 시계, 폴더의 참고는 호버다. 런처 화면에는 아직 반영하지 않았다.</p>
+        </div>
+        <nav>
+            <a href="#s1">01 치수</a>
+            <a href="#s2">02 고른 여백</a>
+            <a href="#s3">03 두 판</a>
+            <a href="#s4">04 네 판</a>
+            <a href="#s5">05 이음</a>
+        </nav>
+
+        <section class="study" id="s1">
+            <div class="study-head">
+                <div class="num">01</div>
+                <div>
+                    <h2>치수</h2>
+                    <p>바깥 여백은 32, 판 사이와 판 안은 16이다. 포스터 간격도 16이라 갤러리만 따로 넓지 않다. 사이드바는 한 판이고, 검색부터 이름까지 그 16 사이에 남는 높이를 같이 나눈다.</p>
+                </div>
+            </div>
+            <div class="dock s1"></div>
+        </section>
+        <section class="study" id="s2">
+            <div class="study-head">
+                <div class="num">02</div>
+                <div>
+                    <h2>고른 여백</h2>
+                    <p>런처 밖, 판과 판 사이, 포스터 사이가 모두 24다. 판 안쪽은 12로 한 단계 좁아서 판이 틈보다 무겁지 않다. 폴더 목록은 붙여 두고, 검색과 그 목록과 이름 사이에만 남는 높이를 나눈다.</p>
+                </div>
+            </div>
+            <div class="dock s2"></div>
+        </section>
+        <section class="study" id="s3">
+            <div class="study-head">
+                <div class="num">03</div>
+                <div>
+                    <h2>두 판</h2>
+                    <p>사이드바를 목록 판과 이름 판으로 나눈다. 목록 판은 내용 높이만 가지고, 이름 판은 하단 바와 높이 72로 같은 줄에 있다. 그 사이는 판이 아니라 런처 배경이다. 바깥 여백은 28이다.</p>
+                </div>
+            </div>
+            <div class="dock s3"></div>
+        </section>
+        <section class="study" id="s4">
+            <div class="study-head">
+                <div class="num">04</div>
+                <div>
+                    <h2>네 판</h2>
+                    <p>갤러리도 아이콘 바와 같은 판이다. 안쪽 여백 16, 칸 사이 12, 모서리 16이 갤러리, 아이콘, 하단, 사이드에 같다. 포스터 모서리는 판 안 칸과 같이 12다. 사이드바는 그 12 사이에 남는 높이를 같이 나눈다. 바깥 여백은 28이다.</p>
+                </div>
+            </div>
+            <div class="dock s4"></div>
+        </section>
+        <section class="study" id="s5">
+            <div class="study-head">
+                <div class="num">05</div>
+                <div>
+                    <h2>이음</h2>
+                    <p>아이콘 판과 하단 바 사이의 16px이 사이드바에서도 같은 높이로 지나간다. 위 판은 그 틈 직전까지 채우고 칸 사이가 고르다. 이름 판과 하단 바는 높이 72로 맞닿지 않은 채 같은 줄이다.</p>
+                </div>
+            </div>
+            <div class="dock s5"></div>
+        </section>
+        <p class="note">내용물은 같다. 차이는 여백이 어디에 같은 크기로 반복되는지다.</p>
+    </div>
+    <template id="dock-body">
+        <div class="main">
+            <div class="gallery">
+                <article class="g-item"><div class="poster p1"></div><span class="g-name">작업</span></article>
+                <article class="g-item on"><div class="poster p2"></div><span class="g-name">참고</span></article>
+                <article class="g-item"><div class="poster p3"></div><span class="g-name">회의</span></article>
+                <article class="g-item"><div class="poster p4"></div><span class="g-name">자료</span></article>
+                <article class="g-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+            </div>
+            <div class="icons">
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""><span class="i-name">계산기</span></article>
+                <article class="i-item on"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""><span class="i-name">시계</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""><span class="i-name">메모장</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""><span class="i-name">캡처도구</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""><span class="i-name">그림판</span></article>
+                <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""><span class="i-name">화상 키보드</span></article>
+                <article class="i-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+                <article class="i-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+            </div>
+        </div>
+        <aside class="folder">
+            <div class="side-top">
+                <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+                <div class="list">
+                    <div class="folder-head"><span>폴더</span><b>2</b></div>
+                    <div class="folder-row"><i></i>작업</div>
+                    <div class="folder-row on"><i></i>참고</div>
+                    <div class="folder-add"><img src="../src/icon/icon-plus.svg" alt="">폴더 추가</div>
+                </div>
+            </div>
+            <div class="side-foot">
+                <a class="brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span>ZEN</span> Launcher</a>
+                <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+            </div>
+        </aside>
+        <footer class="footer">
+            <div class="cluster">
+                <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                <span class="split"></span>
+                <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+            </div>
+            <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+            <div class="cluster">
+                <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+            </div>
+        </footer>
+    </template>
+    <script>
+        const body = document.getElementById("dock-body");
+        document.querySelectorAll(".dock").forEach((dock) => {
+            dock.append(body.content.cloneNode(true));
+        });
+    </script>
+</body>
+</html>
