@@ -4842,6 +4842,19 @@
             height: calc(92px * var(--layout-scale));
         }
 
+        #icon-area .icon-img,
+        #icon-area > .icon-entry:hover .icon-img {
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #icon-area .icon-img {
+            filter: grayscale(100%);
+        }
+
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img {
+            filter: grayscale(0);
+        }
+
         #icon-area > .icon-entry:hover .icon-img,
         #gallery-area > .gallery-entry:hover .gallery-img {
             transform: none;
@@ -4865,7 +4878,7 @@
             height: 36px;
             border-radius: 999px;
             box-shadow: none;
-            border: 1px solid var(--hairline);
+            border: none;
             background: rgba(12, 12, 12, 0.92);
         }
 
@@ -4876,11 +4889,12 @@
             height: 50px;
             padding: 0 12px;
             gap: 12px;
-            background: #4a4a4a;
+            background: #101010;
         }
 
-        body[data-theme="light"] #footer {
-            background: #f7f8fa;
+        body[data-theme="light"] #footer,
+        body[data-theme="light"] #weather-bar {
+            background: #c5ced6;
         }
 
         #footer-left,
@@ -5108,72 +5122,20 @@
             z-index: 24;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 16px;
+            gap: 10px;
             height: 40px;
-            padding: 0 16px 0 12px;
+            padding: 0 16px;
             box-sizing: border-box;
+            background: #101010;
             color: #d7d7d7;
             pointer-events: none;
         }
 
-        .weather-bar-main,
-        .weather-bar-now,
-        .weather-bar-stats,
-        .weather-bar-stat {
-            display: flex;
-            align-items: center;
-            min-width: 0;
-        }
-
-        .weather-bar-main {
-            gap: 10px;
-        }
-
-        .weather-bar-copy {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-width: 0;
-            gap: 1px;
-        }
-
-        #weather-bar .weather-visual {
-            width: 28px;
-            height: 28px;
-            flex: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        #weather-bar .weather-visual-orb {
-            top: 4px;
-            right: 3px;
-            width: 10px;
-            height: 10px;
-            box-shadow: none;
-        }
-
-        #weather-bar .weather-visual-cloud {
-            left: 3px;
-            bottom: 5px;
-            width: 14px;
-            height: 6px;
-            box-shadow: 5px -2px 0 0 rgba(237, 242, 247, 0.88);
-        }
-
-        #weather-bar .weather-visual-rain {
-            left: 6px;
-            right: 4px;
-            bottom: 4px;
-            height: 10px;
-        }
-
         #weather-bar .weather-location {
             color: #9a9a9a;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 600;
-            line-height: 1.2;
+            line-height: 1;
             white-space: nowrap;
         }
 
@@ -5182,15 +5144,15 @@
             content: none;
         }
 
-        #weather-bar .weather-bar-now {
-            gap: 6px;
-        }
-
         #weather-bar .weather-temp {
+            width: auto;
+            align-self: center;
+            text-align: left;
             color: #f3f3f3;
             font-size: 14px;
             font-weight: 700;
             line-height: 1;
+            letter-spacing: 0;
         }
 
         #weather-bar .weather-condition {
@@ -5201,27 +5163,23 @@
             white-space: nowrap;
         }
 
-        .weather-bar-stats {
-            gap: 14px;
-            margin-left: auto;
+        .weather-bar-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 4px;
         }
 
-        .weather-bar-stat {
-            gap: 5px;
-            color: #9a9a9a;
-            font-size: 11px;
-            font-weight: 600;
+        .weather-bar-stat img {
+            width: 14px;
+            height: 14px;
+            filter: brightness(0) invert(0.82);
         }
 
         .weather-bar-stat strong {
             color: #f2f2f2;
             font-size: 12px;
             font-weight: 700;
-        }
-
-        #weather-bar .weather-meta-icon {
-            width: 12px;
-            height: 12px;
         }
 
         #weather-bar .weather-status {
@@ -5241,6 +5199,11 @@
             color: #1d232b;
         }
 
+        body[data-theme="light"] .weather-bar-stat img,
+        body[data-theme="light"] .shutdown-step-button img {
+            filter: brightness(0) invert(0.2);
+        }
+
         #search-area {
             display: flex;
             align-items: center;
@@ -5249,9 +5212,31 @@
             box-sizing: border-box;
         }
 
-        #search-area::before,
+        #search-area::before {
+            content: '';
+            inset: -1.5px;
+            padding: 1.5px;
+            border-radius: 999px;
+            opacity: 1;
+            z-index: 0;
+            animation: search-rgb-border-flow 3.4s linear infinite;
+            pointer-events: none;
+        }
+
         #search-area::after {
             content: none;
+        }
+
+        #search-area > div,
+        #search-area input {
+            position: relative;
+            z-index: 1;
+        }
+
+        .shutdown-step-button img {
+            width: 12px;
+            height: 12px;
+            filter: brightness(0) invert(0.82);
         }
 
         #search-area > div:first-child {
@@ -5313,7 +5298,7 @@
 
         #footer-brand {
             margin-left: 8px;
-            color: #2a2a2a;
+            color: #8a8a8a;
             font-size: 13px;
             font-weight: 900;
             letter-spacing: -0.03em;
@@ -5503,39 +5488,22 @@
 <body>
     <div id="container">
         <div id="launcher-shell">
-            <div id="weather-bar" data-visual="cloudy" aria-live="polite">
-                <div class="weather-bar-main">
-                    <div class="weather-visual" aria-hidden="true">
-                        <div class="weather-visual-orb"></div>
-                        <div class="weather-visual-stars"></div>
-                        <div class="weather-visual-cloud"></div>
-                        <div class="weather-visual-rain"></div>
-                    </div>
-                    <div class="weather-bar-copy">
-                        <div class="weather-location" id="weather-location">위치 확인 중</div>
-                        <div class="weather-bar-now">
-                            <span class="weather-temp" id="weather-temperature">--°</span>
-                            <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="weather-bar-stats">
-                    <div class="weather-bar-stat">
-                        <span class="weather-meta-icon temperature" aria-hidden="true"></span>
-                        <span>체감</span>
-                        <strong id="weather-feels-like">--°</strong>
-                    </div>
-                    <div class="weather-bar-stat">
-                        <span class="weather-meta-icon humidity" aria-hidden="true"></span>
-                        <span>습도</span>
-                        <strong id="weather-humidity">--</strong>
-                    </div>
-                    <div class="weather-bar-stat">
-                        <span class="weather-meta-icon cloud" aria-hidden="true"></span>
-                        <span>강수</span>
-                        <strong id="weather-precipitation">--</strong>
-                    </div>
-                </div>
+            <div id="weather-bar" aria-live="polite">
+                <span class="weather-location" id="weather-location">위치 확인 중</span>
+                <span class="weather-temp" id="weather-temperature">--°</span>
+                <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
+                <span class="weather-bar-stat" title="체감">
+                    <img src="src/icon/icon-temperature.svg" alt="체감">
+                    <strong id="weather-feels-like">--°</strong>
+                </span>
+                <span class="weather-bar-stat" title="습도">
+                    <img src="src/icon/icon-humidity.svg" alt="습도">
+                    <strong id="weather-humidity">--</strong>
+                </span>
+                <span class="weather-bar-stat" title="강수">
+                    <img src="src/icon/icon-cloud.svg" alt="강수">
+                    <strong id="weather-precipitation">--</strong>
+                </span>
                 <div class="weather-status" id="weather-status" data-state="loading">날씨를 확인하고 있습니다.</div>
             </div>
             <div id="left-box">
@@ -5656,15 +5624,15 @@
                 <div class="shutdown-scheduler-section-label" hidden>Manual Adjustment</div>
                 <div class="shutdown-scheduler-adjuster">
                     <div class="shutdown-scheduler-time-column">
-                        <button class="shutdown-step-button" type="button" data-adjust="60" aria-label="시간 늘리기">⌃</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="60" aria-label="시간 늘리기"><img src="src/icon/icon-chevron-up.svg" alt=""></button>
                         <input class="shutdown-time-display" id="shutdown-hours-display" type="number" min="0" max="168" step="1" value="01" inputmode="numeric" aria-label="시간 입력">
-                        <button class="shutdown-step-button" type="button" data-adjust="-60" aria-label="시간 줄이기">⌄</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="-60" aria-label="시간 줄이기"><img src="src/icon/icon-chevron-down.svg" alt=""></button>
                     </div>
                     <div class="shutdown-time-divider">:</div>
                     <div class="shutdown-scheduler-time-column">
-                        <button class="shutdown-step-button" type="button" data-adjust="5" aria-label="분 늘리기">⌃</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="5" aria-label="분 늘리기"><img src="src/icon/icon-chevron-up.svg" alt=""></button>
                         <input class="shutdown-time-display" id="shutdown-minutes-display" type="number" min="0" max="59" step="1" value="00" inputmode="numeric" aria-label="분 입력">
-                        <button class="shutdown-step-button" type="button" data-adjust="-5" aria-label="분 줄이기">⌄</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="-5" aria-label="분 줄이기"><img src="src/icon/icon-chevron-down.svg" alt=""></button>
                     </div>
                 </div>
             </div>
