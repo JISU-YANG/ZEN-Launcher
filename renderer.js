@@ -302,7 +302,7 @@
         document.querySelectorAll('[data-link="volume-mute"]').forEach((button) => {
             const image = button.querySelector('img');
             if (image) {
-                image.src = masterMuted ? 'src/icon/icon-volume-mute.svg' : 'src/icon/icon-volume-high.svg';
+                image.src = masterMuted ? 'src/icon/icon-volume-mute.svg' : 'src/icon/icon-volume.svg';
             }
             button.setAttribute('aria-pressed', masterMuted ? 'true' : 'false');
             button.setAttribute('aria-label', label);
