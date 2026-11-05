@@ -16,7 +16,8 @@ const {
     sheetHeightForFit,
     boundsForSheet,
     shapeForSheet,
-    normalizeSheetFit
+    normalizeSheetFit,
+    normalizePositionOffset
 } = require('./src/main/domain/launcher/launcherFrame');
 const { setupGitHubAutoUpdater } = require('./src/main/infrastructure/updates/githubAutoUpdater');
 const { createAppTray } = require('./src/main/infrastructure/tray/appTray');
@@ -30,7 +31,7 @@ const { readMasterMute } = require('./src/main/infrastructure/windows/masterMute
 const store = new Store();
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
 const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
-const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js', 'sheetMotion.js'];
+const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js', 'sheetMotion.js', 'zenDialog.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
 const APPEARANCE_SETTINGS_KEY = 'ZENL.Appearance';
@@ -42,8 +43,11 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     grayscaleUntilHover: true,
     suppressShortcutDuringFullscreen: false,
     minimizeResourcesDuringFullscreen: true,
-    launchAtStartup: false
+    launchAtStartup: false,
+    positionOffsetX: 0,
+    positionOffsetY: 0
 });
+const SETTINGS_EXPORT_VERSION = 1;
 const SEARCH_SHORTCUT = 'CommandOrControl+Space';
 const FULLSCREEN_SHORTCUT_WATCH_MS = 700;
 const FOREGROUND_PROBE_SCRIPT = path.join(__dirname, 'src', 'main', 'infrastructure', 'windows', 'foregroundFullscreenProbe.ps1');
@@ -87,6 +91,7 @@ function normalizeAppearanceSettings(value = {}) {
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
     const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
     const launchAtStartup = value?.launchAtStartup === true;
+    const positionOffset = normalizePositionOffset(value);
 
     return {
         launcherTransparency,
@@ -95,7 +100,9 @@ function normalizeAppearanceSettings(value = {}) {
         grayscaleUntilHover,
         suppressShortcutDuringFullscreen,
         minimizeResourcesDuringFullscreen,
-        launchAtStartup
+        launchAtStartup,
+        positionOffsetX: positionOffset.x,
+        positionOffsetY: positionOffset.y
     };
 }
 
@@ -119,6 +126,7 @@ function saveAppearanceSettings(value) {
     store.set(APPEARANCE_SETTINGS_KEY, normalizedSettings);
     syncFullscreenMode(normalizedSettings);
     applyLaunchAtStartup(normalizedSettings.launchAtStartup);
+    publishLauncherLayout();
     return normalizedSettings;
 }
 
@@ -127,6 +135,7 @@ function clearAppearanceSettings() {
     const settings = loadAppearanceSettings();
     syncFullscreenMode(settings);
     applyLaunchAtStartup(settings.launchAtStartup);
+    publishLauncherLayout();
     return settings;
 }
 
@@ -757,7 +766,11 @@ async function runTarget(target) {
 
 function readLauncherLayout() {
     const display = screen.getPrimaryDisplay();
-    const frame = computeLauncherFrame(display.workArea, display.bounds);
+    const appearance = loadAppearanceSettings();
+    const frame = computeLauncherFrame(display.workArea, display.bounds, {
+        x: appearance.positionOffsetX,
+        y: appearance.positionOffsetY
+    });
     const sheetHeight = activeSheetFit === 'closed'
         ? 0
         : sheetHeightForFit(activeSheetFit, frame.availableAbove);
@@ -772,7 +785,17 @@ function readLauncherLayout() {
             availableAbove: frame.availableAbove,
             scale: frame.scale,
             sheetHeight,
-            fit: activeSheetFit
+            fit: activeSheetFit,
+            autoX: frame.autoX,
+            autoY: frame.autoY,
+            x: frame.x,
+            y: frame.y,
+            positionOffsetX: frame.positionOffsetX,
+            positionOffsetY: frame.positionOffsetY,
+            displayWidth: frame.displayWidth,
+            displayHeight: frame.displayHeight,
+            workAreaWidth: frame.workAreaWidth,
+            workAreaHeight: frame.workAreaHeight
         }
     };
 }
@@ -960,7 +983,8 @@ app.whenReady().then(() => {
         getWindow: () => mainWindow,
         onStateChange: () => {
             appTray?.update();
-        }
+        },
+        presentMessage: presentLauncherMessage
     });
     stopAutoUpdater = () => autoUpdaterController.stop();
     try {
@@ -995,13 +1019,98 @@ app.whenReady().then(() => {
 
 ipcMain.handle('zen-launcher:pick-path', async (_event, kind) => {
     const properties = kind === 'folder' ? ['openDirectory'] : ['openFile'];
-    const result = await dialog.showOpenDialog({ properties });
+    const filters = kind === 'image'
+        ? [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'svg'] }]
+        : undefined;
+    const result = await dialog.showOpenDialog({
+        properties,
+        filters
+    });
 
     if (result.canceled || result.filePaths.length === 0) {
         return '';
     }
 
     return result.filePaths[0];
+});
+
+function buildSettingsExportPayload() {
+    const categories = launcherCategoryService.loadAll();
+    return {
+        version: SETTINGS_EXPORT_VERSION,
+        exportedAt: new Date().toISOString(),
+        appearance: loadAppearanceSettings(),
+        categories: {
+            gallery: Array.isArray(categories?.gallery) ? categories.gallery : [],
+            icon: Array.isArray(categories?.icon) ? categories.icon : [],
+            folder: Array.isArray(categories?.folder) ? categories.folder : []
+        }
+    };
+}
+
+function parseSettingsImportPayload(rawText) {
+    let parsed;
+    try {
+        parsed = JSON.parse(rawText);
+    } catch (_error) {
+        throw new Error('설정 파일을 해석하지 못했습니다.');
+    }
+
+    if (!parsed || typeof parsed !== 'object') {
+        throw new Error('설정 파일 형식이 올바르지 않습니다.');
+    }
+
+    const appearance = normalizeAppearanceSettings(parsed.appearance || {});
+    const categorySource = parsed.categories && typeof parsed.categories === 'object'
+        ? parsed.categories
+        : parsed;
+    const categories = {
+        gallery: Array.isArray(categorySource.gallery) ? categorySource.gallery : [],
+        icon: Array.isArray(categorySource.icon) ? categorySource.icon : [],
+        folder: Array.isArray(categorySource.folder) ? categorySource.folder : []
+    };
+
+    return { appearance, categories };
+}
+
+ipcMain.handle('zen-launcher:export-settings', async () => {
+    const defaultPath = path.join(
+        app.getPath('documents'),
+        `zen-launcher-settings-${new Date().toISOString().slice(0, 10)}.json`
+    );
+    const result = await dialog.showSaveDialog({
+        title: '설정 내보내기',
+        defaultPath,
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+        return { canceled: true };
+    }
+
+    const payload = buildSettingsExportPayload();
+    fs.writeFileSync(result.filePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    return { canceled: false, filePath: result.filePath };
+});
+
+ipcMain.handle('zen-launcher:import-settings', async () => {
+    const result = await dialog.showOpenDialog({
+        title: '설정 불러오기',
+        properties: ['openFile'],
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+        return { canceled: true };
+    }
+
+    const rawText = fs.readFileSync(result.filePaths[0], 'utf8');
+    const payload = parseSettingsImportPayload(rawText);
+    return {
+        canceled: false,
+        filePath: result.filePaths[0],
+        ...payload
+    };
 });
 
 ipcMain.handle('zen-launcher:load-data', async () => {
@@ -1053,16 +1162,50 @@ ipcMain.handle('zen-launcher:apply-sheet-fit', (_event, fit) => {
     return applyLauncherLayout();
 });
 
-ipcMain.handle('zen-launcher:show-message', async (_event, options) => {
-    const result = await dialog.showMessageBox({
-        type: typeof options?.type === 'string' ? options.type : 'info',
-        title: 'ZEN Launcher',
-        message: typeof options?.message === 'string' ? options.message : '',
-        buttons: Array.isArray(options?.buttons) && options.buttons.length > 0 ? options.buttons : ['\uD655\uC778'],
-        defaultId: Number.isInteger(options?.defaultId) ? options.defaultId : 0,
-        cancelId: Number.isInteger(options?.cancelId) ? options.cancelId : 0
-    });
+async function presentLauncherMessage(parent, options = {}) {
+    const payload = {
+        type: typeof options.type === 'string' ? options.type : 'info',
+        message: typeof options.message === 'string' ? options.message : '',
+        detail: typeof options.detail === 'string' ? options.detail : '',
+        buttons: Array.isArray(options.buttons) && options.buttons.length > 0 ? options.buttons : ['확인'],
+        defaultId: Number.isInteger(options.defaultId) ? options.defaultId : 0,
+        cancelId: Number.isInteger(options.cancelId) ? options.cancelId : 0
+    };
+    const windowReady = parent && !parent.isDestroyed() && parent.webContents && !parent.webContents.isDestroyed();
 
+    if (windowReady) {
+        try {
+            const response = await parent.webContents.executeJavaScript(
+                `window.zenDialog && window.zenDialog.show(${JSON.stringify(payload)})`,
+                true
+            );
+            if (Number.isInteger(response)) {
+                return { response };
+            }
+        } catch (error) {
+            console.warn('In-app dialog failed:', error?.message || error);
+        }
+    }
+
+    const nativeOptions = {
+        type: payload.type,
+        title: 'ZEN Launcher',
+        message: payload.message,
+        detail: payload.detail,
+        buttons: payload.buttons,
+        defaultId: payload.defaultId,
+        cancelId: payload.cancelId,
+        noLink: true
+    };
+    if (windowReady) {
+        return dialog.showMessageBox(parent, nativeOptions);
+    }
+    return dialog.showMessageBox(nativeOptions);
+}
+
+ipcMain.handle('zen-launcher:show-message', async (event, options) => {
+    const parent = BrowserWindow.fromWebContents(event.sender);
+    const result = await presentLauncherMessage(parent, options);
     return result.response;
 });
 

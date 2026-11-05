@@ -33,12 +33,21 @@
 
 ## ActionButton
 
-클래스 `setting-action-button`. 강조는 `primary-button`, 위험은 `danger-button`.
+클래스 `setting-action-button`. 강조는 `primary-button`, 위험은 `danger-button`. 경로 선택(`file-item`)과 같은 선택 버튼도 이 면을 쓴다.
 
-- 쓰는 곳: 저장, 닫기, 초기화.
-- 크기: 높이 `--control-h`, 모서리 `--radius-control`.
-- 상태: 기본은 약한 면, 강조는 밝은 면과 어두운 글자, 위험은 글자색만 다르다.
-- 모션: 없음.
+- 쓰는 곳: 저장, 닫기, 초기화, 내보내기, 불러오기.
+- 크기: 높이 `--control-h`, 모서리 `--radius-control`, 가장자리는 1px `--hairline`.
+- 상태: 기본은 `--zen-plate`, 호버는 `--zen-hover`. 강조는 글자색과 면색을 뒤집는다. 위험은 `--zen-danger-plate`와 `--zen-danger-ink`.
+- 모션: 없음. 그라데이션과 그림자는 없다.
+
+## Dialog
+
+클래스 `#zen-dialog`. 저장하지 않고 닫기, 초기화, 삭제, 실행 실패는 시스템 메시지 상자 대신 이 카드를 연다.
+
+- 카드는 `--zen-shell`, 가장자리는 `--hairline`, 모서리는 `--radius-control`.
+- 제목 아래 보조 문장이 있고, 동작은 오른쪽 정렬이다.
+- 안전한 기본 동작은 강조 버튼, 삭제·초기화·버리기는 위험 버튼이다.
+- 바깥과 Esc는 취소다. 그림자는 없다.
 
 ## Row
 
@@ -97,7 +106,7 @@
 | --- | --- | --- |
 | `peek` | 최대 112px | 한 줄 도구 |
 | `panel` | 400px. 위쪽 여백이 더 좁으면 그 여백까지 | 예약 종료, 런처 설정 |
-| `workspace` | 도크 위부터 작업 영역 상단까지 | 프로그램 탐색 |
+| `workspace` | 도크 위부터 작업 영역 상단까지 | 갤러리·아이콘 항목 편집, 프로그램 탐색 |
 
 다음 패널은 새 시간을 만들지 않고 이 fit 중 하나를 고른다.
 
