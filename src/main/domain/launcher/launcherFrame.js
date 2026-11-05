@@ -1,6 +1,7 @@
 const DESIGN_WIDTH = 1200;
 const DOCK_HEIGHT = 420;
 const FRAME_MARGIN = 16;
+const PANEL_SHEET_HEIGHT = 400;
 const SHEET_FITS = new Set(['peek', 'panel', 'workspace']);
 
 function computeLauncherFrame(workArea, screenBounds = null) {
@@ -51,8 +52,7 @@ function sheetHeightForFit(fit, availableAbove) {
         return available;
     }
 
-    const panelHeight = Math.max(220, Math.round(available * 0.42));
-    return Math.min(available, panelHeight);
+    return Math.min(available, PANEL_SHEET_HEIGHT);
 }
 
 function boundsForSheet(frame) {
@@ -86,6 +86,7 @@ module.exports = {
     DESIGN_WIDTH,
     DOCK_HEIGHT,
     FRAME_MARGIN,
+    PANEL_SHEET_HEIGHT,
     computeLauncherFrame,
     sheetHeightForFit,
     boundsForSheet,

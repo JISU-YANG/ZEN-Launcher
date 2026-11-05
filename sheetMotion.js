@@ -1,7 +1,7 @@
 (function initZenSheetMotion() {
     const FITS = {
         peek: (available) => Math.min(112, available),
-        panel: (available) => Math.min(available, Math.max(220, Math.round(available * 0.42))),
+        panel: (available) => Math.min(available, 400),
         workspace: (available) => available
     };
     const MOTION_MS = {

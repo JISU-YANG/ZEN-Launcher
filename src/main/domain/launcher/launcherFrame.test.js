@@ -4,7 +4,8 @@ const {
     computeLauncherFrame,
     sheetHeightForFit,
     boundsForSheet,
-    shapeForSheet
+    shapeForSheet,
+    PANEL_SHEET_HEIGHT
 } = require('./launcherFrame');
 const { resolveInitialIcons, DEFAULT_ICONS } = require('./defaultIcons');
 
@@ -59,7 +60,8 @@ test('keeps the window bounds still while the sheet only changes shape', () => {
 
 test('sizes peek, panel, and workspace from the space above the dock', () => {
     assert.equal(sheetHeightForFit('peek', 620), 112);
-    assert.equal(sheetHeightForFit('panel', 620), Math.min(620, Math.max(220, Math.round(620 * 0.42))));
+    assert.equal(sheetHeightForFit('panel', 620), PANEL_SHEET_HEIGHT);
+    assert.equal(sheetHeightForFit('panel', PANEL_SHEET_HEIGHT), PANEL_SHEET_HEIGHT);
     assert.equal(sheetHeightForFit('workspace', 620), 620);
     assert.equal(sheetHeightForFit('panel', 180), 180);
     assert.equal(sheetHeightForFit('closed', 620), 0);

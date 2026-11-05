@@ -522,6 +522,7 @@ class ZenLauncherPreferences {
                 inset:10px 0 0 0;
                 display:flex;
                 flex-direction:column;
+                overflow:hidden;
                 opacity:0;
                 visibility:hidden;
                 pointer-events:none;
