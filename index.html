@@ -4834,12 +4834,37 @@
             border-color: rgba(0, 0, 0, 0.06);
         }
 
+        #icon-area {
+            height: calc(112px * var(--layout-scale));
+        }
+
         #icon-area > .icon-entry {
             width: auto;
             flex: 1 1 0;
             min-width: 0;
             max-width: calc(104px * var(--layout-scale));
-            height: calc(92px * var(--layout-scale));
+            height: calc(112px * var(--layout-scale));
+            padding: 0;
+        }
+
+        #gallery-area > button.zen-slot-add,
+        #icon-area > button.zen-slot-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        #gallery-area > button.zen-slot-add img,
+        #icon-area > button.zen-slot-add img {
+            width: 22px;
+            height: 22px;
+            filter: brightness(0) invert(0.62);
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add img,
+        body[data-theme="light"] #icon-area > button.zen-slot-add img {
+            filter: brightness(0) invert(0.32);
         }
 
         #icon-area .icon-img,
@@ -4866,19 +4891,19 @@
             gap: 0;
             top: 168px;
             left: 50%;
-            width: 280px;
+            width: 440px;
             margin: 0;
-            height: 36px;
+            height: 44px;
             transform: translateX(-50%);
         }
 
         #center-box > #search-area {
-            width: 280px;
+            width: 440px;
             flex: none;
-            height: 36px;
-            border-radius: 999px;
+            height: 44px;
+            border-radius: 10px;
             box-shadow: none;
-            border: none;
+            border: 1px solid var(--hairline);
             background: rgba(12, 12, 12, 0.92);
         }
 
@@ -5163,11 +5188,17 @@
             white-space: nowrap;
         }
 
+        .weather-bar-stats {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-left: auto;
+        }
+
         .weather-bar-stat {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            margin-left: 4px;
         }
 
         .weather-bar-stat img {
@@ -5216,11 +5247,16 @@
             content: '';
             inset: -1.5px;
             padding: 1.5px;
-            border-radius: 999px;
-            opacity: 1;
+            border-radius: 12px;
+            opacity: 0;
             z-index: 0;
-            animation: search-rgb-border-flow 3.4s linear infinite;
+            animation: none;
             pointer-events: none;
+        }
+
+        #search-area:focus-within::before {
+            opacity: 1;
+            animation: search-rgb-border-flow 3.4s linear infinite;
         }
 
         #search-area::after {
@@ -5275,7 +5311,7 @@
         #search-area input,
         #input-search {
             width: 100%;
-            height: 34px;
+            height: 40px;
             border: none;
             background: transparent;
             color: #f2f2f2;
@@ -5296,18 +5332,34 @@
             color: #1d232b;
         }
 
-        #footer-brand {
-            margin-left: 8px;
-            color: #8a8a8a;
+        .list-view {
+            justify-content: flex-start;
+            align-items: stretch;
+        }
+
+        #folder-area {
+            flex: 0 1 auto;
+            min-height: 0;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        #folder-watermark {
+            margin-top: auto;
+            align-self: center;
+            color: rgba(255, 255, 255, 0.16);
             font-size: 13px;
             font-weight: 900;
             letter-spacing: -0.03em;
             line-height: 1;
-            white-space: nowrap;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+            user-select: none;
         }
 
-        body[data-theme="light"] #footer-brand {
-            color: #8b939c;
+        body[data-theme="light"] #folder-watermark {
+            color: rgba(29, 35, 43, 0.28);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
         }
 
         #right-box {
@@ -5492,17 +5544,19 @@
                 <span class="weather-location" id="weather-location">위치 확인 중</span>
                 <span class="weather-temp" id="weather-temperature">--°</span>
                 <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
-                <span class="weather-bar-stat" title="체감">
-                    <img src="src/icon/icon-temperature.svg" alt="체감">
-                    <strong id="weather-feels-like">--°</strong>
-                </span>
-                <span class="weather-bar-stat" title="습도">
-                    <img src="src/icon/icon-humidity.svg" alt="습도">
-                    <strong id="weather-humidity">--</strong>
-                </span>
-                <span class="weather-bar-stat" title="강수">
-                    <img src="src/icon/icon-cloud.svg" alt="강수">
-                    <strong id="weather-precipitation">--</strong>
+                <span class="weather-bar-stats">
+                    <span class="weather-bar-stat" title="체감">
+                        <img src="src/icon/icon-temperature.svg" alt="체감">
+                        <strong id="weather-feels-like">--°</strong>
+                    </span>
+                    <span class="weather-bar-stat" title="습도">
+                        <img src="src/icon/icon-humidity.svg" alt="습도">
+                        <strong id="weather-humidity">--</strong>
+                    </span>
+                    <span class="weather-bar-stat" title="강수">
+                        <img src="src/icon/icon-cloud.svg" alt="강수">
+                        <strong id="weather-precipitation">--</strong>
+                    </span>
                 </span>
                 <div class="weather-status" id="weather-status" data-state="loading">날씨를 확인하고 있습니다.</div>
             </div>
@@ -5520,6 +5574,7 @@
             <div id="right-box">
                 <div class="item-box list-view">
                     <div id="folder-area"></div>
+                    <div id="folder-watermark">ZEN Launcher</div>
                 </div>
             </div>
             <div id="footer">
@@ -5538,7 +5593,6 @@
                     <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
                     <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
                     <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>런처</span></button>
-                    <span id="footer-brand">ZEN Launcher</span>
                 </div>
             </div>
         </div>

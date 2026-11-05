@@ -2399,15 +2399,20 @@ class ZenLauncherPreferences {
     }
 
     #createLauncherPlaceholder(category) {
-        const label = category === ZenLauncherPreferences.Category.FOLDER
-            ? '폴더 추가'
-            : '추가';
         const button = document.createElement('button');
         button.type = 'button';
         button.className = category === ZenLauncherPreferences.Category.FOLDER
             ? 'list-item zen-slot-add'
             : `${category}-entry zen-slot-add`;
-        button.textContent = label;
+        if (category === ZenLauncherPreferences.Category.FOLDER) {
+            button.textContent = '폴더 추가';
+        } else {
+            const icon = document.createElement('img');
+            icon.src = 'src/icon/icon-plus.svg';
+            icon.alt = '';
+            button.appendChild(icon);
+            button.setAttribute('aria-label', '추가');
+        }
         button.addEventListener('click', () => {
             this.#openEmptySlot(category);
         });
