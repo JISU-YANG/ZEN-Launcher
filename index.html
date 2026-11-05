@@ -1192,11 +1192,13 @@
         .weather-temp {
             align-self: stretch;
             width: 100%;
-            font-size: 40px;
-            font-weight: 900;
-            line-height: 0.95;
-            letter-spacing: -0.04em;
-            color: #ffffff;
+            font-family: inherit;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+            color: #f3f3f3;
             text-align: right;
         }
 
@@ -1306,7 +1308,9 @@
             margin-top: 4px;
             color: #f0f0f0;
             font-size: 13px;
-            font-weight: 900;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
         }
 
         .weather-status {
@@ -1732,7 +1736,8 @@
             width: 38px;
             height: 38px;
             margin: 0;
-            border-radius: 10px;
+            border-radius: 12px;
+            overflow: hidden;
             transition: 0.2s all ease;
             filter: grayscale(100%);
             object-fit: cover;
@@ -2437,8 +2442,8 @@
         #editor-widget-body #weather-widget.embedded-widget .weather-temp {
             align-self: stretch;
             width: 100%;
-            font-size: 36px;
-            letter-spacing: -0.05em;
+            font-size: 30px;
+            letter-spacing: -0.02em;
             text-align: right;
         }
 
