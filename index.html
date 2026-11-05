@@ -4947,9 +4947,14 @@
             color: #9a9a9a;
             font-size: 13px;
             font-weight: 900;
-            letter-spacing: 0.06em;
+            letter-spacing: 0;
             line-height: 1;
             white-space: nowrap;
+        }
+
+        .launcher-brand-zen {
+            letter-spacing: 0.06em;
+            margin-right: -0.06em;
         }
 
         #footer-folder {
@@ -5472,7 +5477,10 @@
             justify-content: flex-start;
         }
 
-        #right-box,
+        #right-box {
+            padding-top: 0;
+        }
+
         #left-box {
             padding-top: 16px;
         }
@@ -5708,7 +5716,7 @@
                     </div>
                 </div>
                 <div id="footer-folder">
-                    <span id="launcher-brand">ZEN Launcher</span>
+                    <span id="launcher-brand"><span class="launcher-brand-zen">ZEN</span> Launcher</span>
                     <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>런처</span></button>
                 </div>
             </div>
