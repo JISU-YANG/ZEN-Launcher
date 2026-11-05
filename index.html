@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-media-grayscale="true">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,6 +41,12 @@
         textarea,
         select {
             font-family: inherit;
+        }
+
+        html[data-resource-saver="active"] *,
+        html[data-resource-saver="active"] *::before,
+        html[data-resource-saver="active"] *::after {
+            animation-play-state: paused !important;
         }
 
         #container {
@@ -1191,11 +1197,13 @@
         .weather-temp {
             align-self: stretch;
             width: 100%;
-            font-size: 40px;
-            font-weight: 900;
-            line-height: 0.95;
-            letter-spacing: -0.04em;
-            color: #ffffff;
+            font-family: inherit;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+            color: #f3f3f3;
             text-align: right;
         }
 
@@ -1305,7 +1313,9 @@
             margin-top: 4px;
             color: #f0f0f0;
             font-size: 13px;
-            font-weight: 900;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
         }
 
         .weather-status {
@@ -1324,26 +1334,26 @@
             color: #f7d08a;
         }
 
-        #weather-widget[data-visual="clear-night"] .weather-visual-orb {
+        #weather-bar[data-visual="clear-night"] .weather-visual-orb {
             background: radial-gradient(circle at 30% 30%, #f8fbff, #d8e5ff 58%, #9bb2f5 100%);
             box-shadow: 0 0 24px rgba(152, 177, 255, 0.3);
         }
 
-        #weather-widget[data-visual="cloudy"] .weather-visual-orb,
-        #weather-widget[data-visual="rain"] .weather-visual-orb,
-        #weather-widget[data-visual="storm"] .weather-visual-orb,
-        #weather-widget[data-visual="cloudy-night"] .weather-visual-orb {
+        #weather-bar[data-visual="cloudy"] .weather-visual-orb,
+        #weather-bar[data-visual="rain"] .weather-visual-orb,
+        #weather-bar[data-visual="storm"] .weather-visual-orb,
+        #weather-bar[data-visual="cloudy-night"] .weather-visual-orb {
             opacity: 0.42;
             transform: scale(0.9);
         }
 
-        #weather-widget[data-visual="rain"] .weather-visual-rain,
-        #weather-widget[data-visual="storm"] .weather-visual-rain {
+        #weather-bar[data-visual="rain"] .weather-visual-rain,
+        #weather-bar[data-visual="storm"] .weather-visual-rain {
             opacity: 1;
         }
 
-        #weather-widget[data-visual="clear-night"] .weather-visual-stars,
-        #weather-widget[data-visual="cloudy-night"] .weather-visual-stars {
+        #weather-bar[data-visual="clear-night"] .weather-visual-stars,
+        #weather-bar[data-visual="cloudy-night"] .weather-visual-stars {
             opacity: 1;
         }
 
@@ -1731,7 +1741,8 @@
             width: 38px;
             height: 38px;
             margin: 0;
-            border-radius: 10px;
+            border-radius: 12px;
+            overflow: hidden;
             transition: 0.2s all ease;
             filter: grayscale(100%);
             object-fit: cover;
@@ -2436,8 +2447,8 @@
         #editor-widget-body #weather-widget.embedded-widget .weather-temp {
             align-self: stretch;
             width: 100%;
-            font-size: 36px;
-            letter-spacing: -0.05em;
+            font-size: 30px;
+            letter-spacing: -0.02em;
             text-align: right;
         }
 
@@ -4739,6 +4750,1721 @@
             background: linear-gradient(180deg, #393939, #1f1f1f);
         }
 
+        :root {
+            --control-h: 32px;
+            --control-h-sm: 28px;
+            --radius-control: 8px;
+            --icon-size: 16px;
+            --hover-fill: rgba(255, 255, 255, 0.08);
+            --press-fill: rgba(255, 255, 255, 0.12);
+            --focus-ring: rgba(220, 220, 220, 0.85);
+            --hairline: rgba(255, 255, 255, 0.12);
+            --dock-height: 420px;
+            --folder-column: clamp(180px, 22vw, 280px);
+            --layout-scale: 1;
+            --sheet-size: 0px;
+            --sheet-duration: 320ms;
+        }
+
+        body[data-theme="light"] {
+            --hover-fill: rgba(0, 0, 0, 0.06);
+            --press-fill: rgba(0, 0, 0, 0.1);
+            --focus-ring: rgba(40, 40, 40, 0.55);
+            --hairline: rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            font-weight: 600;
+        }
+
+        #container {
+            height: var(--dock-height);
+        }
+
+        #launcher-shell,
+        body[data-theme="light"] #launcher-shell {
+            background-image: none;
+            background-size: auto;
+        }
+
+        #launcher-shell {
+            background-color: rgba(28, 28, 28, var(--launcher-shell-alpha));
+        }
+
+        body[data-theme="light"] #launcher-shell {
+            background-color: rgba(232, 236, 241, var(--launcher-shell-alpha));
+        }
+
+        #left-box {
+            width: auto;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        #right-box {
+            width: var(--folder-column);
+        }
+
+        #gallery-area,
+        #icon-area {
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        #gallery-area > .gallery-entry {
+            width: auto;
+            flex: 0 1 calc(132px * var(--layout-scale));
+            max-width: calc(132px * var(--layout-scale));
+            min-width: calc(96px * var(--layout-scale));
+            background: #101010;
+        }
+
+        #gallery-area > .gallery-entry > a,
+        #gallery-area > .gallery-entry > .launcher {
+            background: #0c0c0c;
+        }
+
+        body[data-theme="light"] #gallery-area > .gallery-entry,
+        body[data-theme="light"] #gallery-area > .gallery-entry > a,
+        body[data-theme="light"] #gallery-area > .gallery-entry > .launcher {
+            background: #d3dae3;
+        }
+
+        #icon-area > .icon-entry > a,
+        #icon-area > .icon-entry > .launcher,
+        #icon-area > button.icon-entry {
+            background: #141414;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+        }
+
+        body[data-theme="light"] #icon-area > .icon-entry > a,
+        body[data-theme="light"] #icon-area > .icon-entry > .launcher,
+        body[data-theme="light"] #icon-area > button.icon-entry {
+            background: #d7dee6;
+            border-color: rgba(0, 0, 0, 0.06);
+        }
+
+        #icon-area {
+            height: calc(112px * var(--layout-scale));
+        }
+
+        #icon-area > .icon-entry {
+            width: auto;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: calc(104px * var(--layout-scale));
+            height: calc(112px * var(--layout-scale));
+            padding: 0;
+        }
+
+        #gallery-area > button.zen-slot-add,
+        #icon-area > button.zen-slot-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        #gallery-area > button.zen-slot-add img,
+        #icon-area > button.zen-slot-add img {
+            width: 22px;
+            height: 22px;
+            filter: brightness(0) invert(0.62);
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add img,
+        body[data-theme="light"] #icon-area > button.zen-slot-add img {
+            filter: brightness(0) invert(0.32);
+        }
+
+        #icon-area .icon-img,
+        #icon-area > .icon-entry:hover .icon-img,
+        body[data-theme="light"] #icon-area .icon-img,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img {
+            filter: none;
+        }
+
+        #icon-area .icon-img.icon-glyph,
+        #icon-area > .icon-entry:hover .icon-img.icon-glyph {
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #icon-area .icon-img.icon-glyph,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img.icon-glyph {
+            filter: brightness(0);
+        }
+
+        #icon-area > .icon-entry:hover .icon-img,
+        #gallery-area > .gallery-entry:hover .gallery-img {
+            transform: none;
+        }
+
+        #center-box {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            top: 168px;
+            left: 50%;
+            width: 440px;
+            margin: 0;
+            height: 56px;
+            transform: translateX(-50%);
+        }
+
+        #center-box > #search-area {
+            width: 440px;
+            flex: none;
+            height: 56px;
+            border-radius: 10px;
+            box-shadow: none;
+            border: 1px solid var(--hairline);
+            background: rgba(12, 12, 12, 0.92);
+        }
+
+        #footer {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) var(--folder-column);
+            justify-content: stretch;
+            height: 50px;
+            padding: 0;
+            gap: 0;
+            background: #101010;
+        }
+
+        #footer-main,
+        #footer-folder,
+        #footer-power,
+        #footer-settings {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            height: 100%;
+        }
+
+        #footer-main {
+            position: relative;
+            justify-content: space-between;
+            padding: 0 16px 0 8px;
+        }
+
+        #footer-power,
+        #footer-settings,
+        #launcher-brand,
+        #footer-folder > .zen-icon-button {
+            position: relative;
+            top: -2px;
+        }
+
+        #footer-power,
+        #footer-settings {
+            gap: 2px;
+        }
+
+        #footer-settings {
+            justify-content: flex-end;
+        }
+
+        #launcher-brand {
+            color: #9a9a9a;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .launcher-brand-zen {
+            letter-spacing: 0.06em;
+            margin-right: 0.35em;
+        }
+
+        #footer-folder {
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 8px 0 18px;
+        }
+
+        .footer-divider {
+            width: 1px;
+            height: 18px;
+            margin: 0 4px;
+            background: var(--hairline);
+            flex: 0 0 auto;
+        }
+
+        .zen-icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: var(--control-h-sm);
+            min-height: var(--control-h-sm);
+            padding: 0 8px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            background: transparent;
+            color: #c8c8c8;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .zen-icon-button img {
+            width: var(--icon-size);
+            height: var(--icon-size);
+            margin: 0;
+            padding: 0;
+            filter: brightness(0) invert(0.78);
+        }
+
+        #footer .zen-icon-button {
+            width: var(--control-h-sm);
+            min-width: var(--control-h-sm);
+            padding: 0;
+            gap: 0;
+        }
+
+        #footer .zen-icon-button span,
+        #footer-folder .zen-icon-button span {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        .zen-icon-button:hover,
+        .zen-icon-button:active,
+        .widget-toggle-btn:hover,
+        .widget-toggle-btn:active,
+        .setting-action-button:hover,
+        .quick-link-button:hover,
+        .compact-panel-icon-button:hover {
+            transform: none;
+            box-shadow: none;
+            text-decoration: none;
+        }
+
+        .zen-icon-button:hover,
+        .widget-toggle-btn:hover {
+            background: var(--hover-fill);
+        }
+
+        .zen-icon-button:active,
+        .widget-toggle-btn:active {
+            background: var(--press-fill);
+        }
+
+        .zen-icon-button:focus-visible,
+        .widget-toggle-btn:focus-visible,
+        .zen-slot-add:focus-visible,
+        .setting-action-button:focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        .zen-icon-button[aria-expanded="true"] {
+            background: var(--hover-fill);
+            border-color: var(--hairline);
+        }
+
+        body[data-theme="light"] .zen-icon-button {
+            color: #3a3a3a;
+        }
+
+        body[data-theme="light"] .zen-icon-button img,
+        body[data-theme="light"] #link-area button.widget-toggle-btn img {
+            filter: brightness(0) invert(0.28);
+        }
+
+        .setting-action-button,
+        .btn-row .setting-action-button {
+            height: var(--control-h);
+            min-height: var(--control-h);
+            border-radius: var(--radius-control);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: none;
+            font-weight: 600;
+            transform: none;
+        }
+
+        .setting-action-button.primary-button {
+            background: #f2f2f2;
+            color: #171717;
+        }
+
+        .setting-action-button.danger-button {
+            background: rgba(255, 255, 255, 0.04);
+            color: #e7c5cb;
+        }
+
+        body[data-theme="light"] .setting-action-button {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1c1c1c;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .setting-action-button.primary-button {
+            background: #1f1f1f;
+            color: #f5f5f5;
+        }
+
+        body[data-theme="light"] .setting-action-button.danger-button {
+            background: rgba(0, 0, 0, 0.04);
+            color: #8a3d49;
+        }
+
+        body[data-theme="light"] #setting-credit,
+        body[data-theme="light"] #setting-credit strong {
+            color: #4d4d4d;
+        }
+
+        .list-item:hover {
+            text-decoration: none;
+            background: var(--hover-fill);
+        }
+
+        .zen-slot-add {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed var(--hairline);
+            border-radius: var(--radius-control);
+            background: transparent;
+            color: #8f8f8f;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #folder-area .zen-slot-add {
+            width: 100%;
+            min-height: 44px;
+        }
+
+        .weather-pill,
+        .quick-widget-pill,
+        .shutdown-scheduler-pill {
+            display: none;
+        }
+
+        #editor {
+            bottom: var(--dock-height);
+            height: var(--sheet-size);
+            transition: height var(--sheet-duration) cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        #editor::before,
+        #editor.open::before,
+        #editor.closing::before {
+            top: 0;
+            height: 1px;
+            animation: none;
+            background: var(--hairline);
+            opacity: 1;
+        }
+
+        #editor-s-surface {
+            clip-path: none;
+        }
+
+        #editor-widget-shell,
+        #setting-container,
+        .btn-row,
+        #editor.closing #editor-widget-shell,
+        #editor.closing #setting-container,
+        #editor.closing .btn-row {
+            transform: none;
+        }
+
+        #editor[data-fit="panel"] #editor-widget-body,
+        #editor[data-fit="workspace"] #editor-widget-body {
+            overflow: auto;
+        }
+
+        #editor.is-exchange.open-ready #editor-widget-shell,
+        #editor.is-exchange.open-ready #setting-container,
+        #editor.is-exchange.open-ready .btn-row {
+            animation: zen-sheet-fade var(--sheet-duration) ease;
+        }
+
+        #setting-content {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        #weather-bar {
+            position: absolute;
+            top: calc(50% - 2px);
+            left: 50%;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            height: auto;
+            padding: 0;
+            background: transparent;
+            color: #d7d7d7;
+            pointer-events: auto;
+            transform: translate(-50%, -50%);
+        }
+
+        .weather-readout {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .weather-temp-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .weather-hover-card {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 0;
+            z-index: 40;
+            width: 196px;
+            padding: 10px 12px;
+            border: 1px solid var(--hairline);
+            border-radius: 10px;
+            background: #101010;
+            box-sizing: border-box;
+        }
+
+        #weather-bar .weather-temp-wrap:hover .weather-hover-card,
+        #weather-bar .weather-temp-wrap:focus-within .weather-hover-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #weather-bar .weather-location {
+            display: block;
+            position: static;
+            color: #d7d7d7;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+            white-space: normal;
+        }
+
+        #weather-bar .weather-location::before,
+        #weather-bar .weather-location::after {
+            content: none;
+        }
+
+        #weather-bar .weather-temp {
+            width: auto;
+            color: #f7f7f7;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        #weather-bar .weather-condition {
+            max-width: 72px;
+            overflow: hidden;
+            color: #c8c8c8;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #weather-bar .weather-condition::before,
+        .weather-precip::before {
+            content: '';
+            width: 3px;
+            height: 3px;
+            margin-right: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.28);
+            flex: none;
+        }
+
+        #weather-bar .weather-condition,
+        .weather-precip {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .weather-precip img {
+            width: 13px;
+            height: 13px;
+            margin-right: 3px;
+            filter: brightness(0) invert(0.82);
+        }
+
+        .weather-precip strong {
+            color: #f2f2f2;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .weather-bar-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .weather-hover-card .weather-bar-stat {
+            justify-content: flex-start;
+            color: #9a9a9a;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .weather-hover-card .weather-bar-stat strong {
+            margin-left: auto;
+            color: #f2f2f2;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .weather-bar-stat img {
+            width: 14px;
+            height: 14px;
+            filter: brightness(0) invert(0.82);
+        }
+
+        #weather-bar .weather-status {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+        }
+
+        body[data-theme="light"] #footer {
+            background: #c5ced6;
+        }
+
+        body[data-theme="light"] #weather-bar {
+            color: #3d4550;
+        }
+
+        body[data-theme="light"] #weather-bar .weather-temp,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat strong,
+        body[data-theme="light"] .weather-precip strong {
+            color: #1d232b;
+        }
+
+        body[data-theme="light"] .weather-bar-stat img,
+        body[data-theme="light"] .weather-precip img,
+        body[data-theme="light"] .shutdown-step-button img {
+            filter: brightness(0) invert(0.2);
+        }
+
+        body[data-theme="light"] #weather-bar .weather-condition::before,
+        body[data-theme="light"] .weather-precip::before {
+            background: rgba(29, 35, 43, 0.28);
+        }
+
+        #search-area {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #search-area::before {
+            content: '';
+            inset: -1.5px;
+            padding: 1.5px;
+            border-radius: 12px;
+            opacity: 0;
+            z-index: 0;
+            animation: none;
+            pointer-events: none;
+        }
+
+        #search-area:focus-within::before {
+            opacity: 1;
+            animation: search-rgb-border-flow 3.4s linear infinite;
+        }
+
+        #search-area::after {
+            content: none;
+        }
+
+        #search-area > div,
+        #search-area input {
+            position: relative;
+            z-index: 1;
+        }
+
+        .shutdown-step-button img {
+            width: 12px;
+            height: 12px;
+            filter: brightness(0) invert(0.82);
+        }
+
+        #search-area > div:first-child {
+            display: flex;
+            align-items: center;
+            flex: none;
+            width: auto;
+            height: 100%;
+            margin: 0;
+            padding: 0 20px;
+            line-height: 1;
+        }
+
+        #search-area > div:first-child > a {
+            color: #9a9a9a;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        #search-area > .vertical-divider {
+            align-self: center;
+            flex: none;
+            width: 1px;
+            height: 18px;
+            margin: 0;
+            border: none;
+            background: var(--hairline);
+        }
+
+        #search-area > div:last-child {
+            display: flex;
+            align-items: center;
+            flex: 1 1 auto;
+            width: auto;
+            height: 100%;
+            margin: 0;
+            padding: 0 20px;
+            min-width: 0;
+            line-height: 1;
+            text-align: left;
+        }
+
+        #search-area input,
+        #input-search {
+            width: 100%;
+            height: 32px;
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: #f2f2f2;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 32px;
+        }
+
+        #search-area input::placeholder {
+            color: #8d8d8d;
+        }
+
+        body[data-theme="light"] #center-box > #search-area {
+            background: #ffffff;
+        }
+
+        body[data-theme="light"] #search-area input {
+            color: #1d232b;
+        }
+
+        body[data-theme="light"] #launcher-brand {
+            color: #5c6670;
+        }
+
+        body[data-theme="light"] .weather-hover-card {
+            background: #c5ced6;
+        }
+
+        body[data-theme="light"] #weather-bar .weather-location {
+            color: #1d232b;
+        }
+
+        #folder-area {
+            justify-content: flex-start;
+        }
+
+        #right-box {
+            padding-top: 0;
+        }
+
+        #left-box {
+            padding-top: 16px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-top > div {
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-preset-button,
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-step-button,
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action {
+            transform: none;
+            box-shadow: none;
+            border-radius: var(--radius-control);
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-preset-button {
+            min-height: 40px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-preset-button:hover,
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-step-button:hover {
+            transform: none;
+            background: var(--hover-fill);
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-preset-unit {
+            letter-spacing: 0;
+            text-transform: none;
+            font-size: 10px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-time-display {
+            width: 64px;
+            height: 44px;
+            border-radius: var(--radius-control);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 22px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status {
+            border-radius: var(--radius-control);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-status-label {
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 11px;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action {
+            height: var(--control-h);
+            min-width: 88px;
+            padding: 0 12px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #f2f2f2;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action.primary {
+            background: #f2f2f2;
+            color: #171717;
+        }
+
+        #editor-widget-body #shutdown-scheduler.embedded-widget .shutdown-scheduler-action.danger {
+            background: rgba(255, 255, 255, 0.04);
+            color: #e7c5cb;
+        }
+
+        .maker-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            max-width: 420px;
+            padding: 4px 8px 8px;
+        }
+
+        .maker-kicker {
+            color: #8d8d8d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .maker-name {
+            color: #f3f3f3;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+
+        .maker-product {
+            color: #bdbdbd;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .maker-meta {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 8px 16px;
+            margin: 18px 0 0;
+        }
+
+        .maker-meta div {
+            display: contents;
+        }
+
+        .maker-meta dt {
+            color: #8d8d8d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .maker-meta dd {
+            margin: 0;
+            color: #f2f2f2;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        body[data-theme="light"] .maker-name,
+        body[data-theme="light"] .maker-meta dd {
+            color: #1c1c1c;
+        }
+
+        body[data-theme="light"] .maker-product {
+            color: #4d4d4d;
+        }
+
+        #setting-credit {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-top: auto;
+            padding: 8px 4px 0;
+            color: #8d8d8d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        #setting-credit strong {
+            color: #d5d5d5;
+            font-weight: 700;
+        }
+
+        @keyframes zen-sheet-fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #editor,
+            #editor-widget-shell,
+            #setting-container,
+            .btn-row,
+            .zen-icon-button,
+            .setting-action-button {
+                transition: none;
+                animation: none;
+            }
+        }
+
+        :root {
+            --zen-shell: #1c1c1c;
+            --zen-plate: #262626;
+            --zen-tile: #303030;
+            --zen-hover: #3a3a3a;
+            --zen-ink: #ffffff;
+            --zen-soft: #c8c8c8;
+            --zen-muted: #8c8c8c;
+            --zen-gap: 24px;
+            --zen-side: 240px;
+        }
+
+        body[data-theme="light"] {
+            --zen-shell: #e7ebf0;
+            --zen-plate: #f7f8fa;
+            --zen-tile: #ffffff;
+            --zen-hover: #e4e9ef;
+            --zen-ink: #1c1c1c;
+            --zen-soft: #3d4650;
+            --zen-muted: #6a7380;
+        }
+
+        #launcher-shell,
+        body[data-theme="light"] #launcher-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) var(--zen-side);
+            grid-template-rows: minmax(0, 1fr) auto;
+            gap: var(--zen-gap);
+            align-items: stretch;
+            justify-content: stretch;
+            width: 100%;
+            height: 100%;
+            padding: var(--zen-gap);
+            box-sizing: border-box;
+            overflow: hidden;
+            background-image: none;
+            background-color: var(--zen-shell);
+            border-radius: 18px;
+        }
+
+        #left-box {
+            display: flex;
+            flex-direction: column;
+            gap: var(--zen-gap);
+            width: auto;
+            height: auto;
+            min-width: 0;
+            min-height: 0;
+            padding: 0;
+        }
+
+        #right-box {
+            grid-column: 2;
+            grid-row: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: stretch;
+            align-self: stretch;
+            gap: 12px;
+            width: auto;
+            height: auto;
+            min-width: 0;
+            min-height: 0;
+            padding: 12px;
+            box-sizing: border-box;
+            background: var(--zen-plate);
+            border-radius: 16px;
+        }
+
+        #gallery-area,
+        #icon-area {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            justify-content: stretch;
+            align-items: stretch;
+        }
+
+        #gallery-area {
+            flex: 1 1 auto;
+            height: auto;
+            min-height: 0;
+            gap: var(--zen-gap);
+        }
+
+        #gallery-area > .gallery-entry {
+            position: relative;
+            flex: 0 0 calc((100% - (var(--zen-gap) * 5)) / 6);
+            width: calc((100% - (var(--zen-gap) * 5)) / 6);
+            max-width: calc((100% - (var(--zen-gap) * 5)) / 6);
+            min-width: 0;
+            height: 100%;
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+            border-radius: 16px;
+            box-sizing: border-box;
+        }
+
+        #gallery-area > .gallery-entry:not(.zen-slot-add),
+        body[data-theme="light"] #gallery-area > .gallery-entry:not(.zen-slot-add) {
+            padding: 12px;
+            background: var(--zen-plate);
+            box-shadow: none;
+        }
+
+        #gallery-area > .gallery-entry::before {
+            display: none;
+        }
+
+        #gallery-area > .gallery-entry > a,
+        #gallery-area > .gallery-entry > .launcher,
+        body[data-theme="light"] #gallery-area > .gallery-entry > a,
+        body[data-theme="light"] #gallery-area > .gallery-entry > .launcher {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 10px;
+            background: var(--zen-tile);
+            box-shadow: none;
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            object-fit: cover;
+        }
+
+        .gallery-name {
+            top: auto;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: auto;
+            height: 40px;
+            padding: 0 10px;
+            border-radius: 0;
+            background: var(--zen-tile);
+            color: var(--zen-ink);
+            font-size: 13px;
+            transform: translateY(100%);
+            opacity: 1;
+            transition: transform 0.2s ease;
+        }
+
+        #gallery-area > .gallery-entry:hover .gallery-name,
+        #gallery-area > .gallery-entry:focus-within .gallery-name,
+        body[data-theme="light"] #gallery-area > .gallery-entry:hover .gallery-name,
+        body[data-theme="light"] #gallery-area > .gallery-entry:focus-within .gallery-name {
+            color: var(--zen-ink);
+            background: var(--zen-tile);
+            transform: translateY(0);
+        }
+
+        #gallery-area > button.zen-slot-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: var(--zen-plate);
+        }
+
+        #icon-area {
+            flex: 0 0 84px;
+            height: 84px;
+            gap: 12px;
+        }
+
+        #icon-area > .icon-entry {
+            flex: 0 0 calc((100% - (12px * 7)) / 8);
+            width: calc((100% - (12px * 7)) / 8);
+            max-width: calc((100% - (12px * 7)) / 8);
+            min-width: 0;
+            height: 100%;
+            padding: 0;
+            background: transparent;
+        }
+
+        #icon-area > .icon-entry > a,
+        #icon-area > .icon-entry > .launcher,
+        #icon-area > button.icon-entry,
+        body[data-theme="light"] #icon-area > .icon-entry > a,
+        body[data-theme="light"] #icon-area > .icon-entry > .launcher,
+        body[data-theme="light"] #icon-area > button.icon-entry {
+            height: 100%;
+            gap: 6px;
+            padding: 8px 6px 8px;
+            border: none;
+            border-radius: 10px;
+            background: var(--zen-tile);
+        }
+
+        #icon-area > .icon-entry:hover > a,
+        #icon-area > .icon-entry:hover > .launcher,
+        #icon-area > button.icon-entry:hover {
+            background: var(--zen-hover);
+        }
+
+        #icon-area .icon-img {
+            width: 26px;
+            height: 26px;
+            border-radius: 0;
+        }
+
+        .icon-name,
+        #icon-area > .icon-entry:hover .icon-name {
+            max-width: 100%;
+            color: var(--zen-soft);
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        #icon-area > .icon-entry:hover .icon-name,
+        #icon-area > .icon-entry:focus-within .icon-name {
+            color: var(--zen-ink);
+        }
+
+        #icon-area > button.zen-slot-add,
+        #gallery-area > button.zen-slot-add {
+            border: none;
+        }
+
+        #search-area,
+        body[data-theme="light"] #search-area {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 40px;
+            margin: 0;
+            padding: 0 12px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: none;
+            background: var(--zen-tile);
+        }
+
+        #search-area::before,
+        #search-area::after,
+        #search-area:focus-within::before {
+            content: none;
+            display: none;
+            animation: none;
+        }
+
+        #search-area > div:first-child,
+        #search-area > div:last-child {
+            width: auto;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            line-height: 40px;
+        }
+
+        #search-area > div:first-child {
+            flex: none;
+        }
+
+        #search-area > div:first-child > a,
+        body[data-theme="light"] #search-area > div:first-child > a {
+            color: var(--zen-ink);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        #search-area > div:last-child {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin-left: 12px;
+            text-align: left;
+        }
+
+        #search-area > div:first-child {
+            margin-right: 12px;
+        }
+
+        #search-area .vertical-divider {
+            width: 1px;
+            height: 14px;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        body[data-theme="light"] #search-area .vertical-divider {
+            background: rgba(0, 0, 0, 0.16);
+        }
+
+        #search-area input,
+        #input-search,
+        body[data-theme="light"] #search-area input,
+        body[data-theme="light"] #input-search {
+            height: 40px;
+            color: var(--zen-ink);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 40px;
+        }
+
+        #search-area input::placeholder,
+        #input-search::placeholder,
+        body[data-theme="light"] #search-area input::placeholder,
+        body[data-theme="light"] #input-search::placeholder {
+            color: var(--zen-soft);
+        }
+
+        .list-view {
+            display: flex;
+            flex: 0 1 auto;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 8px;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        .folder-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 28px;
+            padding: 0 4px;
+            color: var(--zen-muted);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .folder-head b {
+            color: var(--zen-ink);
+            font-weight: 900;
+        }
+
+        #folder-area {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 8px;
+            width: 100%;
+            min-height: 0;
+        }
+
+        #folder-area .list-item,
+        #folder-area .zen-slot-add {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            height: 40px;
+            min-height: 40px;
+            margin: 0;
+            padding: 0 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--zen-tile);
+            color: var(--zen-ink);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        #folder-area .list-item:hover,
+        #folder-area .zen-slot-add:hover {
+            background: var(--zen-hover);
+            color: var(--zen-ink);
+            text-decoration: none;
+        }
+
+        #folder-area .zen-slot-add {
+            justify-content: center;
+            color: var(--zen-muted);
+        }
+
+        #gallery-area .gallery-fallback {
+            color: transparent;
+            font-size: 0;
+        }
+
+        .list-view,
+        body[data-theme="light"] .list-view {
+            background: transparent;
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #folder-area .list-item,
+        #folder-area .zen-slot-add,
+        body[data-theme="light"] #folder-area .list-item,
+        body[data-theme="light"] #folder-area .zen-slot-add {
+            background: var(--zen-tile);
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #folder-area .list-item:hover,
+        #folder-area .zen-slot-add:hover,
+        body[data-theme="light"] #folder-area .list-item:hover,
+        body[data-theme="light"] #folder-area .zen-slot-add:hover {
+            background: var(--zen-hover);
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #folder-area .list-item img,
+        #folder-area .zen-slot-add img {
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #folder-area .list-item img,
+        body[data-theme="light"] #folder-area .zen-slot-add img {
+            filter: brightness(0);
+        }
+
+        #folder-area .list-item span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #gallery-area > button.zen-slot-add,
+        #icon-area > button.zen-slot-add,
+        #folder-area > button.zen-slot-add,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add,
+        body[data-theme="light"] #icon-area > button.zen-slot-add,
+        body[data-theme="light"] #folder-area > button.zen-slot-add {
+            position: relative;
+            gap: 0;
+            padding: 0;
+            border: 1px solid transparent;
+            background: transparent;
+            background-image: none;
+            box-shadow: none;
+            transition: background-color 0.18s ease, border-color 0.18s ease;
+        }
+
+        #gallery-area > button.zen-slot-add {
+            border-radius: 16px;
+        }
+
+        #icon-area > button.zen-slot-add {
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        #folder-area > button.zen-slot-add {
+            height: 40px;
+            min-height: 40px;
+            border-radius: 10px;
+        }
+
+        #gallery-area > button.zen-slot-add::before,
+        #icon-area > button.zen-slot-add::before,
+        #folder-area > button.zen-slot-add::before {
+            content: '';
+            display: block;
+            position: static;
+            left: auto;
+            top: auto;
+            z-index: auto;
+            width: 28px;
+            height: 28px;
+            opacity: 0;
+            border-radius: 999px;
+            background: var(--zen-plate);
+            pointer-events: none;
+            transition: opacity 0.18s ease, background-color 0.18s ease;
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add::before {
+            background: var(--zen-plate);
+        }
+
+        #folder-area > button.zen-slot-add::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add::before {
+            background: var(--zen-tile);
+        }
+
+        #gallery-area > button.zen-slot-add img,
+        #icon-area > button.zen-slot-add img,
+        #folder-area > button.zen-slot-add img {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            padding: 0;
+            transform: translate(-50%, -50%);
+            filter: brightness(0) invert(1);
+            opacity: 0;
+            transition: opacity 0.18s ease;
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add img,
+        body[data-theme="light"] #icon-area > button.zen-slot-add img,
+        body[data-theme="light"] #folder-area > button.zen-slot-add img {
+            filter: brightness(0);
+        }
+
+        #gallery-area > button.zen-slot-add:hover,
+        #gallery-area > button.zen-slot-add:focus-visible,
+        #icon-area > button.zen-slot-add:hover,
+        #icon-area > button.zen-slot-add:focus-visible,
+        #folder-area > button.zen-slot-add:hover,
+        #folder-area > button.zen-slot-add:focus-visible,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:focus-visible,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:focus-visible,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:focus-visible {
+            border-color: var(--hairline);
+            background: transparent;
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #gallery-area > button.zen-slot-add:hover::before,
+        #gallery-area > button.zen-slot-add:focus-visible::before,
+        #icon-area > button.zen-slot-add:hover::before,
+        #icon-area > button.zen-slot-add:focus-visible::before,
+        #folder-area > button.zen-slot-add:hover::before,
+        #folder-area > button.zen-slot-add:focus-visible::before,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:focus-visible::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:focus-visible::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:focus-visible::before {
+            opacity: 1;
+            background: var(--zen-hover);
+        }
+
+        #gallery-area > button.zen-slot-add:hover img,
+        #gallery-area > button.zen-slot-add:focus-visible img,
+        #icon-area > button.zen-slot-add:hover img,
+        #icon-area > button.zen-slot-add:focus-visible img,
+        #folder-area > button.zen-slot-add:hover img,
+        #folder-area > button.zen-slot-add:focus-visible img {
+            opacity: 1;
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:focus-visible::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:focus-visible::before {
+            background: var(--zen-tile);
+        }
+
+        #footer,
+        body[data-theme="light"] #footer {
+            position: relative;
+            left: auto;
+            right: auto;
+            bottom: auto;
+            grid-column: 1;
+            grid-row: 2;
+            display: block;
+            width: auto;
+            height: auto;
+            padding: 0;
+            overflow: visible;
+            background: transparent;
+            z-index: 2;
+        }
+
+        #footer-main {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            width: 100%;
+            height: auto;
+            padding: 0;
+            position: static;
+            background: transparent;
+        }
+
+        .list-view > .folder-head {
+            justify-content: space-between;
+        }
+
+        .list-view > #folder-area {
+            justify-content: flex-start;
+            align-items: stretch;
+        }
+
+        #footer-power,
+        #footer-settings,
+        #launcher-brand,
+        #footer-folder > .zen-icon-button,
+        #weather-bar {
+            position: relative;
+            top: 0;
+            transform: none;
+        }
+
+        #footer-power,
+        #footer-settings {
+            height: 40px;
+            padding: 0 6px;
+            gap: 2px;
+            border-radius: 10px;
+            background: var(--zen-tile);
+        }
+
+        #footer-settings {
+            justify-content: flex-end;
+        }
+
+        #weather-bar,
+        body[data-theme="light"] #weather-bar {
+            justify-self: center;
+            left: auto;
+            right: auto;
+            width: max-content;
+            max-width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 10px;
+            background: var(--zen-tile);
+            color: var(--zen-ink);
+            pointer-events: auto;
+        }
+
+        #footer .zen-icon-button {
+            top: 0;
+            width: 28px;
+            min-width: 28px;
+            height: 28px;
+            min-height: 28px;
+            background: transparent;
+        }
+
+        #footer .zen-icon-button:hover,
+        #footer-folder .zen-icon-button:hover,
+        #launcher-brand:hover {
+            background: var(--zen-hover);
+        }
+
+        #footer .zen-icon-button img,
+        #footer-folder .zen-icon-button img {
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #footer .zen-icon-button img,
+        body[data-theme="light"] #footer-folder .zen-icon-button img {
+            filter: brightness(0);
+        }
+
+        #footer-folder {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            height: auto;
+            padding: 0;
+            background: transparent;
+        }
+
+        #launcher-brand {
+            display: inline-flex;
+            align-items: center;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 10px;
+            background: var(--zen-tile);
+            color: var(--zen-ink);
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        #footer-folder > .zen-icon-button {
+            width: 40px;
+            min-width: 40px;
+            height: 40px;
+            min-height: 40px;
+            border-radius: 10px;
+            background: var(--zen-tile);
+        }
+
+        #gallery-area .gallery-name,
+        #folder-area .list-item,
+        #folder-area .list-item span,
+        body[data-theme="light"] #folder-area .list-item,
+        body[data-theme="light"] #folder-area .list-item span,
+        #launcher-brand,
+        body[data-theme="light"] #launcher-brand,
+        #search-area > div:first-child > a,
+        body[data-theme="light"] #search-area > div:first-child > a,
+        .weather-hover-card .weather-bar-stat strong,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat strong {
+            color: var(--zen-ink);
+        }
+
+        #icon-area .icon-name,
+        body[data-theme="light"] #icon-area .icon-name,
+        #weather-bar .weather-temp,
+        body[data-theme="light"] #weather-bar .weather-temp,
+        #weather-bar .weather-condition,
+        body[data-theme="light"] #weather-bar .weather-condition,
+        .weather-precip strong,
+        body[data-theme="light"] .weather-precip strong,
+        #weather-bar .weather-location,
+        body[data-theme="light"] #weather-bar .weather-location {
+            color: var(--zen-soft);
+        }
+
+        #icon-area > .icon-entry:hover .icon-name,
+        #icon-area > .icon-entry:focus-within .icon-name,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-name,
+        body[data-theme="light"] #icon-area > .icon-entry:focus-within .icon-name {
+            color: var(--zen-ink);
+        }
+
+        .weather-hover-card .weather-bar-stat,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat {
+            color: var(--zen-muted);
+        }
+
+        #icon-area .icon-img.icon-glyph,
+        #icon-area > .icon-entry:hover .icon-img.icon-glyph {
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] #icon-area .icon-img.icon-glyph,
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img.icon-glyph {
+            filter: brightness(0);
+        }
+
+        #folder-area .list-item img,
+        #footer .zen-icon-button img,
+        #footer-folder .zen-icon-button img,
+        .weather-precip img,
+        #gallery-area > button.zen-slot-add img,
+        #icon-area > button.zen-slot-add img,
+        #folder-area > button.zen-slot-add img {
+            filter: brightness(0) invert(0.78);
+        }
+
+        body[data-theme="light"] #folder-area .list-item img,
+        body[data-theme="light"] #footer .zen-icon-button img,
+        body[data-theme="light"] #footer-folder .zen-icon-button img,
+        body[data-theme="light"] .weather-precip img,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add img,
+        body[data-theme="light"] #icon-area > button.zen-slot-add img,
+        body[data-theme="light"] #folder-area > button.zen-slot-add img {
+            filter: brightness(0) invert(0.28);
+        }
+
+        .weather-hover-card .weather-bar-stat img,
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat img {
+            filter: brightness(0) invert(0.55);
+        }
+
+        body[data-theme="light"] .weather-hover-card .weather-bar-stat img {
+            filter: brightness(0) invert(0.42);
+        }
+
+        .weather-hover-card,
+        body[data-theme="light"] .weather-hover-card {
+            background: var(--zen-hover);
+            border-color: var(--hairline);
+        }
+
+        html[data-media-grayscale="true"] #gallery-area .gallery-img,
+        html[data-media-grayscale="true"] #icon-area .icon-img:not(.icon-glyph) {
+            filter: grayscale(1);
+        }
+
+        html[data-media-grayscale="true"] #gallery-area > .gallery-entry:hover .gallery-img,
+        html[data-media-grayscale="true"] #gallery-area > .gallery-entry:focus-within .gallery-img,
+        html[data-media-grayscale="true"] #icon-area > .icon-entry:hover .icon-img:not(.icon-glyph),
+        html[data-media-grayscale="true"] #icon-area > .icon-entry:focus-within .icon-img:not(.icon-glyph) {
+            filter: none;
+        }
+
     </style>
 </head>
 <body>
@@ -4747,53 +6473,64 @@
             <div id="left-box">
                 <div class="item-box" id="gallery-area"></div>
                 <div class="item-box" id="icon-area"></div>
-                <div id="center-box">
-                    <div id="link-area">
-                        <div>
-                            <button id="btn-weather-toggle" class="widget-toggle-btn" type="button" aria-label="날씨 위젯 열기" aria-expanded="false" title="날씨">
-                                <img src="src/icon/icon-weather.svg" alt="날씨">
-                            </button>
-                        </div>
-                        <div class="vertical-divider"></div>
-                        <div>
-                            <button id="btn-quick-toggle" class="widget-toggle-btn" type="button" aria-label="빠른 도구 위젯 열기" aria-expanded="false" title="빠른 도구">
-                                <img src="src/icon/icon-quicktools.svg" alt="빠른 도구">
-                            </button>
-                        </div>
-                        <div class="vertical-divider"></div>
-                        <div>
-                            <button id="btn-footer-compact" class="widget-toggle-btn" type="button" aria-label="시스템 설정 열기" aria-expanded="false" title="시스템 설정">
-                                <img src="src/icon/icon-setting.svg" alt="시스템 설정">
-                            </button>
-                        </div>
-                    </div>
-                    <div id="search-area">
-                        <div><a href="https://www.google.com">Google</a></div>
-                        <div class="vertical-divider"></div>
-                        <div><input type="text" id="input-search" placeholder="Type to search"></div>
-                    </div>
-                </div>
             </div>
             <div id="right-box">
+                <div id="search-area">
+                    <div><a href="https://www.google.com">Google</a></div>
+                    <div class="vertical-divider"></div>
+                    <div><input type="text" id="input-search" placeholder="검색"></div>
+                </div>
                 <div class="item-box list-view">
                     <div id="folder-area"></div>
                 </div>
+                <div id="footer-folder">
+                    <a id="launcher-brand" href="https://github.com/JISU-YANG/ZEN-Launcher" target="_blank" rel="noopener noreferrer"><span class="launcher-brand-zen">ZEN</span><span>Launcher</span></a>
+                    <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>런처</span></button>
+                </div>
             </div>
             <div id="footer">
-                <div id="footer-left">
-                    <div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="shutdown" aria-label="종료" title="종료"><img src="src/icon/icon-power-off.svg" alt=""></a></div>
-                        <div><a class="launcher-basic footer-btn icon-only" data-link="reboot" aria-label="재시작" title="재시작"><img src="src/icon/icon-rotate-right.svg" alt=""></a></div>
-                        <div><button class="footer-btn icon-only" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt="예약 종료"></button></div>
+                <div id="footer-main">
+                    <div id="footer-power">
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="shutdown" aria-label="종료" title="종료"><img src="src/icon/icon-power-off.svg" alt=""><span>종료</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="reboot" aria-label="재시작" title="재시작"><img src="src/icon/icon-rotate-right.svg" alt=""><span>재시작</span></button>
+                        <button class="zen-icon-button" id="btn-schedule-shutdown" type="button" aria-label="예약 종료 위젯 열기" aria-expanded="false" title="예약 종료"><img src="src/icon/icon-alarm-clock.svg" alt=""><span>예약</span></button>
+                        <span class="footer-divider" aria-hidden="true"></span>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><img src="src/icon/icon-volume-low.svg" alt=""><span>볼륨 -</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><img src="src/icon/icon-volume-high.svg" alt=""><span>볼륨 +</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume.svg" alt=""><span>음소거</span></button>
                     </div>
-                    <div>
-                        <div><button class="footer-btn icon-only" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt="런처 설정"></button></div>
+                    <div id="weather-bar" aria-live="polite">
+                        <span class="weather-readout">
+                            <span class="weather-temp-wrap">
+                                <span class="weather-temp" id="weather-temperature">--°</span>
+                                <span class="weather-hover-card">
+                                    <span class="weather-location" id="weather-location">위치 확인 중</span>
+                                    <span class="weather-bar-stat">
+                                        <img src="src/icon/icon-temperature.svg" alt="">
+                                        <span>체감</span>
+                                        <strong id="weather-feels-like">--°</strong>
+                                    </span>
+                                    <span class="weather-bar-stat">
+                                        <img src="src/icon/icon-humidity.svg" alt="">
+                                        <span>습도</span>
+                                        <strong id="weather-humidity">--</strong>
+                                    </span>
+                                </span>
+                            </span>
+                            <span class="weather-condition" id="weather-condition">날씨 확인 중</span>
+                            <span class="weather-precip" title="강수">
+                                <img src="src/icon/icon-cloud.svg" alt="">
+                                <strong id="weather-precipitation">--</strong>
+                            </span>
+                        </span>
+                        <div class="weather-status" id="weather-status" data-state="loading">날씨를 확인하고 있습니다.</div>
                     </div>
-                </div>
-                <div id="footer-right">
-                    <div>JISU YANG</div>
-                    <div>|</div>
-                    <div>ZEN Launcher</div>
+                    <div id="footer-settings">
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><img src="src/icon/icon-mouse.svg" alt=""><span>마우스</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4832,58 +6569,6 @@
                 </button>
             </div>
         </div>
-        <div id="weather-widget" aria-live="polite">
-            <div class="weather-widget-header">
-                <div>
-                    <div class="weather-widget-title">Weather</div>
-                    <div class="weather-widget-caption" id="weather-updated">현재 위치와 날씨 정보를 불러옵니다.</div>
-                </div>
-                <div class="weather-pill" id="weather-pill">LIVE</div>
-            </div>
-            <div class="weather-widget-body">
-                <div class="weather-summary">
-                    <div class="weather-location" id="weather-location">현재 위치 확인 중</div>
-                    <div class="weather-description-wrap">
-                        <div class="weather-condition" id="weather-condition">날씨 위젯</div>
-                        <div class="weather-description" id="weather-description">현재 위치 기반으로 실시간 날씨를 보여줍니다.</div>
-                    </div>
-                </div>
-                <div class="weather-outfit" id="weather-outfit">옷차림 추천을 준비하고 있어요.</div>
-                <div class="weather-climate">
-                    <div class="weather-temp" id="weather-temperature">--°</div>
-                    <div class="weather-visual" aria-hidden="true">
-                        <div class="weather-visual-orb"></div>
-                        <div class="weather-visual-stars"></div>
-                        <div class="weather-visual-cloud"></div>
-                        <div class="weather-visual-rain"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="weather-meta">
-                <div class="weather-meta-card">
-                    <div class="weather-meta-label">
-                        <span class="weather-meta-icon temperature" aria-hidden="true"></span>
-                        <span>체감</span>
-                    </div>
-                    <div class="weather-meta-value" id="weather-feels-like">--°</div>
-                </div>
-                <div class="weather-meta-card">
-                    <div class="weather-meta-label">
-                        <span class="weather-meta-icon humidity" aria-hidden="true"></span>
-                        <span>습도</span>
-                    </div>
-                    <div class="weather-meta-value" id="weather-humidity">--</div>
-                </div>
-                <div class="weather-meta-card">
-                    <div class="weather-meta-label">
-                        <span class="weather-meta-icon cloud" aria-hidden="true"></span>
-                        <span>강수</span>
-                    </div>
-                    <div class="weather-meta-value" id="weather-precipitation">--</div>
-                </div>
-            </div>
-            <div class="weather-status" id="weather-status" data-state="loading">날씨 위젯을 열면 현재 위치와 기온을 확인합니다.</div>
-        </div>
     </div>
         <div id="footer-compact-panel" aria-label="시스템 설정">
             <div class="compact-panel-quick-list" role="list">
@@ -4893,7 +6578,7 @@
             <a class="launcher-basic compact-panel-icon-button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><span class="compact-panel-icon"><img src="src/icon/icon-audio.svg" alt=""></span><span class="compact-panel-item-label">오디오</span></a>
             <a class="launcher-basic compact-panel-icon-button" data-link="volume-down" aria-label="볼륨 낮추기" title="볼륨 낮추기"><span class="compact-panel-icon"><img src="src/icon/icon-volume-low.svg" alt=""></span><span class="compact-panel-item-label">볼륨 -</span></a>
             <a class="launcher-basic compact-panel-icon-button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><span class="compact-panel-icon"><img src="src/icon/icon-volume-high.svg" alt=""></span><span class="compact-panel-item-label">볼륨 +</span></a>
-            <a class="launcher-basic compact-panel-icon-button" data-link="volume-mute" aria-label="음소거" title="음소거"><span class="compact-panel-icon"><img src="src/icon/icon-volume-mute.svg" alt=""></span><span class="compact-panel-item-label">음소거</span></a>
+            <a class="launcher-basic compact-panel-icon-button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><span class="compact-panel-icon"><img src="src/icon/icon-volume.svg" alt=""></span><span class="compact-panel-item-label">음소거</span></a>
             </div>
         </div>
         <div id="shutdown-scheduler" aria-label="예약 종료 설정">
@@ -4911,19 +6596,19 @@
                 <div class="shutdown-scheduler-presets">
                     <button class="shutdown-preset-button" type="button" data-minutes="15">
                         <span class="shutdown-preset-value">15</span>
-                        <span class="shutdown-preset-unit">MIN</span>
+                        <span class="shutdown-preset-unit">분</span>
                     </button>
                     <button class="shutdown-preset-button" type="button" data-minutes="30">
                         <span class="shutdown-preset-value">30</span>
-                        <span class="shutdown-preset-unit">MIN</span>
+                        <span class="shutdown-preset-unit">분</span>
                     </button>
                     <button class="shutdown-preset-button" type="button" data-minutes="60">
                         <span class="shutdown-preset-value">60</span>
-                        <span class="shutdown-preset-unit">MIN</span>
+                        <span class="shutdown-preset-unit">분</span>
                     </button>
                     <button class="shutdown-preset-button" type="button" data-minutes="120">
                         <span class="shutdown-preset-value">120</span>
-                        <span class="shutdown-preset-unit">MIN</span>
+                        <span class="shutdown-preset-unit">분</span>
                     </button>
                 </div>
             </div>
@@ -4931,22 +6616,22 @@
                 <div class="shutdown-scheduler-section-label" hidden>Manual Adjustment</div>
                 <div class="shutdown-scheduler-adjuster">
                     <div class="shutdown-scheduler-time-column">
-                        <button class="shutdown-step-button" type="button" data-adjust="60" aria-label="시간 늘리기">⌃</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="60" aria-label="시간 늘리기"><img src="src/icon/icon-chevron-up.svg" alt=""></button>
                         <input class="shutdown-time-display" id="shutdown-hours-display" type="number" min="0" max="168" step="1" value="01" inputmode="numeric" aria-label="시간 입력">
-                        <button class="shutdown-step-button" type="button" data-adjust="-60" aria-label="시간 줄이기">⌄</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="-60" aria-label="시간 줄이기"><img src="src/icon/icon-chevron-down.svg" alt=""></button>
                     </div>
                     <div class="shutdown-time-divider">:</div>
                     <div class="shutdown-scheduler-time-column">
-                        <button class="shutdown-step-button" type="button" data-adjust="5" aria-label="분 늘리기">⌃</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="5" aria-label="분 늘리기"><img src="src/icon/icon-chevron-up.svg" alt=""></button>
                         <input class="shutdown-time-display" id="shutdown-minutes-display" type="number" min="0" max="59" step="1" value="00" inputmode="numeric" aria-label="분 입력">
-                        <button class="shutdown-step-button" type="button" data-adjust="-5" aria-label="분 줄이기">⌄</button>
+                        <button class="shutdown-step-button" type="button" data-adjust="-5" aria-label="분 줄이기"><img src="src/icon/icon-chevron-down.svg" alt=""></button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="shutdown-scheduler-actions">
             <div id="shutdown-scheduler-status" class="shutdown-scheduler-status" data-state="idle">
-                <div class="shutdown-scheduler-status-label">Active Shutdown</div>
+                <div class="shutdown-scheduler-status-label">예약 상태</div>
                 <div class="shutdown-scheduler-status-message">예약 종료 또는 예약 취소를 선택할 수 있습니다.</div>
             </div>
             <button id="btn-shutdown-cancel" class="shutdown-scheduler-action danger" type="button">예약 취소</button>
@@ -4972,6 +6657,8 @@
 	                    <button id="btn-preference-folder" data-tab="folder" data-category="FOLDER" type="button">폴더</button>
 	                    <button id="btn-preference-transparency" data-tab="transparency" data-label="투명도" type="button">투명도</button>
 	                    <button id="btn-preference-theme" data-tab="theme" data-label="테마" type="button">테마</button>
+	                    <button id="btn-preference-shortcut" data-tab="shortcut" data-label="단축키" type="button">단축키</button>
+	                    <button id="btn-preference-credit" data-tab="credit" data-label="제작자" type="button">제작자</button>
 	                </div>
 	            </div>
             <div id="setting-row"></div>
@@ -4986,6 +6673,7 @@
             </div>
         </div>
     </div>
+    <script src="./sheetMotion.js"></script>
     <script src="./preference.js"></script>
     <script src="./renderer.js"></script>
 </body>

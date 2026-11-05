@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>갤러리와 아이콘 시안</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --shell: #1c1c1c;
+            --dock: #101010;
+            --folder: #262626;
+            --ink: #d7d7d7;
+            --muted: #9a9a9a;
+            --faint: #6f6f6f;
+            --hairline: rgba(255, 255, 255, 0.12);
+            --hover: rgba(255, 255, 255, 0.08);
+            --page: #0e0e0e;
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            color: #ececec;
+            font-family: "Noto Sans KR", sans-serif;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        .page {
+            width: min(1180px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 36px 0 80px;
+        }
+
+        .intro h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .intro p {
+            max-width: 68ch;
+            margin: 0 0 10px;
+            color: #bdbdbd;
+            font-size: 15px;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            gap: 8px;
+            margin: 22px 0 8px;
+            padding: 10px 0;
+            background: linear-gradient(180deg, var(--page) 70%, transparent);
+        }
+
+        nav a {
+            padding: 6px 10px;
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            color: #cfcfcf;
+            font-size: 13px;
+            font-weight: 700;
+            background: #161616;
+        }
+
+        nav a:hover { background: #222; }
+
+        .study { margin-top: 36px; }
+
+        .study-head {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .num {
+            color: #8d8d8d;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            padding-top: 6px;
+        }
+
+        .study-head h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .study-head p {
+            margin: 4px 0 0;
+            max-width: 78ch;
+            color: #a3a3a3;
+            font-size: 14px;
+        }
+
+        .dock {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            grid-template-rows: 370px 50px;
+            width: 100%;
+            background: var(--shell);
+            color: var(--ink);
+            overflow: hidden;
+        }
+
+        .main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 18px 20px 14px;
+        }
+
+        .folder {
+            background: var(--folder);
+            padding: 14px 10px;
+        }
+
+        .folder-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            border: 1px dashed rgba(255, 255, 255, 0.16);
+            border-radius: 8px;
+            color: #8f8f8f;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .footer {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            background: var(--dock);
+            color: #d7d7d7;
+        }
+
+        .footer-main,
+        .footer-folder {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            height: 50px;
+        }
+
+        .footer-main { position: relative; justify-content: space-between; padding: 0 16px 0 8px; }
+        .footer-folder { justify-content: space-between; padding: 0 8px 0 18px; }
+
+        .tools { display: flex; align-items: center; gap: 2px; }
+        .tools img,
+        .gear img {
+            width: 16px;
+            height: 16px;
+            filter: brightness(0) invert(1);
+        }
+
+        .tool,
+        .gear {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+        }
+
+        .split { width: 1px; height: 16px; margin: 0 6px; background: var(--hairline); }
+
+        .weather {
+            position: absolute;
+            left: 50%;
+            top: calc(50% - 2px);
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .weather img { width: 14px; height: 14px; filter: brightness(0) invert(1); }
+        .weather b { font-weight: 900; }
+
+        .brand { color: #9a9a9a; font-size: 13px; font-weight: 900; line-height: 1; }
+        .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
+
+        .search {
+            align-self: center;
+            display: flex;
+            align-items: center;
+            width: 440px;
+            max-width: 100%;
+            height: 56px;
+            border: 1px solid var(--hairline);
+            border-radius: 10px;
+            background: transparent;
+        }
+
+        .engine, .query {
+            padding: 0 20px;
+            color: #8d8d8d;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .engine { color: #d7d7d7; }
+        .query { flex: 1; }
+        .vbar { width: 1px; height: 18px; background: var(--hairline); }
+
+        .row { display: flex; align-items: stretch; gap: 10px; min-width: 0; }
+        .glyph, .slot img, .plus {
+            filter: brightness(0) invert(1);
+        }
+
+        .poster { width: 100%; height: 100%; }
+        .p1 { background:
+            radial-gradient(90px 60px at 72% 28%, rgba(255,255,255,0.22), transparent 70%),
+            linear-gradient(165deg, #6a625c 0%, #2c2926 46%, #141312 100%); }
+        .p2 { background:
+            linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.35)),
+            linear-gradient(125deg, #4e5963 0%, #243039 42%, #14181b 100%); }
+        .p3 { background:
+            radial-gradient(120px 40px at 50% 62%, rgba(255,255,255,0.12), transparent 70%),
+            linear-gradient(200deg, #5c5348 0%, #2a241e 50%, #161310 100%); }
+        .p4 { background:
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 18px 100%,
+            linear-gradient(180deg, #3c3c3c 0%, #1a1a1a 100%); }
+
+        /* 1. 한 겹 */
+        .s1 .g-item,
+        .s1 .i-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: #101010;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .s1 .g-item { flex: 1 1 0; height: 132px; }
+        .s1 .g-item .poster { flex: 1; }
+        .s1 .g-name, .s1 .i-name {
+            flex: 0 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            max-width: 100%;
+            padding: 0 6px;
+            color: #9a9a9a;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .s1 .i-item {
+            flex: 1 1 0;
+            height: 104px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .s1 .i-item .glyph { width: 26px; height: 26px; }
+        .s1 .slot { color: #8f8f8f; }
+        .s1 .slot img, .s1 .g-item.slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.62); }
+        .s1 .g-item.slot { align-items: center; justify-content: center; }
+        .s1 .g-item:hover, .s1 .i-item:hover, .s1 .on { background: #1a1a1a; }
+        .s1 .g-item:hover .g-name, .s1 .i-item:hover .i-name, .s1 .on .g-name, .s1 .on .i-name { color: #f2f2f2; }
+
+        /* 2. 우물 */
+        .s2 .g-item, .s2 .i-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            min-width: 0;
+            flex: 1 1 0;
+            padding: 6px;
+            border-radius: 10px;
+        }
+
+        .s2 .face {
+            width: 100%;
+            height: 96px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0c0c0c;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .s2 .g-name, .s2 .i-name {
+            color: #bdbdbd;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .s2 .i-item { align-items: center; height: 96px; justify-content: center; gap: 8px; }
+        .s2 .i-item .glyph { width: 28px; height: 28px; }
+        .s2 .g-item.slot .face, .s2 .i-item.slot {
+            background: transparent;
+            box-shadow: none;
+        }
+        .s2 .g-item.slot { align-items: center; }
+        .s2 .g-item.slot .face {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+        .s2 .g-item.slot img { width: 16px; height: 16px; filter: brightness(0) invert(0.55); }
+        .s2 .i-item.slot .glyph { width: 22px; height: 22px; filter: brightness(0) invert(0.55); }
+        .s2 .g-item:hover, .s2 .i-item:hover, .s2 .on { background: var(--hover); }
+        .s2 .g-item:hover .g-name, .s2 .i-item:hover .i-name, .s2 .on .g-name, .s2 .on .i-name { color: #f7f7f7; }
+
+        /* 3. 캡션 */
+        .s3 .g-item, .s3 .i-item {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 0;
+            min-width: 0;
+            height: 132px;
+            border: 1px solid var(--hairline);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #101010;
+        }
+
+        .s3 .face { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; background: #0c0c0c; }
+        .s3 .i-item .face { background: #141414; }
+        .s3 .glyph { width: 30px; height: 30px; }
+        .s3 .g-name, .s3 .i-name {
+            flex: 0 0 28px;
+            display: block;
+            min-width: 0;
+            padding: 6px 10px 0;
+            color: #ececec;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 22px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .s3 .slot .face img { width: 16px; height: 16px; filter: brightness(0) invert(0.5); }
+        .s3 .g-item:hover .g-name, .s3 .i-item:hover .i-name,
+        .s3 .on .g-name, .s3 .on .i-name { background: #1a1a1a; }
+
+        /* 4. 칸 */
+        .s4 .band {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            background: #101010;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .s4 .icons.band { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+        .s4 .cell {
+            min-width: 0;
+            height: 108px;
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .s4 .cell:last-child { box-shadow: none; }
+        .s4 .icons .cell { height: 72px; display: flex; align-items: center; justify-content: center; }
+        .s4 .glyph { width: 24px; height: 24px; }
+        .s4 .band:not(.icons) .cell.slot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .s4 .cell.slot img { width: 16px; height: 16px; filter: brightness(0) invert(0.5); }
+        .s4 .labels {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            margin-top: 8px;
+        }
+        .s4 .icons + .labels { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+        .s4 .labels span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+            color: #9a9a9a;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .s4 .cell:hover, .s4 .cell.on { background: #1a1a1a; }
+        .s4 .cell:hover + .labels span, .s4 .group:hover .labels span { color: inherit; }
+        .s4 .group:has(.cell:hover) .labels span,
+        .s4 .group:has(.cell.on) .labels span { color: #9a9a9a; }
+        .s4 .cell.on { background: #1a1a1a; }
+
+        /* 5. 여백 */
+        .s5 .row { gap: 22px; }
+        .s5 .g-item, .s5 .i-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            flex: 0 0 auto;
+            min-width: 0;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .s5 .g-item { width: 132px; }
+        .s5 .face { width: 100%; height: 84px; border-radius: 6px; overflow: hidden; }
+        .s5 .g-name, .s5 .i-name { color: #d0d0d0; font-size: 13px; font-weight: 700; }
+        .s5 .i-item { align-items: center; width: auto; gap: 8px; }
+        .s5 .i-name { white-space: nowrap; font-size: 12px; }
+        .s5 .glyph { width: 22px; height: 22px; padding: 6px; border-radius: 8px; box-sizing: content-box; }
+        .s5 .slot img { width: 16px; height: 16px; filter: brightness(0) invert(0.55); }
+        .s5 .g-item.slot .face {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+        .s5 .g-item:hover .g-name, .s5 .i-item:hover .i-name,
+        .s5 .on .g-name, .s5 .on .i-name { color: #fff; }
+        .s5 .i-item:hover .glyph, .s5 .i-item.on .glyph { background: var(--hover); }
+        .s5 .g-item:hover .face, .s5 .g-item.on .face { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16); }
+
+        .note {
+            margin-top: 28px;
+            color: #8d8d8d;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="intro">
+            <h1>갤러리와 아이콘, 다섯 가지 정리</h1>
+            <p>런처는 어두운 단색 판이다. 위는 갤러리, 가운데는 검색, 아래는 아이콘이고, 오른쪽 열은 폴더다. 하단 바만 본문보다 더 어둡다. 호버는 배경만 바꾸고, 떠오르거나 커지거나 그림자를 만들지 않는다.</p>
+            <p>지금 갤러리는 어두운 판 안에 더 어두운 이미지 우물이 있고, 이름은 마우스를 올려야 나온다. 아이콘은 흰 그림과 이름이 또 하나의 판 안에 있다. 칸이 겹쳐 보여서 객체가 무겁다. 아래 시안은 그 규칙을 유지한 채 칸만 다르게 걷어 낸 것이다. 각 줄의 둘째 칸은 호버 상태다.</p>
+        </header>
+
+        <nav>
+            <a href="#s1">01 한 겹</a>
+            <a href="#s2">02 우물</a>
+            <a href="#s3">03 캡션</a>
+            <a href="#s4">04 칸</a>
+            <a href="#s5">05 여백</a>
+        </nav>
+
+        <section class="study" id="s1">
+            <div class="study-head">
+                <div class="num">01</div>
+                <div>
+                    <h2>한 겹</h2>
+                    <p>바깥 판과 안쪽 우물을 한 장으로 합친다. 이미지가 위쪽을 채우고, 이름은 판의 마지막 줄에 항상 있다. 아이콘도 같은 판이다. 호버는 판을 한 단계만 밝힌다.</p>
+                </div>
+            </div>
+            <div class="dock s1">
+                <div class="main">
+                    <div class="row">
+                        <article class="g-item"><div class="poster p1"></div><span class="g-name">작업</span></article>
+                        <article class="g-item on"><div class="poster p2"></div><span class="g-name">참고</span></article>
+                        <article class="g-item"><div class="poster p3"></div><span class="g-name">회의</span></article>
+                        <article class="g-item"><div class="poster p4"></div><span class="g-name">자료</span></article>
+                        <article class="g-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+                    </div>
+                    <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+                    <div class="row">
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""><span class="i-name">계산기</span></article>
+                        <article class="i-item on"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""><span class="i-name">시계</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""><span class="i-name">메모장</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""><span class="i-name">캡처도구</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""><span class="i-name">그림판</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""><span class="i-name">화상 키보드</span></article>
+                        <article class="i-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+                        <article class="i-item slot"><img src="../src/icon/icon-plus.svg" alt=""></article>
+                    </div>
+                </div>
+                <aside class="folder"><div class="folder-add">폴더 추가</div></aside>
+                <footer class="footer">
+                    <div class="footer-main">
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                            <span class="split"></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                        </div>
+                        <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                        </div>
+                    </div>
+                    <div class="footer-folder">
+                        <div class="brand"><span>ZEN</span> Launcher</div>
+                        <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+
+        <section class="study" id="s2">
+            <div class="study-head">
+                <div class="num">02</div>
+                <div>
+                    <h2>우물</h2>
+                    <p>판을 없애고 이미지만 본문보다 어둡게 넣는다. 이름은 이미지 아래, 왼쪽에 붙는다. 아이콘은 흰 그림과 이름뿐이고, 칸은 마우스를 올렸을 때만 생긴다. 빈 자리도 점선 상자가 아니라 같은 크기의 플러스다.</p>
+                </div>
+            </div>
+            <div class="dock s2">
+                <div class="main">
+                    <div class="row">
+                        <article class="g-item"><div class="face"><div class="poster p1"></div></div><span class="g-name">작업</span></article>
+                        <article class="g-item on"><div class="face"><div class="poster p2"></div></div><span class="g-name">참고</span></article>
+                        <article class="g-item"><div class="face"><div class="poster p3"></div></div><span class="g-name">회의</span></article>
+                        <article class="g-item"><div class="face"><div class="poster p4"></div></div><span class="g-name">자료</span></article>
+                        <article class="g-item slot"><div class="face"><img src="../src/icon/icon-plus.svg" alt=""></div><span class="g-name"> </span></article>
+                    </div>
+                    <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+                    <div class="row">
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""><span class="i-name">계산기</span></article>
+                        <article class="i-item on"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""><span class="i-name">시계</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""><span class="i-name">메모장</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""><span class="i-name">캡처도구</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""><span class="i-name">그림판</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""><span class="i-name">화상 키보드</span></article>
+                        <article class="i-item slot"><img class="glyph" src="../src/icon/icon-plus.svg" alt=""><span class="i-name"> </span></article>
+                        <article class="i-item slot"><img class="glyph" src="../src/icon/icon-plus.svg" alt=""><span class="i-name"> </span></article>
+                    </div>
+                </div>
+                <aside class="folder"><div class="folder-add">폴더 추가</div></aside>
+                <footer class="footer">
+                    <div class="footer-main">
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                            <span class="split"></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                        </div>
+                        <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                        </div>
+                    </div>
+                    <div class="footer-folder">
+                        <div class="brand"><span>ZEN</span> Launcher</div>
+                        <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+
+        <section class="study" id="s3">
+            <div class="study-head">
+                <div class="num">03</div>
+                <div>
+                    <h2>캡션</h2>
+                    <p>갤러리와 아이콘을 같은 물건으로 만든다. 위는 그림, 아래는 28px 이름 띠다. 아이콘의 그림 자리는 어두운 면이고, 그 한가운데에 흰 글리프가 있다. 이름 위치와 띠 높이가 두 줄에서 같다.</p>
+                </div>
+            </div>
+            <div class="dock s3">
+                <div class="main">
+                    <div class="row">
+                        <article class="g-item"><div class="face"><div class="poster p1"></div></div><span class="g-name">작업</span></article>
+                        <article class="g-item on"><div class="face"><div class="poster p2"></div></div><span class="g-name">참고</span></article>
+                        <article class="g-item"><div class="face"><div class="poster p3"></div></div><span class="g-name">회의</span></article>
+                        <article class="g-item"><div class="face"><div class="poster p4"></div></div><span class="g-name">자료</span></article>
+                        <article class="g-item slot"><div class="face"><img src="../src/icon/icon-plus.svg" alt=""></div><span class="g-name"></span></article>
+                    </div>
+                    <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+                    <div class="row">
+                        <article class="i-item"><div class="face"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""></div><span class="i-name">계산기</span></article>
+                        <article class="i-item on"><div class="face"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""></div><span class="i-name">시계</span></article>
+                        <article class="i-item"><div class="face"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""></div><span class="i-name">메모장</span></article>
+                        <article class="i-item"><div class="face"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""></div><span class="i-name">캡처도구</span></article>
+                        <article class="i-item"><div class="face"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""></div><span class="i-name">그림판</span></article>
+                        <article class="i-item"><div class="face"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""></div><span class="i-name">화상 키보드</span></article>
+                        <article class="i-item slot"><div class="face"><img src="../src/icon/icon-plus.svg" alt=""></div><span class="i-name"></span></article>
+                        <article class="i-item slot"><div class="face"><img src="../src/icon/icon-plus.svg" alt=""></div><span class="i-name"></span></article>
+                    </div>
+                </div>
+                <aside class="folder"><div class="folder-add">폴더 추가</div></aside>
+                <footer class="footer">
+                    <div class="footer-main">
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                            <span class="split"></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                        </div>
+                        <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                        </div>
+                    </div>
+                    <div class="footer-folder">
+                        <div class="brand"><span>ZEN</span> Launcher</div>
+                        <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+
+        <section class="study" id="s4">
+            <div class="study-head">
+                <div class="num">04</div>
+                <div>
+                    <h2>칸</h2>
+                    <p>카드 사이 틈을 없애고 하나의 어두운 띠로 잇는다. 칸과 칸은 1px 선으로만 나뉜다. 이름은 띠 밖, 각 칸의 가운데 아래에 둔다. 호버는 그 칸의 면만 밝힌다.</p>
+                </div>
+            </div>
+            <div class="dock s4">
+                <div class="main">
+                    <div class="group">
+                        <div class="band">
+                            <div class="cell"><div class="poster p1"></div></div>
+                            <div class="cell on"><div class="poster p2"></div></div>
+                            <div class="cell"><div class="poster p3"></div></div>
+                            <div class="cell"><div class="poster p4"></div></div>
+                            <div class="cell slot"><img src="../src/icon/icon-plus.svg" alt=""></div>
+                        </div>
+                        <div class="labels"><span>작업</span><span>참고</span><span>회의</span><span>자료</span><span></span></div>
+                    </div>
+                    <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+                    <div class="group">
+                        <div class="band icons">
+                            <div class="cell"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""></div>
+                            <div class="cell on"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""></div>
+                            <div class="cell"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""></div>
+                            <div class="cell"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""></div>
+                            <div class="cell"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""></div>
+                            <div class="cell"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""></div>
+                            <div class="cell slot"><img src="../src/icon/icon-plus.svg" alt=""></div>
+                            <div class="cell slot"><img src="../src/icon/icon-plus.svg" alt=""></div>
+                        </div>
+                        <div class="labels"><span>계산기</span><span>시계</span><span>메모장</span><span>캡처도구</span><span>그림판</span><span>화상 키보드</span><span></span><span></span></div>
+                    </div>
+                </div>
+                <aside class="folder"><div class="folder-add">폴더 추가</div></aside>
+                <footer class="footer">
+                    <div class="footer-main">
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                            <span class="split"></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                        </div>
+                        <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                        </div>
+                    </div>
+                    <div class="footer-folder">
+                        <div class="brand"><span>ZEN</span> Launcher</div>
+                        <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+
+        <section class="study" id="s5">
+            <div class="study-head">
+                <div class="num">05</div>
+                <div>
+                    <h2>여백</h2>
+                    <p>판과 테두리와 띠를 두지 않는다. 갤러리는 작은 이미지와 이름, 아이콘은 작은 흰 그림과 이름이다. 간격이 칸의 역할을 한다. 호버는 글자색과, 아이콘이면 그림 뒤의 옅은 면만 바꾼다.</p>
+                </div>
+            </div>
+            <div class="dock s5">
+                <div class="main">
+                    <div class="row">
+                        <article class="g-item"><div class="face"><div class="poster p1"></div></div><span class="g-name">작업</span></article>
+                        <article class="g-item on"><div class="face"><div class="poster p2"></div></div><span class="g-name">참고</span></article>
+                        <article class="g-item"><div class="face"><div class="poster p3"></div></div><span class="g-name">회의</span></article>
+                        <article class="g-item"><div class="face"><div class="poster p4"></div></div><span class="g-name">자료</span></article>
+                        <article class="g-item slot"><div class="face"><img src="../src/icon/icon-plus.svg" alt=""></div></article>
+                    </div>
+                    <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+                    <div class="row">
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-calculator.svg" alt=""><span class="i-name">계산기</span></article>
+                        <article class="i-item on"><img class="glyph" src="../src/icon/icon-tool-clock.svg" alt=""><span class="i-name">시계</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-notepad.svg" alt=""><span class="i-name">메모장</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-snipping.svg" alt=""><span class="i-name">캡처도구</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-paint.svg" alt=""><span class="i-name">그림판</span></article>
+                        <article class="i-item"><img class="glyph" src="../src/icon/icon-tool-keyboard.svg" alt=""><span class="i-name">화상 키보드</span></article>
+                        <article class="i-item slot"><img class="glyph" src="../src/icon/icon-plus.svg" alt=""></article>
+                        <article class="i-item slot"><img class="glyph" src="../src/icon/icon-plus.svg" alt=""></article>
+                    </div>
+                </div>
+                <aside class="folder"><div class="folder-add">폴더 추가</div></aside>
+                <footer class="footer">
+                    <div class="footer-main">
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                            <span class="split"></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                        </div>
+                        <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                        <div class="tools">
+                            <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                            <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                        </div>
+                    </div>
+                    <div class="footer-folder">
+                        <div class="brand"><span>ZEN</span> Launcher</div>
+                        <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+
+        <p class="note">시안만 모은 페이지다. 런처 화면에는 아직 반영하지 않았다. 둘째 칸에 마우스를 올리지 않아도 호버 상태가 보인다.</p>
+    </div>
+</body>
+</html>

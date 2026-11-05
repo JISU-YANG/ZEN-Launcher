@@ -9,6 +9,7 @@
     const launcherShell = document.getElementById('launcher-shell');
     const preferenceButton = document.getElementById('btn-preference');
     const weatherWidget = document.getElementById('weather-widget');
+    const weatherBar = document.getElementById('weather-bar');
     const quickWidget = document.getElementById('quick-widget');
     const shutdownScheduler = document.getElementById('shutdown-scheduler');
     const footerCompactPanel = document.getElementById('footer-compact-panel');
@@ -83,6 +84,7 @@
     let expandedPanelCloseTarget = null;
     let expandedPanelOpenReadyTimer = 0;
     let currentAppearanceSettings = null;
+    let masterMuted = false;
     const SUPPORTED_PANEL_SIZES = new Set(['s', 'm', 'l']);
     const normalizePanelSize = (size) => SUPPORTED_PANEL_SIZES.has(size) ? size : 'm';
     const widgetOrigins = new Map([
@@ -122,12 +124,13 @@
         99: { title: '강한 우박성 뇌우', description: '매우 거친 날씨라 주의가 필요해요.' }
     };
     const setWeatherStatus = (message, state = 'idle') => {
-        if (!weatherStatus) {
-            return;
+        if (weatherStatus) {
+            weatherStatus.dataset.state = state;
+            weatherStatus.textContent = message;
         }
-
-        weatherStatus.dataset.state = state;
-        weatherStatus.textContent = message;
+        if (state === 'error' && weatherCondition) {
+            weatherCondition.textContent = message;
+        }
     };
     const setShutdownSchedulerStatus = (message, state = 'idle') => {
         if (!shutdownSchedulerStatus) {
@@ -253,8 +256,12 @@
     };
     const renderWeather = (payload) => {
         const summary = getWeatherSummary(payload.current.weather_code, payload.current.is_day);
+        const visual = getWeatherVisual(payload.current.weather_code, payload.current.is_day);
+        if (weatherBar) {
+            weatherBar.dataset.visual = visual;
+        }
         if (weatherWidget) {
-            weatherWidget.dataset.visual = getWeatherVisual(payload.current.weather_code, payload.current.is_day);
+            weatherWidget.dataset.visual = visual;
         }
         if (weatherLocation) {
             weatherLocation.textContent = payload.locationLabel;
@@ -288,6 +295,29 @@
         }
 
         setWeatherStatus('', 'idle');
+    };
+    const applyMasterMute = (muted) => {
+        masterMuted = muted === true;
+        const label = masterMuted ? '음소거 해제' : '음소거';
+        document.querySelectorAll('[data-link="volume-mute"]').forEach((button) => {
+            const image = button.querySelector('img');
+            if (image) {
+                image.src = masterMuted ? 'src/icon/icon-volume-mute.svg' : 'src/icon/icon-volume.svg';
+            }
+            button.setAttribute('aria-pressed', masterMuted ? 'true' : 'false');
+            button.setAttribute('aria-label', label);
+            button.title = label;
+        });
+    };
+    const refreshMasterMute = async () => {
+        if (typeof window.zenLauncher?.getMuteState !== 'function') {
+            return;
+        }
+
+        const state = await window.zenLauncher.getMuteState();
+        if (typeof state === 'boolean') {
+            applyMasterMute(state);
+        }
     };
     const scheduleWidgetPositionSync = () => {
         if (widgetSyncFrame) {
@@ -334,12 +364,20 @@
             editorElement.classList.add('open-ready');
         }, EXPANDED_PANEL_OPEN_READY_DELAY_MS);
     };
-    const setExpandedPanel = (panel, { title = '', caption = '', size = 'm' } = {}) => {
+    const fitForPanelSize = (size) => {
+        if (size === 's') {
+            return 'peek';
+        }
+        if (size === 'l') {
+            return 'workspace';
+        }
+        return 'panel';
+    };
+    const setExpandedPanel = (panel, { title = '', caption = '', size = 'm', fit = '' } = {}) => {
         if (!editorElement || !editorWidgetBody) {
             return;
         }
-        const wasOpen = editorElement.classList.contains('open') && !editorElement.classList.contains('closing');
-        const resolvedSize = normalizePanelSize(size);
+        const resolvedFit = fit || fitForPanelSize(size);
 
         if (expandedPanelCloseTimer) {
             window.clearTimeout(expandedPanelCloseTimer);
@@ -353,28 +391,18 @@
 
         activeExpandedPanel = panel;
         if (panel) {
-            editorElement.classList.remove('closing');
             editorElement.dataset.panel = panel;
-            editorElement.dataset.size = resolvedSize;
-            editorElement.classList.add('open');
-            if (wasOpen) {
-                clearExpandedPanelOpenReadyTimer();
-                editorElement.classList.remove('expanding');
-                editorElement.classList.add('open-ready');
-            } else {
-                scheduleExpandedPanelOpenReady();
-            }
+            editorElement.dataset.size = resolvedFit === 'peek' ? 's' : (resolvedFit === 'workspace' ? 'l' : 'm');
+            window.zenSheet?.openSheet(editorElement, { fit: resolvedFit }).finally(() => {
+                syncExpandedEditorState();
+            });
         } else if (editorElement.dataset.panel !== 'settings') {
             delete editorElement.dataset.panel;
             delete editorElement.dataset.size;
-            editorElement.classList.remove('closing');
-            editorElement.classList.remove('open');
-            editorElement.classList.remove('expanding');
-            editorElement.classList.remove('open-ready');
-            clearExpandedPanelOpenReadyTimer();
+            window.zenSheet?.closeSheet(editorElement).finally(() => {
+                syncExpandedEditorState();
+            });
         }
-
-        syncExpandedEditorState();
 
         if (editorWidgetTitle) {
             editorWidgetTitle.textContent = title;
@@ -382,6 +410,7 @@
         if (editorWidgetCaption) {
             editorWidgetCaption.textContent = caption;
         }
+        syncExpandedEditorState();
     };
     const restoreWidgetToOrigin = (widget) => {
         const origin = widgetOrigins.get(widget);
@@ -416,72 +445,35 @@
             return;
         }
 
+        const closingPanel = activeExpandedPanel;
+        activeExpandedPanel = '';
+        if (expandedPanelCloseTimer) {
+            window.clearTimeout(expandedPanelCloseTimer);
+            expandedPanelCloseTimer = 0;
+        }
+        clearExpandedPanelOpenReadyTimer();
+
         const finalizeExpandedPanelClose = () => {
-            const shouldKeepCompactSize = closingPanel === 'compact';
-            clearExpandedPanelOpenReadyTimer();
-            if (expandedPanelCloseTimer) {
-                window.clearTimeout(expandedPanelCloseTimer);
-                expandedPanelCloseTimer = 0;
-            }
-            if (expandedPanelCloseHandler) {
-                expandedPanelCloseTarget?.removeEventListener('transitionend', expandedPanelCloseHandler);
-                expandedPanelCloseHandler = null;
-                expandedPanelCloseTarget = null;
-            }
-            editorElement.classList.remove('closing');
-            editorElement.classList.remove('expanding');
-            editorElement.classList.remove('open-ready');
-            if (editorElement.dataset.panel === closingPanel) {
-                delete editorElement.dataset.panel;
-                if (!shouldKeepCompactSize) {
-                    delete editorElement.dataset.size;
-                }
-            }
             syncExpandedEditorState();
             restoreWidgetToOrigin(weatherWidget);
             restoreWidgetToOrigin(quickWidget);
             restoreWidgetToOrigin(shutdownScheduler);
             restoreWidgetToOrigin(footerCompactPanel);
-            editorWidgetBody?.replaceChildren();
+            if (!editorElement.classList.contains('open')) {
+                editorWidgetBody?.replaceChildren();
+            }
         };
 
-        const closingPanel = activeExpandedPanel;
         if (closingPanel && editorElement.dataset.panel === closingPanel) {
-            clearExpandedPanelOpenReadyTimer();
-            editorElement.classList.remove('expanding');
-            editorElement.classList.remove('open-ready');
-            editorElement.classList.add('closing');
-            editorElement.classList.remove('open');
+            window.zenSheet?.closeSheet(editorElement).then((closed) => {
+                if (closed) {
+                    finalizeExpandedPanelClose();
+                }
+            });
+            return;
         }
 
-        syncExpandedEditorState();
-
-        activeExpandedPanel = '';
-        if (expandedPanelCloseTimer) {
-            window.clearTimeout(expandedPanelCloseTimer);
-        }
-
-        const currentSize = editorElement.dataset.size || '';
-        const closeTransitionTarget = editorSurfaceElement && SUPPORTED_PANEL_SIZES.has(currentSize)
-            ? editorSurfaceElement
-            : editorElement;
-
-        expandedPanelCloseHandler = (event) => {
-            if (event.target !== closeTransitionTarget) {
-                return;
-            }
-            const transitionProperty = 'clip-path';
-            if (event.propertyName !== transitionProperty) {
-                return;
-            }
-            finalizeExpandedPanelClose();
-        };
-        expandedPanelCloseTarget = closeTransitionTarget;
-        closeTransitionTarget.addEventListener('transitionend', expandedPanelCloseHandler);
-
-        expandedPanelCloseTimer = window.setTimeout(() => {
-            finalizeExpandedPanelClose();
-        }, 1100);
+        finalizeExpandedPanelClose();
     };
     const updateCompactPanelClock = () => {
         if (!compactPanelClock) {
@@ -585,7 +577,7 @@
         mountWidgetInExpandedArea(
             weatherWidget,
             'weather',
-            'Weather',
+            '날씨',
             '현재 위치 기준 날씨와 체감 정보를 확장 영역에서 확인합니다.'
         );
         weatherToggleButton.setAttribute('aria-label', '날씨 위젯 닫기');
@@ -756,7 +748,7 @@
         mountWidgetInExpandedArea(
             footerCompactPanel,
             'compact',
-            'System Settings',
+            'PC',
             '시스템 설정과 볼륨 제어를 빠르게 실행합니다.',
             { size: 's' }
         );
@@ -1003,7 +995,7 @@
             closeFooterCompactPanel();
         }
 
-        if (event.key === 'F5' && isWeatherWidgetOpen) {
+        if (event.key === 'F5' && weatherBar) {
             event.preventDefault();
             await loadWeatherData({ force: true });
         }
@@ -1081,9 +1073,19 @@
             return;
         }
 
+        const target = trigger.dataset.link || '';
+        const previousMuted = masterMuted;
+        if (target === 'volume-mute') {
+            applyMasterMute(!masterMuted);
+        } else if (target === 'volume-up') {
+            applyMasterMute(false);
+        }
+
         try {
-            const target = trigger.dataset.link || '';
             await window.zenLauncher.run(target);
+            if (target === 'volume-up' || target === 'volume-down' || target === 'volume-mute') {
+                await refreshMasterMute();
+            }
             if (trigger.closest('#quick-widget')) {
                 closeQuickWidget();
             }
@@ -1091,9 +1093,12 @@
                 closeFooterCompactPanel();
             }
         } catch (error) {
+            if (target === 'volume-mute' || target === 'volume-up') {
+                applyMasterMute(previousMuted);
+            }
             await window.zenLauncher.showMessage({
                 type: 'error',
-                message: error.message || '??곸쓣 ?ㅽ뻾?섏? 紐삵뻽?듬땲??'
+                message: error.message || '대상을 실행하지 못했습니다.'
             });
         }
     });
@@ -1115,7 +1120,7 @@
         } catch (error) {
             await window.zenLauncher.showMessage({
                 type: 'error',
-                message: error.message || '寃???섏씠吏瑜??댁? 紐삵뻽?듬땲??'
+                message: error.message || '검색 페이지를 열지 못했습니다.'
             });
         }
     });
@@ -1208,8 +1213,40 @@
         event.preventDefault();
         toggleFooterCompactPanel();
     });
-    updateCompactPanelClock();
-    window.setInterval(updateCompactPanelClock, 60 * 1000);
+    let compactPanelClockTimer = 0;
+    const stopCompactPanelClock = () => {
+        if (!compactPanelClockTimer) {
+            return;
+        }
+
+        window.clearInterval(compactPanelClockTimer);
+        compactPanelClockTimer = 0;
+    };
+    const startCompactPanelClock = () => {
+        updateCompactPanelClock();
+        if (compactPanelClockTimer) {
+            return;
+        }
+
+        compactPanelClockTimer = window.setInterval(updateCompactPanelClock, 60 * 1000);
+    };
+    const applyResourceSaver = (active) => {
+        const enabled = active === true;
+        document.documentElement.dataset.resourceSaver = enabled ? 'active' : 'inactive';
+        if (document.body) {
+            document.body.dataset.resourceSaver = enabled ? 'active' : 'inactive';
+        }
+        if (enabled) {
+            stopCompactPanelClock();
+            return;
+        }
+
+        startCompactPanelClock();
+    };
+    const detachResourceSaverListener = window.zenLauncher.onResourceSaver
+        ? window.zenLauncher.onResourceSaver(applyResourceSaver)
+        : () => {};
+    startCompactPanelClock();
     shutdownMinutesInput?.addEventListener('keydown', async (event) => {
         if (event.key !== 'Enter') {
             return;
@@ -1237,11 +1274,15 @@
         });
 
     updateSearchEngineDisplay();
+    loadWeatherData().catch(() => {});
+    refreshMasterMute().catch(() => {});
 
     window.addEventListener('beforeunload', () => {
         if (widgetSyncFrame) {
             window.cancelAnimationFrame(widgetSyncFrame);
         }
+        stopCompactPanelClock();
+        detachResourceSaverListener();
         detachFocusListener();
     });
 });
