@@ -17,7 +17,8 @@
             --muted: #8f8f8f;
             --line: rgba(255, 255, 255, 0.16);
             --gap: 8px;
-            --foot-h: 64px;
+            --inset: 36px;
+            --foot-h: 76px;
         }
 
         * { box-sizing: border-box; }
@@ -37,7 +38,7 @@
         .dock {
             display: grid;
             grid-template-columns: minmax(0, 1fr) 220px;
-            grid-template-rows: 450px var(--foot-h);
+            grid-template-rows: auto var(--foot-h);
             margin-top: 22px;
             background: var(--shell);
             color: var(--ink);
@@ -49,8 +50,8 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 40px;
-            padding: 44px 44px 36px 52px;
+            gap: var(--inset);
+            padding: var(--inset) 18px var(--inset) var(--inset);
         }
 
         .gallery {
@@ -147,7 +148,7 @@
             flex-direction: column;
             align-items: stretch;
             gap: 20px;
-            padding: 44px 28px 36px 24px;
+            padding: var(--inset) var(--inset) var(--inset) 18px;
             background: var(--shell);
         }
         .search {
@@ -155,7 +156,7 @@
             align-items: center;
             width: 100%;
             height: auto;
-            padding: 2px 2px 0;
+            padding: 0;
             background: none;
         }
         .engine, .query {
@@ -213,17 +214,17 @@
         }
         .footer-main, .footer-folder {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             min-width: 0;
             height: 100%;
         }
         .footer-main {
             display: grid;
             grid-template-columns: auto 1fr auto;
-            align-items: center;
-            padding: 0 28px;
+            align-items: start;
+            padding: 0 18px 0 var(--inset);
         }
-        .footer-folder { justify-content: space-between; padding: 0 22px 0 24px; }
+        .footer-folder { justify-content: space-between; padding: 0 var(--inset) 0 18px; }
         .cluster, .weather, .gear { background: var(--plate); border-radius: 10px; }
         .cluster { display: flex; align-items: center; gap: var(--gap); height: 40px; padding: 0 8px; }
         .weather {
@@ -249,7 +250,7 @@
             display: inline-flex;
             align-items: center;
             height: 40px;
-            padding: 0 14px;
+            padding: 0 12px;
             border-radius: 10px;
             background: var(--plate);
             color: #ffffff;
@@ -266,7 +267,7 @@
     <div class="page">
         <h1>묶음, 검색은 폴더 위</h1>
         <div class="intro">
-            <p>검색은 판을 벗기고 엔진, 구분선, 입력만 폴더 위에 둔다. 갤러리는 높이 208px, 사이는 36px이다. 런처 안쪽 여백을 더 넓혔고, 바깥 모서리는 18px이다.</p>
+            <p>검색은 판을 벗기고 엔진, 구분선, 입력만 폴더 위에 둔다. 갤러리는 높이 208px, 사이는 36px이다. 런처 바깥 여백은 위, 아래, 왼쪽, 오른쪽 모두 36px이고, 모서리는 18px이다.</p>
             <p>배경은 #050505다. 폴더 줄과 하단 묶음은 #0e0e0e, 그 호버는 #161616이라 단계는 좁고 눈으로는 갈린다. 갤러리 이름과 아이콘 호버는 검은 배경이다. ZEN Launcher도 같은 묶음 배경이고, 누르면 GitHub로 간다. 참고, 시계, 폴더의 참고는 올려 둔 상태다.</p>
         </div>
         <div class="dock">
