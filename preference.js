@@ -531,6 +531,7 @@ class ZenLauncherPreferences {
         ElementPath.settingTopbar?.append(scanButton, scanMeta);
 
         const footer = document.querySelector('#editor > .btn-row');
+        const main = document.getElementById('setting-main');
         if (footer) {
             const statusGroup = document.createElement('div');
             statusGroup.className = 'setting-footer-status';
@@ -540,6 +541,7 @@ class ZenLauncherPreferences {
             actionGroup.className = 'setting-footer-actions';
             actionGroup.append(ElementPath.clearButton, ElementPath.cancelButton, ElementPath.saveButton);
             footer.replaceChildren(statusGroup, actionGroup);
+            main?.append(footer);
         }
 
         const content = document.createElement('div');
@@ -684,7 +686,7 @@ class ZenLauncherPreferences {
             }
             .program-browser {
                 position:absolute;
-                inset:10px 0 0 0;
+                inset:0;
                 display:flex;
                 flex-direction:column;
                 overflow:hidden;
@@ -693,12 +695,13 @@ class ZenLauncherPreferences {
                 pointer-events:none;
                 transform:translateY(12px);
                 transition:opacity 0.24s ease, transform 0.34s cubic-bezier(0.25, 0.8, 0.2, 1), visibility 0s linear 0.34s;
-                background:transparent;
+                background:var(--zen-shell, #1c1c1c);
                 border:none;
                 border-radius:0;
                 box-shadow:none;
                 z-index:30;
                 box-sizing:border-box;
+                padding:12px 16px;
             }
             .program-browser.open {
                 opacity:1;
@@ -1304,7 +1307,7 @@ class ZenLauncherPreferences {
         const backButton = document.createElement('button');
         backButton.type = 'button';
         backButton.className = 'slot-editor-back';
-        backButton.textContent = '목록';
+        backButton.textContent = '항목으로';
         backButton.addEventListener('click', () => {
             this.#closeItemEditor();
         });
@@ -1334,15 +1337,27 @@ class ZenLauncherPreferences {
             this.#deleteActiveItem();
         });
 
-        const doneButton = document.createElement('button');
-        doneButton.type = 'button';
-        doneButton.className = 'setting-action-button primary-button';
-        doneButton.textContent = '완료';
-        doneButton.addEventListener('click', () => {
+        const backAction = document.createElement('button');
+        backAction.type = 'button';
+        backAction.className = 'setting-action-button';
+        backAction.textContent = '항목으로';
+        backAction.addEventListener('click', () => {
             this.#closeItemEditor();
         });
 
-        actions.append(deleteButton, doneButton);
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'setting-action-button primary-button';
+        saveButton.textContent = '저장';
+        saveButton.addEventListener('click', async () => {
+            await this.#saveDirtyCategories();
+            this.#closeItemEditor();
+        });
+
+        const rightActions = document.createElement('div');
+        rightActions.className = 'slot-editor-actions-right';
+        rightActions.append(backAction, saveButton);
+        actions.append(deleteButton, rightActions);
         editor.append(header, fields, actions);
         return editor;
     }
@@ -1383,7 +1398,7 @@ class ZenLauncherPreferences {
         closeButton.type = 'button';
         closeButton.id = 'btn-program-browser-close';
         closeButton.className = 'slot-secondary-button';
-        closeButton.textContent = '닫기';
+        closeButton.textContent = '편집으로';
 
         rightTools.append(scanMeta, scanButton, closeButton);
         header.append(titleWrap, rightTools);
@@ -1452,8 +1467,7 @@ class ZenLauncherPreferences {
         }
         if (ElementPath.editorElement) {
             ElementPath.editorElement.dataset.panel = 'settings';
-            const fit = ElementPath.editorElement.classList.contains('program-browser-active') ? 'workspace' : 'panel';
-            window.zenSheet?.openSheet(ElementPath.editorElement, { fit });
+            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'workspace' });
         }
         this.#refreshStatus();
     }
@@ -2501,6 +2515,8 @@ class ZenLauncherPreferences {
 
         const row = document.createElement('div');
         row.className = 'editor-choice-list';
+        row.setAttribute('role', 'listbox');
+        row.setAttribute('aria-label', '여는 방법');
 
         [
             ['direct', '링크', '웹 주소나 파일을 직접 넣습니다'],
@@ -3075,8 +3091,8 @@ class ZenLauncherPreferences {
 
         browser.classList.remove('open');
         if (restoreSize && ElementPath.editorElement?.dataset.panel === 'settings') {
-            ElementPath.editorElement.dataset.size = 'm';
-            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'panel' });
+            ElementPath.editorElement.dataset.size = 'l';
+            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'workspace' });
         }
         this.#programBrowserContext = null;
         this.#programBrowserFilter = '';
