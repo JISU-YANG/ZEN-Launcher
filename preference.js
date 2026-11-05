@@ -1202,6 +1202,7 @@ class ZenLauncherPreferences {
                 border-color:rgba(84,92,104,0.12);
             }
             body[data-theme="light"] .setting-field input,
+            body[data-theme="light"] .setting-offset-input,
             body[data-theme="light"] .program-browser-search,
             body[data-theme="light"] .theme-control-value,
             body[data-theme="light"] .theme-transparency-range,
@@ -1291,6 +1292,36 @@ class ZenLauncherPreferences {
                 outline:2px solid rgba(146,164,184,0.72);
                 outline-offset:2px;
             }
+            .setting-segment .theme-mode-option,
+            .setting-segment .theme-mode-option:hover,
+            .setting-segment .theme-mode-option:has(input:checked) {
+                min-height:var(--control-h, 32px);
+                height:var(--control-h, 32px);
+                padding:0 12px;
+                gap:0;
+                transform:none;
+                border-radius:var(--radius-control, 8px);
+                background:transparent;
+                box-shadow:none;
+            }
+            .setting-segment .theme-mode-option::before,
+            .setting-segment .theme-mode-option-swatch,
+            .setting-segment .theme-mode-option input {
+                display:none;
+            }
+            .setting-segment .theme-mode-option:has(input:checked) {
+                background:rgba(255,255,255,0.08);
+            }
+            body[data-theme="light"] .setting-segment .theme-mode-option,
+            body[data-theme="light"] .setting-segment .theme-mode-option:hover,
+            body[data-theme="light"] .setting-segment .theme-mode-option:has(input:checked) {
+                background:transparent;
+                box-shadow:none;
+                transform:none;
+            }
+            body[data-theme="light"] .setting-segment .theme-mode-option:has(input:checked) {
+                background:rgba(0,0,0,0.06);
+            }
         `;
 
         document.head.appendChild(style);
@@ -1300,26 +1331,6 @@ class ZenLauncherPreferences {
     #createItemEditor() {
         const editor = document.createElement('div');
         editor.id = 'slot-editor';
-
-        const header = document.createElement('div');
-        header.className = 'slot-editor-header';
-
-        const backButton = document.createElement('button');
-        backButton.type = 'button';
-        backButton.className = 'slot-editor-back';
-        backButton.textContent = '항목으로';
-        backButton.addEventListener('click', () => {
-            this.#closeItemEditor();
-        });
-
-        const heading = document.createElement('div');
-        heading.className = 'slot-editor-heading';
-        const title = this.#createStaticElement('div', 'slot-editor-title', '항목 편집');
-        title.id = 'slot-editor-title';
-        const caption = this.#createStaticElement('div', 'slot-editor-caption', '');
-        caption.id = 'slot-editor-caption';
-        heading.append(title, caption);
-        header.append(backButton, heading);
 
         const fields = document.createElement('div');
         fields.className = 'slot-editor-fields';
@@ -1340,7 +1351,7 @@ class ZenLauncherPreferences {
         const backAction = document.createElement('button');
         backAction.type = 'button';
         backAction.className = 'setting-action-button';
-        backAction.textContent = '항목으로';
+        backAction.textContent = '뒤로';
         backAction.addEventListener('click', () => {
             this.#closeItemEditor();
         });
@@ -1358,7 +1369,7 @@ class ZenLauncherPreferences {
         rightActions.className = 'slot-editor-actions-right';
         rightActions.append(backAction, saveButton);
         actions.append(deleteButton, rightActions);
-        editor.append(header, fields, actions);
+        editor.append(fields, actions);
         return editor;
     }
 
@@ -1467,7 +1478,7 @@ class ZenLauncherPreferences {
         }
         if (ElementPath.editorElement) {
             ElementPath.editorElement.dataset.panel = 'settings';
-            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'workspace' });
+            this.#applySettingsFit();
         }
         this.#refreshStatus();
     }
@@ -1689,60 +1700,91 @@ class ZenLauncherPreferences {
         }
     }
 
-    #createTransparencyPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel';
-
-        const header = document.createElement('div');
-        header.className = 'theme-control-header';
-        header.append(
-            this.#createStaticElement('div', 'theme-control-title', '런처 투명도'),
-            this.#createStaticElement('div', 'theme-control-value', '')
+    #needsWideSheet() {
+        const slotOpen = document.getElementById('slot-editor')?.classList.contains('open');
+        const category = ZenLauncherPreferences.activeCategory;
+        const editingWideItem = slotOpen && (
+            category === ZenLauncherPreferences.Category.GALLERY
+            || category === ZenLauncherPreferences.Category.ICON
         );
+        return this.#isProgramBrowserOpen() || editingWideItem;
+    }
 
+    #applySettingsFit() {
+        const editor = ElementPath.editorElement;
+        if (!editor || editor.dataset.panel !== 'settings') {
+            return;
+        }
+        const fit = this.#needsWideSheet() ? 'workspace' : 'panel';
+        editor.dataset.size = fit === 'workspace' ? 'l' : 'm';
+        window.zenSheet?.openSheet(editor, { fit });
+    }
+
+    #createSettingPage(title) {
+        const page = document.createElement('section');
+        page.className = 'setting-page';
+        const heading = this.#createStaticElement('h2', 'setting-page-title', title);
+        const body = document.createElement('div');
+        body.className = 'setting-page-body';
+        page.append(heading, body);
+        return { page, body };
+    }
+
+    #createSettingRow({ title, description, control }) {
+        const row = document.createElement('div');
+        row.className = 'setting-row-item';
+        const copy = document.createElement('div');
+        copy.className = 'setting-row-copy';
+        copy.append(this.#createStaticElement('div', 'setting-row-title', title));
+        if (description) {
+            copy.append(this.#createStaticElement('div', 'setting-row-description', description));
+        }
+        const slot = document.createElement('div');
+        slot.className = 'setting-row-control';
+        if (control) {
+            slot.append(control);
+        }
+        row.append(copy, slot);
+        return row;
+    }
+
+    #createTransparencyPanel() {
+        const { page, body } = this.#createSettingPage('투명도');
+        const value = this.#createStaticElement('span', 'setting-inline-value', '0%');
         const range = document.createElement('input');
         range.type = 'range';
-        range.className = 'theme-transparency-range';
+        range.className = 'theme-transparency-range setting-inline-range';
         range.min = '0';
         range.max = `${MAX_LAUNCHER_TRANSPARENCY}`;
         range.step = '1';
 
-        const rangeHeader = document.createElement('div');
-        rangeHeader.className = 'theme-range-header';
-        rangeHeader.append(
-            this.#createStaticElement('div', 'theme-range-label', '투명도'),
-            this.#createStaticElement('div', 'theme-range-caption', '런처 표면')
-        );
-
-        const scale = document.createElement('div');
-        scale.className = 'theme-transparency-scale';
-        scale.append(
-            this.#createStaticElement('span', '', '0%'),
-            this.#createStaticElement('span', '', `${MAX_LAUNCHER_TRANSPARENCY}%`)
-        );
-
-        const hoverToggle = document.createElement('label');
-        hoverToggle.className = 'theme-toggle-card';
+        const rangeControl = document.createElement('div');
+        rangeControl.className = 'setting-inline-cluster';
+        rangeControl.append(range, value);
 
         const hoverCheckbox = document.createElement('input');
         hoverCheckbox.type = 'checkbox';
         hoverCheckbox.checked = this.#draftAppearance.revealOnHover === true;
 
-        const hoverCopy = document.createElement('div');
-        hoverCopy.className = 'theme-toggle-copy';
-        hoverCopy.append(
-            this.#createStaticElement('div', 'theme-toggle-title', '마우스 호버 시 잠시 선명하게 표시')
+        body.append(
+            this.#createSettingRow({
+                title: '런처 투명도',
+                description: '0은 불투명, 100은 가장 투명합니다.',
+                control: rangeControl
+            }),
+            this.#createSettingRow({
+                title: '마우스를 올리면 선명하게',
+                description: '평소 투명도를 유지하고, 올릴 때만 불투명해집니다.',
+                control: hoverCheckbox
+            })
         );
-
-        hoverToggle.append(hoverCheckbox, hoverCopy);
-        panel.append(header, rangeHeader, range, scale, hoverToggle);
 
         const syncThemePanel = () => {
             const normalizedAppearance = normalizeAppearanceSettings(this.#draftAppearance);
             const transparencyText = `${normalizedAppearance.launcherTransparency}%`;
             range.value = `${normalizedAppearance.launcherTransparency}`;
             range.setAttribute('aria-valuetext', transparencyText);
-            header.querySelector('.theme-control-value').textContent = transparencyText;
+            value.textContent = transparencyText;
             hoverCheckbox.checked = normalizedAppearance.revealOnHover === true;
         };
 
@@ -1757,39 +1799,34 @@ class ZenLauncherPreferences {
         });
 
         syncThemePanel();
-        return panel;
+        return page;
     }
 
     #createCreditPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'maker-panel';
-
-        const version = this.#createStaticElement('dd', '', '확인 중');
-        const date = this.#createStaticElement('dd', '', '확인 중');
-        const versionRow = document.createElement('div');
-        versionRow.append(this.#createStaticElement('dt', '', '버전'), version);
-        const dateRow = document.createElement('div');
-        dateRow.append(this.#createStaticElement('dt', '', '날짜'), date);
-        const meta = document.createElement('dl');
-        meta.className = 'maker-meta';
-        meta.append(versionRow, dateRow);
-
-        panel.append(
-            this.#createStaticElement('div', 'maker-kicker', '제작자'),
-            this.#createStaticElement('div', 'maker-name', 'JISU YANG'),
-            this.#createStaticElement('div', 'maker-product', 'ZEN Launcher'),
-            meta
+        const { page, body } = this.#createSettingPage('정보');
+        const author = this.#createStaticElement('span', 'setting-inline-value', 'JISU YANG');
+        const product = this.#createStaticElement('span', 'setting-inline-value', 'ZEN Launcher');
+        const version = this.#createStaticElement('span', 'setting-inline-value', '확인 중');
+        const date = this.#createStaticElement('span', 'setting-inline-value', '확인 중');
+        body.append(
+            this.#createSettingRow({ title: '제작자', control: author }),
+            this.#createSettingRow({ title: '제품', control: product }),
+            this.#createSettingRow({ title: '버전', control: version }),
+            this.#createSettingRow({ title: '날짜', control: date })
         );
 
         window.zenLauncher.getAppInfo?.().then((info) => {
-            if (!info || !panel.isConnected) {
+            if (!info || !page.isConnected) {
                 return;
+            }
+            if (info.author) {
+                author.textContent = info.author;
+            }
+            if (info.productName) {
+                product.textContent = info.productName;
             }
             if (info.version) {
                 version.textContent = `v${info.version}`;
-            }
-            if (info.author) {
-                panel.querySelector('.maker-name').textContent = info.author;
             }
             if (info.releaseDate) {
                 date.textContent = String(info.releaseDate).replace(/-/g, '.');
@@ -1798,25 +1835,19 @@ class ZenLauncherPreferences {
             version.textContent = 'v2.3.3';
         });
 
-        return panel;
+        return page;
     }
 
     #createThemePanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel theme-placeholder';
-
-        const title = this.#createStaticElement('div', 'theme-placeholder-title', '테마');
-        const description = this.#createStaticElement('div', 'theme-control-description', '라이트 또는 다크 모드를 선택할 수 있습니다.');
-
+        const { page, body } = this.#createSettingPage('테마');
         const group = document.createElement('div');
-        group.className = 'theme-mode-group';
+        group.className = 'setting-segment';
         group.append(
             this.#createThemeModeOption({
                 id: 'theme-mode-light',
                 name: 'theme-mode',
                 value: 'light',
                 title: '라이트',
-                caption: '밝고 선명한 화면',
                 checked: this.#draftAppearance.themeMode === 'light'
             }),
             this.#createThemeModeOption({
@@ -1824,226 +1855,142 @@ class ZenLauncherPreferences {
                 name: 'theme-mode',
                 value: 'dark',
                 title: '다크',
-                caption: '현재 기준 테마',
                 checked: this.#draftAppearance.themeMode !== 'light'
             })
         );
 
-        const grayscaleToggle = document.createElement('label');
-        grayscaleToggle.className = 'theme-toggle-card';
-
         const grayscaleCheckbox = document.createElement('input');
         grayscaleCheckbox.type = 'checkbox';
         grayscaleCheckbox.checked = this.#draftAppearance.grayscaleUntilHover !== false;
-
-        const grayscaleCopy = document.createElement('div');
-        grayscaleCopy.className = 'theme-toggle-copy';
-        grayscaleCopy.append(
-            this.#createStaticElement('div', 'theme-toggle-title', '평소에는 흑백으로 보기'),
-            this.#createStaticElement('div', 'theme-toggle-description', '갤러리와 아이콘 이미지는 마우스를 올리면 원래 색이 보입니다.')
-        );
-
         grayscaleCheckbox.addEventListener('change', () => {
             this.#updateAppearanceDraft({ grayscaleUntilHover: grayscaleCheckbox.checked });
         });
 
-        grayscaleToggle.append(grayscaleCheckbox, grayscaleCopy);
-        panel.append(title, description, group, grayscaleToggle);
-        return panel;
-    }
-
-    #createToggleCard({ id, title, description, checked, onChange }) {
-        const toggle = document.createElement('label');
-        toggle.className = 'theme-toggle-card';
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = id;
-        checkbox.checked = checked === true;
-
-        const copy = document.createElement('div');
-        copy.className = 'theme-toggle-copy';
-        copy.append(this.#createStaticElement('div', 'theme-toggle-title', title));
-        if (description) {
-            copy.append(this.#createStaticElement('div', 'theme-toggle-description', description));
-        }
-
-        checkbox.addEventListener('change', () => {
-            onChange?.(checkbox.checked);
-        });
-
-        toggle.append(checkbox, copy);
-        return { toggle, checkbox };
+        body.append(
+            this.#createSettingRow({
+                title: '화면 모드',
+                description: '라이트 또는 다크를 고릅니다.',
+                control: group
+            }),
+            this.#createSettingRow({
+                title: '평소에는 흑백으로 보기',
+                description: '갤러리와 아이콘은 마우스를 올리면 원래 색이 보입니다.',
+                control: grayscaleCheckbox
+            })
+        );
+        return page;
     }
 
     #createShortcutPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel';
-        panel.append(
-            this.#createStaticElement('div', 'theme-placeholder-title', '단축키'),
-            this.#createStaticElement(
-                'div',
-                'theme-control-description',
-                'Ctrl+Space는 런처 검색창으로 이동합니다.'
-            )
-        );
-
-        const { toggle } = this.#createToggleCard({
-            id: 'shortcut-suppress-fullscreen',
-            title: '다른 앱이 전체 화면이면 단축키 멈추기',
-            description: '켜 두면 다른 프로그램이 화면 전체를 쓰는 동안 Ctrl+Space는 그 프로그램에 전달됩니다. 기본값은 꺼짐입니다.',
-            checked: this.#draftAppearance.suppressShortcutDuringFullscreen === true,
-            onChange: (checked) => {
-                this.#updateAppearanceDraft({ suppressShortcutDuringFullscreen: checked });
-            }
+        const { page, body } = this.#createSettingPage('단축키');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = this.#draftAppearance.suppressShortcutDuringFullscreen === true;
+        checkbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ suppressShortcutDuringFullscreen: checkbox.checked });
         });
-
-        panel.append(toggle);
-        return panel;
+        body.append(this.#createSettingRow({
+            title: '전체 화면이면 Ctrl+Space 멈추기',
+            description: '다른 프로그램이 화면 전체를 쓰는 동안 단축키는 그 프로그램에 전달됩니다.',
+            control: checkbox
+        }));
+        return page;
     }
 
     #createFullscreenPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel';
-        panel.append(
-            this.#createStaticElement('div', 'theme-placeholder-title', '전체 화면'),
-            this.#createStaticElement(
-                'div',
-                'theme-control-description',
-                '다른 프로그램이 화면 전체를 쓸 때 런처 자원 사용을 조절합니다.'
-            )
-        );
-
-        const { toggle } = this.#createToggleCard({
-            id: 'resource-minimize-fullscreen',
-            title: '다른 앱이 전체 화면이면 자원 사용 줄이기',
-            description: '켜 두면 애니메이션을 멈추고 화면 갱신을 초당 1회로 낮춥니다. 기본값은 최소화입니다.',
-            checked: this.#draftAppearance.minimizeResourcesDuringFullscreen !== false,
-            onChange: (checked) => {
-                this.#updateAppearanceDraft({ minimizeResourcesDuringFullscreen: checked });
-            }
+        const { page, body } = this.#createSettingPage('전체 화면');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = this.#draftAppearance.minimizeResourcesDuringFullscreen !== false;
+        checkbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ minimizeResourcesDuringFullscreen: checkbox.checked });
         });
-
-        panel.append(toggle);
-        return panel;
+        body.append(this.#createSettingRow({
+            title: '전체 화면이면 자원 사용 줄이기',
+            description: '애니메이션을 멈추고 화면 갱신을 초당 1회로 낮춥니다.',
+            control: checkbox
+        }));
+        return page;
     }
 
     #createStartupPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel';
-        panel.append(
-            this.#createStaticElement('div', 'theme-placeholder-title', '시작'),
-            this.#createStaticElement(
-                'div',
-                'theme-control-description',
-                'Windows 로그인과 함께 런처를 실행할지 정합니다.'
-            )
-        );
-
-        const { toggle } = this.#createToggleCard({
-            id: 'launch-at-startup',
-            title: 'Windows 시작 시 자동 실행',
-            description: '켜 두면 로그인할 때 런처가 시스템 트레이에서 실행됩니다. 기본값은 꺼짐입니다.',
-            checked: this.#draftAppearance.launchAtStartup === true,
-            onChange: (checked) => {
-                this.#updateAppearanceDraft({ launchAtStartup: checked });
-            }
+        const { page, body } = this.#createSettingPage('시작');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = this.#draftAppearance.launchAtStartup === true;
+        checkbox.addEventListener('change', () => {
+            this.#updateAppearanceDraft({ launchAtStartup: checkbox.checked });
         });
-
-        panel.append(toggle);
-        return panel;
+        body.append(this.#createSettingRow({
+            title: 'Windows 시작 시 자동 실행',
+            description: '로그인할 때 런처가 시스템 트레이에서 실행됩니다.',
+            control: checkbox
+        }));
+        return page;
     }
 
     #createLayoutPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel layout-settings-panel';
+        const { page, body } = this.#createSettingPage('배치');
         const metrics = this.#layoutMetrics || {};
         const displayWidth = metrics.displayWidth || metrics.workAreaWidth || '-';
         const displayHeight = metrics.displayHeight || metrics.workAreaHeight || '-';
         const autoX = Number.isFinite(metrics.autoX) ? metrics.autoX : (Number.isFinite(metrics.x) ? metrics.x : 0);
         const autoY = Number.isFinite(metrics.autoY) ? metrics.autoY : (Number.isFinite(metrics.y) ? metrics.y : 0);
-
-        panel.append(
-            this.#createStaticElement('div', 'theme-placeholder-title', '배치'),
-            this.#createStaticElement(
-                'div',
-                'theme-control-description',
-                '자동으로 인식한 화면을 확인하고, 필요하면 픽셀 단위로 위치를 보정합니다.'
-            )
-        );
-
-        const summary = document.createElement('div');
-        summary.className = 'layout-metric-card';
-        summary.append(
-            this.#createStaticElement('div', 'layout-metric-label', '인식된 해상도'),
-            this.#createStaticElement('div', 'layout-metric-value', `${displayWidth} × ${displayHeight}`),
-            this.#createStaticElement('div', 'layout-metric-label', '자동 위치'),
-            this.#createStaticElement('div', 'layout-metric-value', `X ${autoX}px / Y ${autoY}px`)
-        );
-
-        const offsetX = this.#createOffsetField({
-            id: 'layout-offset-x',
-            label: '가로 보정 (px)',
-            value: this.#draftAppearance.positionOffsetX,
-            onChange: (value) => this.#updateAppearanceDraft({ positionOffsetX: value })
+        const resolution = this.#createStaticElement('span', 'setting-inline-value', `${displayWidth} × ${displayHeight}`);
+        const autoPosition = this.#createStaticElement('span', 'setting-inline-value', `X ${autoX}px / Y ${autoY}px`);
+        const corrected = this.#createStaticElement('span', 'setting-inline-value', '');
+        const offsetX = this.#createOffsetInput(this.#draftAppearance.positionOffsetX, (value) => {
+            this.#updateAppearanceDraft({ positionOffsetX: value });
         });
-        const offsetY = this.#createOffsetField({
-            id: 'layout-offset-y',
-            label: '세로 보정 (px)',
-            value: this.#draftAppearance.positionOffsetY,
-            onChange: (value) => this.#updateAppearanceDraft({ positionOffsetY: value })
+        const offsetY = this.#createOffsetInput(this.#draftAppearance.positionOffsetY, (value) => {
+            this.#updateAppearanceDraft({ positionOffsetY: value });
         });
-
-        const preview = this.#createStaticElement(
-            'div',
-            'theme-control-description',
-            `보정 후 예상 위치: X ${autoX + this.#draftAppearance.positionOffsetX}px / Y ${autoY + this.#draftAppearance.positionOffsetY}px`
-        );
-        preview.id = 'layout-offset-preview';
-
-        const syncPreview = () => {
-            preview.textContent = `보정 후 예상 위치: X ${autoX + this.#draftAppearance.positionOffsetX}px / Y ${autoY + this.#draftAppearance.positionOffsetY}px`;
-        };
-        offsetX.input.addEventListener('input', syncPreview);
-        offsetY.input.addEventListener('input', syncPreview);
-
         const reset = document.createElement('button');
         reset.type = 'button';
         reset.className = 'setting-action-button';
         reset.textContent = '보정 초기화';
+
+        const syncPreview = () => {
+            corrected.textContent = `X ${autoX + this.#draftAppearance.positionOffsetX}px / Y ${autoY + this.#draftAppearance.positionOffsetY}px`;
+        };
         reset.addEventListener('click', () => {
             this.#updateAppearanceDraft({ positionOffsetX: 0, positionOffsetY: 0 });
-            offsetX.input.value = '0';
-            offsetY.input.value = '0';
+            offsetX.value = '0';
+            offsetY.value = '0';
             syncPreview();
         });
+        offsetX.addEventListener('input', syncPreview);
+        offsetY.addEventListener('input', syncPreview);
+        syncPreview();
 
-        panel.append(summary, offsetX.wrapper, offsetY.wrapper, preview, reset);
+        body.append(
+            this.#createSettingRow({ title: '인식된 해상도', control: resolution }),
+            this.#createSettingRow({ title: '자동 위치', control: autoPosition }),
+            this.#createSettingRow({ title: '가로 보정', description: '오른쪽이 양수입니다. 단위는 px.', control: offsetX }),
+            this.#createSettingRow({ title: '세로 보정', description: '아래가 양수입니다. 단위는 px.', control: offsetY }),
+            this.#createSettingRow({ title: '보정 후 위치', control: corrected }),
+            this.#createSettingRow({ title: '보정값', description: '자동 위치로 되돌립니다.', control: reset })
+        );
+
         this.#refreshLayoutMetrics().then((nextMetrics) => {
-            if (!panel.isConnected || !nextMetrics) {
+            if (!page.isConnected || !nextMetrics) {
                 return;
             }
             const width = nextMetrics.displayWidth || nextMetrics.workAreaWidth || '-';
             const height = nextMetrics.displayHeight || nextMetrics.workAreaHeight || '-';
-            const values = summary.querySelectorAll('.layout-metric-value');
-            if (values[0]) {
-                values[0].textContent = `${width} × ${height}`;
-            }
-            if (values[1]) {
-                values[1].textContent = `X ${nextMetrics.autoX ?? 0}px / Y ${nextMetrics.autoY ?? 0}px`;
-            }
+            const nextAutoX = Number.isFinite(nextMetrics.autoX) ? nextMetrics.autoX : 0;
+            const nextAutoY = Number.isFinite(nextMetrics.autoY) ? nextMetrics.autoY : 0;
+            resolution.textContent = `${width} × ${height}`;
+            autoPosition.textContent = `X ${nextAutoX}px / Y ${nextAutoY}px`;
+            corrected.textContent = `X ${nextAutoX + this.#draftAppearance.positionOffsetX}px / Y ${nextAutoY + this.#draftAppearance.positionOffsetY}px`;
         });
-        return panel;
+        return page;
     }
 
-    #createOffsetField({ id, label, value, onChange }) {
-        const wrapper = document.createElement('label');
-        wrapper.className = 'setting-field';
-        wrapper.append(this.#createStaticElement('span', 'setting-field-label', label));
-
+    #createOffsetInput(value, onChange) {
         const input = document.createElement('input');
         input.type = 'number';
-        input.id = id;
+        input.className = 'setting-offset-input';
         input.step = '1';
         input.min = `${-POSITION_OFFSET_LIMIT}`;
         input.max = `${POSITION_OFFSET_LIMIT}`;
@@ -2052,29 +1999,15 @@ class ZenLauncherPreferences {
             onChange?.(normalizePositionOffsetValue(input.value));
             input.value = `${normalizePositionOffsetValue(input.value)}`;
         });
-        wrapper.appendChild(input);
-        return { wrapper, input };
+        return input;
     }
 
     #createBackupPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel';
-        panel.append(
-            this.#createStaticElement('div', 'theme-placeholder-title', '백업'),
-            this.#createStaticElement(
-                'div',
-                'theme-control-description',
-                '갤러리·아이콘·폴더와 모양 설정을 JSON 파일로 내보내거나 불러옵니다. 불러온 내용은 저장 전에 미리보기로 반영됩니다.'
-            )
-        );
-
-        const actions = document.createElement('div');
-        actions.className = 'backup-action-row';
-
+        const { page, body } = this.#createSettingPage('백업');
         const exportButton = document.createElement('button');
         exportButton.type = 'button';
-        exportButton.className = 'setting-action-button primary-button';
-        exportButton.textContent = '설정 내보내기';
+        exportButton.className = 'setting-action-button';
+        exportButton.textContent = '내보내기';
         exportButton.addEventListener('click', async () => {
             const result = await window.zenLauncher.exportSettings?.();
             if (!result || result.canceled) {
@@ -2090,7 +2023,7 @@ class ZenLauncherPreferences {
         const importButton = document.createElement('button');
         importButton.type = 'button';
         importButton.className = 'setting-action-button';
-        importButton.textContent = '설정 불러오기';
+        importButton.textContent = '불러오기';
         importButton.addEventListener('click', async () => {
             const result = await window.zenLauncher.importSettings?.();
             if (!result || result.canceled) {
@@ -2099,9 +2032,19 @@ class ZenLauncherPreferences {
             this.#applyImportedSettings(result);
         });
 
-        actions.append(exportButton, importButton);
-        panel.append(actions);
-        return panel;
+        body.append(
+            this.#createSettingRow({
+                title: '설정 내보내기',
+                description: '항목과 모양 설정을 JSON 파일로 저장합니다.',
+                control: exportButton
+            }),
+            this.#createSettingRow({
+                title: '설정 불러오기',
+                description: '파일을 읽은 뒤 저장을 눌러야 반영됩니다.',
+                control: importButton
+            })
+        );
+        return page;
     }
 
     #applyImportedSettings(payload) {
@@ -2302,22 +2245,16 @@ class ZenLauncherPreferences {
 
     #openItemEditor(category, index, preferredMode = null) {
         const editor = document.getElementById('slot-editor');
-        const title = document.getElementById('slot-editor-title');
         const fields = document.getElementById('slot-editor-fields');
         const deleteButton = document.getElementById('btn-delete-item');
         const item = (this.#drafts.get(category) || [])[index];
         const meta = this.#getCategoryMeta()[category];
 
-        if (!editor || !title || !fields || !item) {
+        if (!editor || !fields || !item) {
             return;
         }
 
         this.#currentEditorMode = this.#resolveEditorMode(category, item, preferredMode);
-        title.textContent = item.name || `새 ${meta.title}`;
-        const caption = document.getElementById('slot-editor-caption');
-        if (caption) {
-            caption.textContent = meta.editorCaption;
-        }
         if (deleteButton) {
             deleteButton.style.display = 'inline-flex';
         }
@@ -2371,6 +2308,7 @@ class ZenLauncherPreferences {
 
         editor.classList.add('open');
         document.getElementById('setting-nav')?.setAttribute('data-collapsed', 'true');
+        this.#applySettingsFit();
     }
 
     #createImageTools(category, index, item) {
@@ -2742,6 +2680,10 @@ class ZenLauncherPreferences {
         this.#currentEditorMode = 'direct';
         if (closeProgramBrowser) {
             this.#closeProgramBrowser({ restoreSize });
+            return;
+        }
+        if (restoreSize) {
+            this.#applySettingsFit();
         }
     }
 
@@ -3071,12 +3013,11 @@ class ZenLauncherPreferences {
             return;
         }
 
-        if (ElementPath.editorElement?.dataset.panel === 'settings') {
-            ElementPath.editorElement.dataset.size = 'l';
-            ElementPath.editorElement.classList.add('program-browser-active');
-            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'workspace' });
-        }
         browser.classList.add('open');
+        if (ElementPath.editorElement?.dataset.panel === 'settings') {
+            ElementPath.editorElement.classList.add('program-browser-active');
+            this.#applySettingsFit();
+        }
         search.value = '';
         this.#renderProgramBrowser();
         search.focus({ preventScroll: true });
@@ -3085,14 +3026,12 @@ class ZenLauncherPreferences {
     #closeProgramBrowser({ restoreSize = true } = {}) {
         const browser = document.getElementById('program-browser');
         ElementPath.editorElement?.classList.remove('program-browser-active');
+        browser?.classList.remove('open');
+        if (restoreSize && ElementPath.editorElement?.dataset.panel === 'settings') {
+            this.#applySettingsFit();
+        }
         if (!browser) {
             return;
-        }
-
-        browser.classList.remove('open');
-        if (restoreSize && ElementPath.editorElement?.dataset.panel === 'settings') {
-            ElementPath.editorElement.dataset.size = 'l';
-            window.zenSheet?.openSheet(ElementPath.editorElement, { fit: 'workspace' });
         }
         this.#programBrowserContext = null;
         this.#programBrowserFilter = '';
