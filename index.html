@@ -4944,22 +4944,18 @@
         }
 
         #launcher-brand {
-            position: absolute;
-            left: 50%;
             color: #9a9a9a;
             font-size: 13px;
             font-weight: 900;
-            letter-spacing: -0.03em;
+            letter-spacing: 0.06em;
             line-height: 1;
             white-space: nowrap;
-            transform: translateX(-50%);
-            pointer-events: none;
         }
 
         #footer-folder {
             justify-content: space-between;
             gap: 8px;
-            padding: 0 8px 0 0;
+            padding: 0 8px 0 18px;
         }
 
         .footer-divider {
@@ -5181,7 +5177,8 @@
         }
 
         #weather-bar {
-            position: relative;
+            position: absolute;
+            left: 50%;
             display: flex;
             align-items: center;
             min-width: 0;
@@ -5190,6 +5187,7 @@
             background: transparent;
             color: #d7d7d7;
             pointer-events: auto;
+            transform: translateX(-50%);
         }
 
         .weather-readout {
@@ -5676,15 +5674,6 @@
                         <button class="zen-icon-button launcher-basic" type="button" data-link="volume-up" aria-label="볼륨 높이기" title="볼륨 높이기"><img src="src/icon/icon-volume-high.svg" alt=""><span>볼륨 +</span></button>
                         <button class="zen-icon-button launcher-basic" type="button" data-link="volume-mute" aria-pressed="false" aria-label="음소거" title="음소거"><img src="src/icon/icon-volume.svg" alt=""><span>음소거</span></button>
                     </div>
-                    <span id="launcher-brand">ZEN Launcher</span>
-                    <div id="footer-settings">
-                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
-                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><img src="src/icon/icon-mouse.svg" alt=""><span>마우스</span></button>
-                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
-                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
-                    </div>
-                </div>
-                <div id="footer-folder">
                     <div id="weather-bar" aria-live="polite">
                         <span class="weather-readout">
                             <span class="weather-temp-wrap">
@@ -5711,6 +5700,15 @@
                         </span>
                         <div class="weather-status" id="weather-status" data-state="loading">날씨를 확인하고 있습니다.</div>
                     </div>
+                    <div id="footer-settings">
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:easeofaccess-colorfilter-bluelightlink" aria-label="화면 설정" title="화면 설정"><img src="src/icon/icon-display.svg" alt=""><span>화면</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:mousetouchpad" aria-label="마우스 설정" title="마우스 설정"><img src="src/icon/icon-mouse.svg" alt=""><span>마우스</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:typing" aria-label="키보드 설정" title="키보드 설정"><img src="src/icon/icon-keyboard.svg" alt=""><span>키보드</span></button>
+                        <button class="zen-icon-button launcher-basic" type="button" data-link="ms-settings:sound" aria-label="소리 설정" title="소리 설정"><img src="src/icon/icon-audio.svg" alt=""><span>소리</span></button>
+                    </div>
+                </div>
+                <div id="footer-folder">
+                    <span id="launcher-brand">ZEN Launcher</span>
                     <button class="zen-icon-button" id="btn-preference" type="button" aria-label="런처 설정" title="런처 설정"><img src="src/icon/icon-system.svg" alt=""><span>런처</span></button>
                 </div>
             </div>
