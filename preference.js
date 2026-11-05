@@ -17,10 +17,21 @@ const DEFAULT_APPEARANCE_SETTINGS = Object.freeze({
     grayscaleUntilHover: true,
     suppressShortcutDuringFullscreen: false,
     minimizeResourcesDuringFullscreen: true,
-    launchAtStartup: false
+    launchAtStartup: false,
+    positionOffsetX: 0,
+    positionOffsetY: 0
 });
 const EXPANDED_PANEL_OPEN_READY_DELAY_MS = 420;
 const SETTINGS_PANEL_SWITCH_OPEN_READY_DELAY_MS = 180;
+const POSITION_OFFSET_LIMIT = 400;
+
+function normalizePositionOffsetValue(value) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) {
+        return 0;
+    }
+    return Math.min(POSITION_OFFSET_LIMIT, Math.max(-POSITION_OFFSET_LIMIT, parsed));
+}
 
 function normalizeAppearanceSettings(value = {}) {
     const rawTransparency = Number.parseInt(value?.launcherTransparency, 10);
@@ -35,6 +46,12 @@ function normalizeAppearanceSettings(value = {}) {
     const suppressShortcutDuringFullscreen = value?.suppressShortcutDuringFullscreen === true;
     const minimizeResourcesDuringFullscreen = value?.minimizeResourcesDuringFullscreen !== false;
     const launchAtStartup = value?.launchAtStartup === true;
+    const positionOffsetX = normalizePositionOffsetValue(
+        value?.positionOffsetX ?? DEFAULT_APPEARANCE_SETTINGS.positionOffsetX
+    );
+    const positionOffsetY = normalizePositionOffsetValue(
+        value?.positionOffsetY ?? DEFAULT_APPEARANCE_SETTINGS.positionOffsetY
+    );
 
     return {
         launcherTransparency,
@@ -43,7 +60,9 @@ function normalizeAppearanceSettings(value = {}) {
         grayscaleUntilHover,
         suppressShortcutDuringFullscreen,
         minimizeResourcesDuringFullscreen,
-        launchAtStartup
+        launchAtStartup,
+        positionOffsetX,
+        positionOffsetY
     };
 }
 
@@ -112,8 +131,19 @@ class ZenLauncherPreferences {
 
     static TransparencyCategory = 'transparency';
     static ThemeCategory = 'theme';
+    static LayoutCategory = 'layout';
     static ShortcutCategory = 'shortcut';
+    static FullscreenCategory = 'fullscreen';
+    static StartupCategory = 'startup';
+    static BackupCategory = 'backup';
     static CreditCategory = 'credit';
+
+    static NavGroups = Object.freeze({
+        items: 'items',
+        appearance: 'appearance',
+        behavior: 'behavior',
+        data: 'data'
+    });
 
     static MaxCount = {
         gallery: 6,
@@ -122,6 +152,7 @@ class ZenLauncherPreferences {
     };
 
     static activeCategory = ZenLauncherPreferences.Category.GALLERY;
+    static activeNavGroup = ZenLauncherPreferences.NavGroups.items;
 
     #savedData = new Map();
     #drafts = new Map();
@@ -134,12 +165,14 @@ class ZenLauncherPreferences {
     #programScanScannedAt = '';
     #programBrowserContext = null;
     #programBrowserFilter = '';
+    #programBrowserShowHidden = false;
     #styleInjected = false;
     #editorCloseTimer = 0;
     #editorOpenReadyTimer = 0;
     #savedAppearance = { ...DEFAULT_APPEARANCE_SETTINGS };
     #draftAppearance = { ...DEFAULT_APPEARANCE_SETTINGS };
     #appearanceDirty = false;
+    #layoutMetrics = null;
 
     constructor(initialData, appearanceSettings) {
         Object.values(ZenLauncherPreferences.Category).forEach((category) => {
@@ -160,11 +193,30 @@ class ZenLauncherPreferences {
         this.#bindEvents();
         this.#bindEditorGridEvents();
         this.#syncAllDirtyCategories();
-        this.#renderCategoryButtons();
+        this.#syncNavGroupFromCategory(ZenLauncherPreferences.activeCategory);
+        this.#renderNav();
         this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
         this.#renderLauncherItems();
         this.#refreshStatus();
         this.#loadProgramScanCache();
+        this.#refreshLayoutMetrics();
+    }
+
+    #getAppearancePanelIds() {
+        return [
+            ZenLauncherPreferences.TransparencyCategory,
+            ZenLauncherPreferences.ThemeCategory,
+            ZenLauncherPreferences.LayoutCategory,
+            ZenLauncherPreferences.ShortcutCategory,
+            ZenLauncherPreferences.FullscreenCategory,
+            ZenLauncherPreferences.StartupCategory,
+            ZenLauncherPreferences.BackupCategory,
+            ZenLauncherPreferences.CreditCategory
+        ];
+    }
+
+    #isAppearancePanel(category) {
+        return this.#getAppearancePanelIds().includes(category);
     }
 
     #getTabCategory(button) {
@@ -172,23 +224,37 @@ class ZenLauncherPreferences {
             return '';
         }
 
-        if (button.dataset.tab === ZenLauncherPreferences.TransparencyCategory) {
-            return ZenLauncherPreferences.TransparencyCategory;
-        }
-
-        if (button.dataset.tab === ZenLauncherPreferences.ThemeCategory) {
-            return ZenLauncherPreferences.ThemeCategory;
-        }
-
-        if (button.dataset.tab === ZenLauncherPreferences.ShortcutCategory) {
-            return ZenLauncherPreferences.ShortcutCategory;
-        }
-
-        if (button.dataset.tab === ZenLauncherPreferences.CreditCategory) {
-            return ZenLauncherPreferences.CreditCategory;
+        const tab = button.dataset.tab || '';
+        if (this.#isAppearancePanel(tab)) {
+            return tab;
         }
 
         return ZenLauncherPreferences.Category[button.dataset.category] || '';
+    }
+
+    #getGroupForCategory(category) {
+        if (Object.values(ZenLauncherPreferences.Category).includes(category)) {
+            return ZenLauncherPreferences.NavGroups.items;
+        }
+        if (
+            category === ZenLauncherPreferences.ThemeCategory
+            || category === ZenLauncherPreferences.TransparencyCategory
+            || category === ZenLauncherPreferences.LayoutCategory
+        ) {
+            return ZenLauncherPreferences.NavGroups.appearance;
+        }
+        if (
+            category === ZenLauncherPreferences.ShortcutCategory
+            || category === ZenLauncherPreferences.FullscreenCategory
+            || category === ZenLauncherPreferences.StartupCategory
+        ) {
+            return ZenLauncherPreferences.NavGroups.behavior;
+        }
+        return ZenLauncherPreferences.NavGroups.data;
+    }
+
+    #syncNavGroupFromCategory(category) {
+        ZenLauncherPreferences.activeNavGroup = this.#getGroupForCategory(category);
     }
 
     #areAppearanceSettingsEqual(left, right) {
@@ -198,7 +264,9 @@ class ZenLauncherPreferences {
             && left?.grayscaleUntilHover === right?.grayscaleUntilHover
             && left?.suppressShortcutDuringFullscreen === right?.suppressShortcutDuringFullscreen
             && left?.minimizeResourcesDuringFullscreen === right?.minimizeResourcesDuringFullscreen
-            && left?.launchAtStartup === right?.launchAtStartup;
+            && left?.launchAtStartup === right?.launchAtStartup
+            && left?.positionOffsetX === right?.positionOffsetX
+            && left?.positionOffsetY === right?.positionOffsetY;
     }
 
     #isAppearanceCategoryDirty(category) {
@@ -215,10 +283,21 @@ class ZenLauncherPreferences {
                 || draft.grayscaleUntilHover !== saved.grayscaleUntilHover;
         }
 
+        if (category === ZenLauncherPreferences.LayoutCategory) {
+            return draft.positionOffsetX !== saved.positionOffsetX
+                || draft.positionOffsetY !== saved.positionOffsetY;
+        }
+
         if (category === ZenLauncherPreferences.ShortcutCategory) {
-            return draft.suppressShortcutDuringFullscreen !== saved.suppressShortcutDuringFullscreen
-                || draft.minimizeResourcesDuringFullscreen !== saved.minimizeResourcesDuringFullscreen
-                || draft.launchAtStartup !== saved.launchAtStartup;
+            return draft.suppressShortcutDuringFullscreen !== saved.suppressShortcutDuringFullscreen;
+        }
+
+        if (category === ZenLauncherPreferences.FullscreenCategory) {
+            return draft.minimizeResourcesDuringFullscreen !== saved.minimizeResourcesDuringFullscreen;
+        }
+
+        if (category === ZenLauncherPreferences.StartupCategory) {
+            return draft.launchAtStartup !== saved.launchAtStartup;
         }
 
         return false;
@@ -245,9 +324,18 @@ class ZenLauncherPreferences {
         });
         this.#updateAppearanceDirtyState();
         this.#statusOverride = null;
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#refreshStatus();
         this.#applyAppearance(this.#draftAppearance);
+    }
+
+    async #refreshLayoutMetrics() {
+        try {
+            this.#layoutMetrics = await window.zenLauncher.getLayoutMetrics?.() || null;
+        } catch (_error) {
+            this.#layoutMetrics = null;
+        }
+        return this.#layoutMetrics;
     }
 
     #bindEvents() {
@@ -300,7 +388,7 @@ class ZenLauncherPreferences {
                 tone: 'success',
                 message: '전체 초기화됨'
             };
-            this.#renderCategoryButtons();
+            this.#renderNav();
             this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
             this.#renderLauncherItems();
             this.#refreshStatus();
@@ -308,6 +396,15 @@ class ZenLauncherPreferences {
 
         ElementPath.saveButton?.addEventListener('click', async () => {
             await this.#saveDirtyCategories();
+        });
+
+        this.#getNavGroupButtons().forEach((button) => {
+            this.#makeAccessibleButton(button, () => {
+                const group = button.dataset.group;
+                if (group) {
+                    this.#switchNavGroup(group);
+                }
+            });
         });
 
         this.#getTabButtons().forEach((button) => {
@@ -348,6 +445,12 @@ class ZenLauncherPreferences {
             this.#renderProgramBrowser();
         });
 
+        const showHidden = document.getElementById('program-browser-show-hidden');
+        showHidden?.addEventListener('change', () => {
+            this.#programBrowserShowHidden = showHidden.checked === true;
+            this.#renderProgramBrowser();
+        });
+
         const browserOverlay = document.getElementById('program-browser');
         browserOverlay?.addEventListener('click', (event) => {
             if (event.target === browserOverlay) {
@@ -382,9 +485,14 @@ class ZenLauncherPreferences {
     #prepareEditorStructure() {
         this.#injectStyles();
 
+        this.#getNavGroupButtons().forEach((button) => {
+            button.setAttribute('role', 'tab');
+            button.tabIndex = 0;
+        });
+
         this.#getTabButtons().forEach((button) => {
             button.classList.add('setting-category-button');
-            button.setAttribute('role', 'button');
+            button.setAttribute('role', 'tab');
             button.tabIndex = 0;
             const label = button.dataset.label || button.textContent;
             button.replaceChildren(this.#createStaticElement('span', 'setting-category-label', label));
@@ -472,22 +580,74 @@ class ZenLauncherPreferences {
             .setting-field-control .file-item { flex:0 0 auto; align-self:auto; margin-top:0 !important; }
             .setting-field-group.mode-tabs { gap:0; }
             .setting-mode-row {
-                display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; padding:8px;
-                border:1px solid rgba(255,255,255,0.08); border-radius:18px;
-                background:linear-gradient(180deg, rgba(21,21,21,0.96), rgba(15,15,15,0.98));
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+                display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; padding:6px;
+                border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-control, 8px);
+                background:rgba(255,255,255,0.03);
             }
             .setting-mode-chip {
-                display:inline-flex; align-items:center; justify-content:center; min-width:0; height:40px; padding:0 14px;
-                border-radius:12px; border:1px solid transparent; background:transparent;
-                color:#8d8d8d; cursor:pointer; font-size:11px; font-weight:800; box-sizing:border-box;
-                transition:background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+                display:inline-flex; align-items:center; justify-content:center; min-width:0; height:var(--control-h, 32px); padding:0 10px;
+                border-radius:var(--radius-control, 8px); border:1px solid transparent; background:transparent;
+                color:#8d8d8d; cursor:pointer; font-size:11px; font-weight:700; box-sizing:border-box;
+                transition:background 0.15s ease, color 0.15s ease;
             }
-            .setting-mode-chip:hover { background:rgba(255,255,255,0.04); color:#cfcfcf; transform:translateY(-1px); }
+            .setting-mode-chip:hover { background:var(--hover-fill, rgba(255,255,255,0.08)); color:#cfcfcf; }
             .setting-mode-chip.active {
-                background:linear-gradient(180deg, rgba(72,72,72,0.96), rgba(44,44,44,0.98));
-                border-color:rgba(255,255,255,0.14); color:#f3f3f3;
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.03);
+                background:var(--hover-fill, rgba(255,255,255,0.08));
+                color:#f3f3f3;
+            }
+            .image-field-control { align-items:stretch; }
+            .editor-live-preview .setting-card-preview { height:120px; }
+            .recommend-empty-panel {
+                display:flex; flex-direction:column; gap:8px; min-height:160px; padding:24px 18px;
+                border:1px dashed rgba(255,255,255,0.14); border-radius:var(--radius-control, 8px);
+                background:rgba(255,255,255,0.02); box-sizing:border-box; justify-content:center;
+            }
+            .recommend-empty-title { color:#f1f1f1; font-size:14px; font-weight:800; }
+            .recommend-empty-copy { color:#9a9a9a; font-size:12px; line-height:1.5; }
+            .layout-metric-card {
+                display:grid; grid-template-columns:120px minmax(0, 1fr); gap:8px 12px; padding:14px 16px;
+                border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-control, 8px);
+                background:rgba(255,255,255,0.03);
+            }
+            .layout-metric-label { color:#8d8d8d; font-size:11px; font-weight:700; }
+            .layout-metric-value { color:#f1f1f1; font-size:13px; font-weight:800; }
+            .backup-action-row { display:flex; gap:10px; flex-wrap:wrap; }
+            .program-browser-search-row { display:flex; gap:10px; align-items:center; }
+            .program-browser-search-row .program-browser-search { flex:1 1 auto; min-width:0; }
+            .program-browser-show-hidden {
+                display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; color:#bdbdbd;
+                font-size:11px; font-weight:700; white-space:nowrap; cursor:pointer;
+            }
+            .program-browser-item.is-hidden-program { opacity:0.72; }
+            .zen-slot-add-preview {
+                display:flex; align-items:center; justify-content:center; min-height:96px;
+                border:1px dashed rgba(255,255,255,0.16); border-radius:var(--radius-control, 8px);
+                background:transparent; cursor:pointer;
+            }
+            .zen-slot-add-preview::before, .zen-slot-add-preview::after { display:none !important; }
+            .zen-slot-add-preview img {
+                width:16px; height:16px; opacity:0.72; filter:brightness(0) invert(1);
+            }
+            body[data-theme="light"] .zen-slot-add-preview img { filter:none; opacity:0.55; }
+            body[data-theme="light"] .recommend-empty-panel,
+            body[data-theme="light"] .layout-metric-card {
+                border-color:rgba(84,92,104,0.14);
+                background:rgba(255,255,255,0.72);
+            }
+            body[data-theme="light"] .recommend-empty-title,
+            body[data-theme="light"] .layout-metric-value { color:var(--light-text-strong); }
+            body[data-theme="light"] .recommend-empty-copy,
+            body[data-theme="light"] .layout-metric-label,
+            body[data-theme="light"] .program-browser-show-hidden { color:var(--light-text-muted); }
+            body[data-theme="light"] .setting-category-button:hover,
+            body[data-theme="light"] .setting-nav-group:hover {
+                background:rgba(0,0,0,0.06);
+            }
+            body[data-theme="light"] .setting-category-button.select-category,
+            body[data-theme="light"] .setting-nav-group[aria-selected="true"] {
+                background:rgba(0,0,0,0.08);
+                color:var(--light-text-strong);
+                box-shadow:none;
             }
             .program-picker-card {
                 display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:16px;
@@ -854,28 +1014,35 @@ class ZenLauncherPreferences {
             body[data-theme="light"] #setting-container {
                 color:var(--light-text-default);
             }
-            body[data-theme="light"] #setting-category,
+            body[data-theme="light"] #setting-nav,
+            body[data-theme="light"] #setting-nav-groups {
+                border-color:rgba(84,92,104,0.12);
+                background:rgba(0,0,0,0.02);
+            }
             body[data-theme="light"] .setting-mode-row {
                 border-color:rgba(84,92,104,0.1);
                 background:linear-gradient(180deg, var(--light-surface-top), var(--light-surface-bottom));
                 box-shadow:var(--light-highlight), 0 12px 22px rgba(38,46,58,0.06);
             }
+            body[data-theme="light"] .setting-nav-group,
             body[data-theme="light"] .setting-category-button,
             body[data-theme="light"] .setting-mode-chip {
                 color:var(--light-text-muted);
             }
+            body[data-theme="light"] .setting-nav-group:hover,
             body[data-theme="light"] .setting-category-button:hover,
             body[data-theme="light"] .setting-mode-chip:hover {
-                border-color:rgba(84,92,104,0.12);
-                background:rgba(255,255,255,0.72);
+                border-color:transparent;
+                background:rgba(0,0,0,0.06);
                 color:var(--light-text-default);
             }
+            body[data-theme="light"] .setting-nav-group[aria-selected="true"],
             body[data-theme="light"] .setting-category-button.select-category,
             body[data-theme="light"] .setting-mode-chip.active {
-                border-color:rgba(84,92,104,0.18);
-                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-active-bottom));
+                border-color:transparent;
+                background:rgba(0,0,0,0.08);
                 color:var(--light-text-strong);
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), var(--light-shadow-medium);
+                box-shadow:none;
             }
             body[data-theme="light"] #setting-status,
             body[data-theme="light"] .setting-scan-meta {
@@ -1225,11 +1392,27 @@ class ZenLauncherPreferences {
         rightTools.append(scanMeta, scanButton, closeButton);
         header.append(titleWrap, rightTools);
 
+        const searchRow = document.createElement('div');
+        searchRow.className = 'program-browser-search-row';
+
         const searchInput = document.createElement('input');
         searchInput.id = 'program-browser-search';
         searchInput.className = 'program-browser-search';
         searchInput.type = 'text';
         searchInput.placeholder = '프로그램 이름이나 경로로 검색';
+
+        const showHidden = document.createElement('label');
+        showHidden.className = 'program-browser-show-hidden';
+        const showHiddenInput = document.createElement('input');
+        showHiddenInput.type = 'checkbox';
+        showHiddenInput.id = 'program-browser-show-hidden';
+        showHiddenInput.checked = this.#programBrowserShowHidden === true;
+        showHidden.append(
+            showHiddenInput,
+            document.createTextNode('숨긴 프로그램 보기')
+        );
+
+        searchRow.append(searchInput, showHidden);
 
         const meta = document.createElement('div');
         meta.className = 'program-browser-meta';
@@ -1246,14 +1429,15 @@ class ZenLauncherPreferences {
         list.id = 'program-browser-list';
         list.className = 'program-browser-list';
 
-        panel.append(header, searchInput, meta, list);
+        panel.append(header, searchRow, meta, list);
         overlay.appendChild(panel);
         return overlay;
     }
 
     #openEditor(category = ZenLauncherPreferences.activeCategory) {
         ZenLauncherPreferences.activeCategory = category;
-        this.#renderCategoryButtons();
+        this.#syncNavGroupFromCategory(category);
+        this.#renderNav();
         this.#renderCategoryItems(category);
         if (this.#editorCloseTimer) {
             window.clearTimeout(this.#editorCloseTimer);
@@ -1298,7 +1482,7 @@ class ZenLauncherPreferences {
                 tone: 'neutral',
                 message: '변경 취소됨'
             };
-            this.#renderCategoryButtons();
+            this.#renderNav();
             this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
         }
 
@@ -1319,20 +1503,28 @@ class ZenLauncherPreferences {
         this.#refreshStatus();
     }
 
+    #switchNavGroup(group) {
+        if (!Object.values(ZenLauncherPreferences.NavGroups).includes(group)) {
+            return;
+        }
+
+        ZenLauncherPreferences.activeNavGroup = group;
+        const firstVisible = this.#getTabButtons().find((button) => button.dataset.group === group);
+        const nextCategory = this.#getTabCategory(firstVisible)
+            || ZenLauncherPreferences.activeCategory;
+        this.#switchCategory(nextCategory);
+    }
+
     #switchCategory(category) {
         ZenLauncherPreferences.activeCategory = category;
+        this.#syncNavGroupFromCategory(category);
         this.#activeItemIndex = -1;
         this.#statusOverride = null;
         this.#closeProgramBrowser();
-        if (
-            category === ZenLauncherPreferences.TransparencyCategory
-            || category === ZenLauncherPreferences.ThemeCategory
-            || category === ZenLauncherPreferences.ShortcutCategory
-            || category === ZenLauncherPreferences.CreditCategory
-        ) {
+        if (this.#isAppearancePanel(category)) {
             this.#closeItemEditor({ closeProgramBrowser: false });
         }
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#renderCategoryItems(category);
         this.#refreshStatus();
     }
@@ -1373,24 +1565,27 @@ class ZenLauncherPreferences {
             tone: 'success',
             message: `${dirtyCategories.length + (shouldSaveAppearance ? 1 : 0)}개 저장됨`
         };
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
         this.#renderLauncherItems();
         this.#refreshStatus();
     }
 
-    #renderCategoryButtons() {
+    #renderNav() {
+        this.#getNavGroupButtons().forEach((button) => {
+            const isActive = button.dataset.group === ZenLauncherPreferences.activeNavGroup;
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
         this.#getTabButtons().forEach((button) => {
             const category = this.#getTabCategory(button);
+            const group = button.dataset.group || this.#getGroupForCategory(category);
             const isActive = category === ZenLauncherPreferences.activeCategory;
-            const isAppearanceCategory = category === ZenLauncherPreferences.TransparencyCategory
-                || category === ZenLauncherPreferences.ThemeCategory
-                || category === ZenLauncherPreferences.ShortcutCategory
-                || category === ZenLauncherPreferences.CreditCategory;
-            const isDirty = isAppearanceCategory
+            const isDirty = this.#isAppearancePanel(category)
                 ? this.#isAppearanceCategoryDirty(category)
                 : this.#dirtyCategories.has(category);
 
+            button.hidden = group !== ZenLauncherPreferences.activeNavGroup;
             button.classList.toggle('select-category', isActive);
             button.dataset.dirty = isDirty ? 'true' : 'false';
         });
@@ -1409,8 +1604,32 @@ class ZenLauncherPreferences {
             return;
         }
 
+        if (category === ZenLauncherPreferences.LayoutCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createLayoutPanel());
+            this.#closeItemEditor();
+            return;
+        }
+
         if (category === ZenLauncherPreferences.ShortcutCategory) {
             ElementPath.editorContext.replaceChildren(this.#createShortcutPanel());
+            this.#closeItemEditor();
+            return;
+        }
+
+        if (category === ZenLauncherPreferences.FullscreenCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createFullscreenPanel());
+            this.#closeItemEditor();
+            return;
+        }
+
+        if (category === ZenLauncherPreferences.StartupCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createStartupPanel());
+            this.#closeItemEditor();
+            return;
+        }
+
+        if (category === ZenLauncherPreferences.BackupCategory) {
+            ElementPath.editorContext.replaceChildren(this.#createBackupPanel());
             this.#closeItemEditor();
             return;
         }
@@ -1428,13 +1647,27 @@ class ZenLauncherPreferences {
         const fragment = document.createDocumentFragment();
         const maxCount = ZenLauncherPreferences.MaxCount[category] || items.length;
 
-        for (let index = 0; index < maxCount; index += 1) {
-            const item = items[index];
-            if (item) {
-                fragment.appendChild(this.#createItemCard(category, item, index));
-                continue;
+        if (category === ZenLauncherPreferences.Category.ICON) {
+            for (let index = 0; index < maxCount; index += 1) {
+                const item = items[index];
+                if (item?.link) {
+                    fragment.appendChild(this.#createItemCard(category, item, index));
+                } else {
+                    fragment.appendChild(this.#createEmptySlotCard(category, index));
+                }
             }
-            fragment.appendChild(this.#createEmptySlotCard(category, index));
+        } else {
+            items.forEach((item, index) => {
+                if (item?.link) {
+                    fragment.appendChild(this.#createItemCard(category, item, index));
+                }
+            });
+            const filledCount = items.filter((item) => item?.link).length;
+            if (filledCount < maxCount) {
+                const hole = items.findIndex((item) => !item?.link);
+                const nextIndex = hole >= 0 ? hole : filledCount;
+                fragment.appendChild(this.#createEmptySlotCard(category, nextIndex));
+            }
         }
 
         grid.appendChild(fragment);
@@ -1609,111 +1842,283 @@ class ZenLauncherPreferences {
         return panel;
     }
 
-    #createShortcutPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'theme-settings-panel';
-
-        const header = document.createElement('div');
-        header.className = 'theme-control-header';
-        header.append(
-            this.#createStaticElement('div', 'theme-control-title', '전체 화면'),
-            this.#createStaticElement('div', 'theme-control-value', '')
-        );
-
-        const description = this.#createStaticElement(
-            'div',
-            'theme-control-description',
-            '다른 프로그램이 화면 전체를 쓸 때의 동작입니다. Ctrl+Space는 런처 검색창으로 이동합니다.'
-        );
-
+    #createToggleCard({ id, title, description, checked, onChange }) {
         const toggle = document.createElement('label');
         toggle.className = 'theme-toggle-card';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.id = 'shortcut-suppress-fullscreen';
-        checkbox.checked = this.#draftAppearance.suppressShortcutDuringFullscreen === true;
+        checkbox.id = id;
+        checkbox.checked = checked === true;
 
         const copy = document.createElement('div');
         copy.className = 'theme-toggle-copy';
-        copy.append(
-            this.#createStaticElement('div', 'theme-toggle-title', '다른 앱이 전체 화면이면 멈추기'),
-            this.#createStaticElement(
-                'div',
-                'theme-toggle-description',
-                '켜 두면 Windows에서 다른 프로그램이 화면 전체를 쓰는 동안 Ctrl+Space는 그 프로그램에 전달됩니다. 기본값은 꺼짐입니다.'
-            )
-        );
-
-        const resourceToggle = document.createElement('label');
-        resourceToggle.className = 'theme-toggle-card';
-
-        const resourceCheckbox = document.createElement('input');
-        resourceCheckbox.type = 'checkbox';
-        resourceCheckbox.id = 'resource-minimize-fullscreen';
-        resourceCheckbox.checked = this.#draftAppearance.minimizeResourcesDuringFullscreen !== false;
-
-        const resourceCopy = document.createElement('div');
-        resourceCopy.className = 'theme-toggle-copy';
-        resourceCopy.append(
-            this.#createStaticElement('div', 'theme-toggle-title', '다른 앱이 전체 화면이면 자원 사용 줄이기'),
-            this.#createStaticElement(
-                'div',
-                'theme-toggle-description',
-                '켜 두면 애니메이션을 멈추고 화면 갱신을 초당 1회로 낮춥니다. 기본값은 최소화입니다.'
-            )
-        );
-
-        const startupToggle = document.createElement('label');
-        startupToggle.className = 'theme-toggle-card';
-
-        const startupCheckbox = document.createElement('input');
-        startupCheckbox.type = 'checkbox';
-        startupCheckbox.id = 'launch-at-startup';
-        startupCheckbox.checked = this.#draftAppearance.launchAtStartup === true;
-
-        const startupCopy = document.createElement('div');
-        startupCopy.className = 'theme-toggle-copy';
-        startupCopy.append(
-            this.#createStaticElement('div', 'theme-toggle-title', 'Windows 시작 시 자동 실행'),
-            this.#createStaticElement(
-                'div',
-                'theme-toggle-description',
-                '켜 두면 로그인할 때 런처가 시스템 트레이에서 실행됩니다. 기본값은 꺼짐입니다.'
-            )
-        );
-
-        toggle.append(checkbox, copy);
-        resourceToggle.append(resourceCheckbox, resourceCopy);
-        startupToggle.append(startupCheckbox, startupCopy);
-        panel.append(header, description, toggle, resourceToggle, startupToggle);
-
-        const syncShortcutPanel = () => {
-            const shortcutEnabled = this.#draftAppearance.suppressShortcutDuringFullscreen === true;
-            const resourcesMinimized = this.#draftAppearance.minimizeResourcesDuringFullscreen !== false;
-            checkbox.checked = shortcutEnabled;
-            resourceCheckbox.checked = resourcesMinimized;
-            startupCheckbox.checked = this.#draftAppearance.launchAtStartup === true;
-            header.querySelector('.theme-control-value').textContent = resourcesMinimized ? '최소화' : '유지';
-        };
+        copy.append(this.#createStaticElement('div', 'theme-toggle-title', title));
+        if (description) {
+            copy.append(this.#createStaticElement('div', 'theme-toggle-description', description));
+        }
 
         checkbox.addEventListener('change', () => {
-            this.#updateAppearanceDraft({ suppressShortcutDuringFullscreen: checkbox.checked });
-            syncShortcutPanel();
+            onChange?.(checkbox.checked);
         });
 
-        resourceCheckbox.addEventListener('change', () => {
-            this.#updateAppearanceDraft({ minimizeResourcesDuringFullscreen: resourceCheckbox.checked });
-            syncShortcutPanel();
+        toggle.append(checkbox, copy);
+        return { toggle, checkbox };
+    }
+
+    #createShortcutPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel';
+        panel.append(
+            this.#createStaticElement('div', 'theme-placeholder-title', '단축키'),
+            this.#createStaticElement(
+                'div',
+                'theme-control-description',
+                'Ctrl+Space는 런처 검색창으로 이동합니다.'
+            )
+        );
+
+        const { toggle } = this.#createToggleCard({
+            id: 'shortcut-suppress-fullscreen',
+            title: '다른 앱이 전체 화면이면 단축키 멈추기',
+            description: '켜 두면 다른 프로그램이 화면 전체를 쓰는 동안 Ctrl+Space는 그 프로그램에 전달됩니다. 기본값은 꺼짐입니다.',
+            checked: this.#draftAppearance.suppressShortcutDuringFullscreen === true,
+            onChange: (checked) => {
+                this.#updateAppearanceDraft({ suppressShortcutDuringFullscreen: checked });
+            }
         });
 
-        startupCheckbox.addEventListener('change', () => {
-            this.#updateAppearanceDraft({ launchAtStartup: startupCheckbox.checked });
-            syncShortcutPanel();
-        });
-
-        syncShortcutPanel();
+        panel.append(toggle);
         return panel;
+    }
+
+    #createFullscreenPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel';
+        panel.append(
+            this.#createStaticElement('div', 'theme-placeholder-title', '전체 화면'),
+            this.#createStaticElement(
+                'div',
+                'theme-control-description',
+                '다른 프로그램이 화면 전체를 쓸 때 런처 자원 사용을 조절합니다.'
+            )
+        );
+
+        const { toggle } = this.#createToggleCard({
+            id: 'resource-minimize-fullscreen',
+            title: '다른 앱이 전체 화면이면 자원 사용 줄이기',
+            description: '켜 두면 애니메이션을 멈추고 화면 갱신을 초당 1회로 낮춥니다. 기본값은 최소화입니다.',
+            checked: this.#draftAppearance.minimizeResourcesDuringFullscreen !== false,
+            onChange: (checked) => {
+                this.#updateAppearanceDraft({ minimizeResourcesDuringFullscreen: checked });
+            }
+        });
+
+        panel.append(toggle);
+        return panel;
+    }
+
+    #createStartupPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel';
+        panel.append(
+            this.#createStaticElement('div', 'theme-placeholder-title', '시작'),
+            this.#createStaticElement(
+                'div',
+                'theme-control-description',
+                'Windows 로그인과 함께 런처를 실행할지 정합니다.'
+            )
+        );
+
+        const { toggle } = this.#createToggleCard({
+            id: 'launch-at-startup',
+            title: 'Windows 시작 시 자동 실행',
+            description: '켜 두면 로그인할 때 런처가 시스템 트레이에서 실행됩니다. 기본값은 꺼짐입니다.',
+            checked: this.#draftAppearance.launchAtStartup === true,
+            onChange: (checked) => {
+                this.#updateAppearanceDraft({ launchAtStartup: checked });
+            }
+        });
+
+        panel.append(toggle);
+        return panel;
+    }
+
+    #createLayoutPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel layout-settings-panel';
+        const metrics = this.#layoutMetrics || {};
+        const displayWidth = metrics.displayWidth || metrics.workAreaWidth || '-';
+        const displayHeight = metrics.displayHeight || metrics.workAreaHeight || '-';
+        const autoX = Number.isFinite(metrics.autoX) ? metrics.autoX : (Number.isFinite(metrics.x) ? metrics.x : 0);
+        const autoY = Number.isFinite(metrics.autoY) ? metrics.autoY : (Number.isFinite(metrics.y) ? metrics.y : 0);
+
+        panel.append(
+            this.#createStaticElement('div', 'theme-placeholder-title', '배치'),
+            this.#createStaticElement(
+                'div',
+                'theme-control-description',
+                '자동으로 인식한 화면을 확인하고, 필요하면 픽셀 단위로 위치를 보정합니다.'
+            )
+        );
+
+        const summary = document.createElement('div');
+        summary.className = 'layout-metric-card';
+        summary.append(
+            this.#createStaticElement('div', 'layout-metric-label', '인식된 해상도'),
+            this.#createStaticElement('div', 'layout-metric-value', `${displayWidth} × ${displayHeight}`),
+            this.#createStaticElement('div', 'layout-metric-label', '자동 위치'),
+            this.#createStaticElement('div', 'layout-metric-value', `X ${autoX}px / Y ${autoY}px`)
+        );
+
+        const offsetX = this.#createOffsetField({
+            id: 'layout-offset-x',
+            label: '가로 보정 (px)',
+            value: this.#draftAppearance.positionOffsetX,
+            onChange: (value) => this.#updateAppearanceDraft({ positionOffsetX: value })
+        });
+        const offsetY = this.#createOffsetField({
+            id: 'layout-offset-y',
+            label: '세로 보정 (px)',
+            value: this.#draftAppearance.positionOffsetY,
+            onChange: (value) => this.#updateAppearanceDraft({ positionOffsetY: value })
+        });
+
+        const preview = this.#createStaticElement(
+            'div',
+            'theme-control-description',
+            `보정 후 예상 위치: X ${autoX + this.#draftAppearance.positionOffsetX}px / Y ${autoY + this.#draftAppearance.positionOffsetY}px`
+        );
+        preview.id = 'layout-offset-preview';
+
+        const syncPreview = () => {
+            preview.textContent = `보정 후 예상 위치: X ${autoX + this.#draftAppearance.positionOffsetX}px / Y ${autoY + this.#draftAppearance.positionOffsetY}px`;
+        };
+        offsetX.input.addEventListener('input', syncPreview);
+        offsetY.input.addEventListener('input', syncPreview);
+
+        const reset = document.createElement('button');
+        reset.type = 'button';
+        reset.className = 'setting-action-button';
+        reset.textContent = '보정 초기화';
+        reset.addEventListener('click', () => {
+            this.#updateAppearanceDraft({ positionOffsetX: 0, positionOffsetY: 0 });
+            offsetX.input.value = '0';
+            offsetY.input.value = '0';
+            syncPreview();
+        });
+
+        panel.append(summary, offsetX.wrapper, offsetY.wrapper, preview, reset);
+        this.#refreshLayoutMetrics().then((nextMetrics) => {
+            if (!panel.isConnected || !nextMetrics) {
+                return;
+            }
+            const width = nextMetrics.displayWidth || nextMetrics.workAreaWidth || '-';
+            const height = nextMetrics.displayHeight || nextMetrics.workAreaHeight || '-';
+            const values = summary.querySelectorAll('.layout-metric-value');
+            if (values[0]) {
+                values[0].textContent = `${width} × ${height}`;
+            }
+            if (values[1]) {
+                values[1].textContent = `X ${nextMetrics.autoX ?? 0}px / Y ${nextMetrics.autoY ?? 0}px`;
+            }
+        });
+        return panel;
+    }
+
+    #createOffsetField({ id, label, value, onChange }) {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'setting-field';
+        wrapper.append(this.#createStaticElement('span', 'setting-field-label', label));
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = id;
+        input.step = '1';
+        input.min = `${-POSITION_OFFSET_LIMIT}`;
+        input.max = `${POSITION_OFFSET_LIMIT}`;
+        input.value = `${value || 0}`;
+        input.addEventListener('change', () => {
+            onChange?.(normalizePositionOffsetValue(input.value));
+            input.value = `${normalizePositionOffsetValue(input.value)}`;
+        });
+        wrapper.appendChild(input);
+        return { wrapper, input };
+    }
+
+    #createBackupPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'theme-settings-panel';
+        panel.append(
+            this.#createStaticElement('div', 'theme-placeholder-title', '백업'),
+            this.#createStaticElement(
+                'div',
+                'theme-control-description',
+                '갤러리·아이콘·폴더와 모양 설정을 JSON 파일로 내보내거나 불러옵니다. 불러온 내용은 저장 전에 미리보기로 반영됩니다.'
+            )
+        );
+
+        const actions = document.createElement('div');
+        actions.className = 'backup-action-row';
+
+        const exportButton = document.createElement('button');
+        exportButton.type = 'button';
+        exportButton.className = 'setting-action-button primary-button';
+        exportButton.textContent = '설정 내보내기';
+        exportButton.addEventListener('click', async () => {
+            const result = await window.zenLauncher.exportSettings?.();
+            if (!result || result.canceled) {
+                return;
+            }
+            this.#statusOverride = {
+                tone: 'success',
+                message: '설정 파일로 내보냄'
+            };
+            this.#refreshStatus();
+        });
+
+        const importButton = document.createElement('button');
+        importButton.type = 'button';
+        importButton.className = 'setting-action-button';
+        importButton.textContent = '설정 불러오기';
+        importButton.addEventListener('click', async () => {
+            const result = await window.zenLauncher.importSettings?.();
+            if (!result || result.canceled) {
+                return;
+            }
+            this.#applyImportedSettings(result);
+        });
+
+        actions.append(exportButton, importButton);
+        panel.append(actions);
+        return panel;
+    }
+
+    #applyImportedSettings(payload) {
+        const appearance = normalizeAppearanceSettings(payload?.appearance || {});
+        this.#draftAppearance = appearance;
+        this.#updateAppearanceDirtyState();
+        this.#applyAppearance(appearance);
+
+        Object.values(ZenLauncherPreferences.Category).forEach((category) => {
+            const source = Array.isArray(payload?.categories?.[category])
+                ? payload.categories[category]
+                : [];
+            const normalizedItems = source
+                .map((item) => this.#normalizeItem(item, category))
+                .filter((item) => item.link)
+                .slice(0, ZenLauncherPreferences.MaxCount[category]);
+            this.#drafts.set(category, normalizedItems.map((item) => ({ ...item })));
+            this.#updateDirtyState(category);
+        });
+
+        this.#statusOverride = {
+            tone: 'warning',
+            message: '불러옴 · 저장 필요'
+        };
+        this.#renderNav();
+        this.#renderCategoryItems(ZenLauncherPreferences.activeCategory);
+        this.#refreshStatus();
     }
 
     #createThemeModeOption({ id, name, value, title, checked = false }) {
@@ -1779,20 +2184,20 @@ class ZenLauncherPreferences {
     #createEmptySlotCard(category, index) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'setting-add-card';
+        button.className = category === ZenLauncherPreferences.Category.FOLDER
+            ? 'setting-add-card zen-slot-add-preview folder'
+            : `setting-add-card zen-slot-add-preview ${category}`;
         button.dataset.action = 'add-item';
         button.dataset.itemIndex = `${index}`;
-        button.append(
-            this.#createStaticElement('div', 'setting-add-card-title', `빈 슬롯 ${index + 1}`),
-            this.#createStaticElement(
-                'div',
-                'setting-add-card-meta',
-                category === ZenLauncherPreferences.Category.FOLDER
-                    ? '클릭해서 폴더를 추가하세요'
-                    : '클릭해서 링크나 프로그램을 추가하세요'
-            )
+        button.setAttribute(
+            'aria-label',
+            category === ZenLauncherPreferences.Category.FOLDER ? '폴더 추가' : '추가'
         );
 
+        const icon = document.createElement('img');
+        icon.src = 'src/icon/icon-plus.svg';
+        icon.alt = '';
+        button.appendChild(icon);
         return button;
     }
 
@@ -1806,8 +2211,16 @@ class ZenLauncherPreferences {
                 return preview;
             }
 
-            preview.classList.add('folder-preview');
-            preview.textContent = item.name || this.#summarizeLink(item.link);
+            preview.classList.add('folder-preview', 'folder-preview-modern');
+            const icon = document.createElement('img');
+            icon.src = 'src/icon/icon-folder.svg';
+            icon.alt = '';
+            const label = this.#createStaticElement(
+                'span',
+                'setting-preview-folder-name',
+                item.name || this.#summarizeLink(item.link)
+            );
+            preview.append(icon, label);
             return preview;
         }
 
@@ -1890,7 +2303,7 @@ class ZenLauncherPreferences {
         }
 
         this.#currentEditorMode = this.#resolveEditorMode(category, item, preferredMode);
-        title.textContent = `${meta.title} 슬롯 ${index + 1} 편집`;
+        title.textContent = `${meta.title} 항목 편집`;
         if (deleteButton) {
             deleteButton.style.display = 'inline-flex';
         }
@@ -1919,19 +2332,14 @@ class ZenLauncherPreferences {
                 pickerLabel: meta.selectButtonLabel
             }));
         } else {
-            leftFields.push(this.#createEditorField({
-                category,
-                index,
-                key: 'img',
-                label: '이미지 URL',
-                value: item.img,
-                placeholder: meta.imagePlaceholder
-            }));
-
+            leftFields.push(this.#createImageField(category, index, item, meta));
+            leftFields.push(this.#createLiveEditorPreview(category, item));
             rightFields.push(this.#createSourceModeField());
 
             if (this.#currentEditorMode === 'program') {
                 rightFields.push(this.#createProgramPickerField(category, index, item));
+            } else if (this.#currentEditorMode === 'recommend') {
+                rightFields.push(this.#createRecommendPanel());
             } else {
                 rightFields.push(this.#createEditorField({
                     category,
@@ -1949,6 +2357,65 @@ class ZenLauncherPreferences {
         fields.replaceChildren(this.#createEditorLayout(category, index, item, { leftFields, rightFields }));
 
         editor.classList.add('open');
+        document.getElementById('setting-nav')?.setAttribute('data-collapsed', 'true');
+    }
+
+    #createImageField(category, index, item, meta) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'setting-field-group';
+        wrapper.append(this.#createStaticElement('span', 'setting-field-label', '이미지'));
+
+        const control = document.createElement('div');
+        control.className = 'setting-field-control image-field-control';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = item.img || '';
+        input.placeholder = meta.imagePlaceholder;
+        input.addEventListener('input', () => {
+            this.#updateDraftValue(category, index, 'img', input.value);
+        });
+
+        const upload = document.createElement('button');
+        upload.type = 'button';
+        upload.className = 'file-item';
+        upload.textContent = '이미지 업로드';
+        upload.addEventListener('click', async () => {
+            const selectedPath = await window.zenLauncher.pickPath('image');
+            if (!selectedPath) {
+                return;
+            }
+            input.value = selectedPath;
+            this.#updateDraftValue(category, index, 'img', selectedPath);
+        });
+
+        control.append(input, upload);
+        wrapper.append(control);
+        return wrapper;
+    }
+
+    #createLiveEditorPreview(category, item) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'setting-field-group editor-live-preview';
+        wrapper.append(
+            this.#createStaticElement('span', 'setting-field-label', '미리보기'),
+            this.#createPreviewElement(category, item)
+        );
+        return wrapper;
+    }
+
+    #createRecommendPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'recommend-empty-panel';
+        panel.append(
+            this.#createStaticElement('div', 'recommend-empty-title', '추천'),
+            this.#createStaticElement(
+                'div',
+                'recommend-empty-copy',
+                '추천 목록은 추후 등록될 예정입니다.'
+            )
+        );
+        return panel;
     }
 
     #createEditorLayout(category, index, item, sections) {
@@ -2026,23 +2493,21 @@ class ZenLauncherPreferences {
         const row = document.createElement('div');
         row.className = 'setting-mode-row';
 
-        const directButton = document.createElement('button');
-        directButton.type = 'button';
-        directButton.className = `setting-mode-chip${this.#currentEditorMode === 'direct' ? ' active' : ''}`;
-        directButton.textContent = '링크';
-        directButton.addEventListener('click', () => {
-            this.#setCurrentEditorMode('direct');
+        [
+            ['direct', '링크'],
+            ['program', '프로그램'],
+            ['recommend', '추천']
+        ].forEach(([mode, label]) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `setting-mode-chip${this.#currentEditorMode === mode ? ' active' : ''}`;
+            button.textContent = label;
+            button.addEventListener('click', () => {
+                this.#setCurrentEditorMode(mode);
+            });
+            row.appendChild(button);
         });
 
-        const programButton = document.createElement('button');
-        programButton.type = 'button';
-        programButton.className = `setting-mode-chip${this.#currentEditorMode === 'program' ? ' active' : ''}`;
-        programButton.textContent = '프로그램';
-        programButton.addEventListener('click', () => {
-            this.#setCurrentEditorMode('program');
-        });
-
-        row.append(directButton, programButton);
         wrapper.appendChild(row);
         return wrapper;
     }
@@ -2113,9 +2578,17 @@ class ZenLauncherPreferences {
         this.#drafts.set(category, items);
         this.#updateDirtyState(category);
         this.#statusOverride = null;
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#refreshStatus();
         this.#updateItemCardDom(category, index);
+
+        const editor = document.getElementById('slot-editor');
+        if (editor?.classList.contains('open') && this.#activeItemIndex === index) {
+            const livePreview = editor.querySelector('.editor-live-preview .setting-card-preview');
+            if (livePreview) {
+                livePreview.replaceWith(this.#createPreviewElement(category, items[index]));
+            }
+        }
     }
 
     #applyScannedProgramSelection(category, index, program) {
@@ -2137,7 +2610,7 @@ class ZenLauncherPreferences {
             tone: 'success',
             message: `"${program.name}" 적용됨`
         };
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#refreshStatus();
         this.#updateItemCardDom(category, index);
         this.#openItemEditor(category, index, 'program');
@@ -2187,7 +2660,7 @@ class ZenLauncherPreferences {
         this.#updateDirtyState(category);
         this.#activeItemIndex = resolvedIndex;
         this.#statusOverride = null;
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#renderCategoryItems(category);
 
         this.#openItemEditor(category, this.#activeItemIndex, 'direct');
@@ -2228,7 +2701,7 @@ class ZenLauncherPreferences {
         this.#activeItemIndex = items.length === 0 ? -1 : Math.min(index, items.length - 1);
         this.#statusOverride = null;
         this.#closeProgramBrowser();
-        this.#renderCategoryButtons();
+        this.#renderNav();
         this.#renderCategoryItems(category);
         this.#refreshStatus();
     }
@@ -2236,6 +2709,7 @@ class ZenLauncherPreferences {
     #closeItemEditor({ closeProgramBrowser = true, restoreSize = true } = {}) {
         const editor = document.getElementById('slot-editor');
         editor?.classList.remove('open');
+        document.getElementById('setting-nav')?.removeAttribute('data-collapsed');
         this.#activeItemIndex = -1;
         this.#currentEditorMode = 'direct';
         if (closeProgramBrowser) {
@@ -2600,16 +3074,63 @@ class ZenLauncherPreferences {
         return document.getElementById('program-browser')?.classList.contains('open');
     }
 
+    #getAssignedProgramLinkKeys(exclude = null) {
+        const keys = new Set();
+        [ZenLauncherPreferences.Category.GALLERY, ZenLauncherPreferences.Category.ICON]
+            .forEach((category) => {
+                (this.#drafts.get(category) || []).forEach((item, index) => {
+                    if (!item?.link) {
+                        return;
+                    }
+                    if (
+                        exclude
+                        && exclude.category === category
+                        && exclude.index === index
+                    ) {
+                        return;
+                    }
+                    keys.add(window.zenLauncher.normalizeLinkKey?.(item.link) || item.link.toLowerCase());
+                });
+            });
+        return keys;
+    }
+
+    #getProgramVisibility(program) {
+        const assignedKeys = this.#getAssignedProgramLinkKeys(this.#programBrowserContext);
+        const linkKey = window.zenLauncher.normalizeLinkKey?.(program.link) || String(program.link || '').toLowerCase();
+        const isSystem = window.zenLauncher.isSystemProgram?.(program) === true;
+        const isAssigned = assignedKeys.has(linkKey);
+        return {
+            isSystem,
+            isAssigned,
+            isHidden: isSystem || isAssigned
+        };
+    }
+
     #renderProgramBrowser() {
         const list = document.getElementById('program-browser-list');
         const count = document.getElementById('program-browser-count');
         const status = document.getElementById('program-browser-status');
+        const showHiddenInput = document.getElementById('program-browser-show-hidden');
         if (!list || !count || !status) {
             return;
         }
 
+        if (showHiddenInput) {
+            showHiddenInput.checked = this.#programBrowserShowHidden === true;
+        }
+
         const filter = this.#programBrowserFilter.toLowerCase();
+        let hiddenCount = 0;
         const filteredPrograms = this.#programScanCache.filter((program) => {
+            const visibility = this.#getProgramVisibility(program);
+            if (visibility.isHidden) {
+                hiddenCount += 1;
+                if (!this.#programBrowserShowHidden) {
+                    return false;
+                }
+            }
+
             if (!filter) {
                 return true;
             }
@@ -2622,7 +3143,9 @@ class ZenLauncherPreferences {
         count.textContent = `${filteredPrograms.length}개`;
         status.textContent = this.#programScanLoading
             ? '스캔 중입니다.'
-            : '';
+            : (hiddenCount > 0 && !this.#programBrowserShowHidden
+                ? `시스템·추가됨 ${hiddenCount}개 숨김`
+                : '');
 
         list.replaceChildren();
 
@@ -2636,7 +3159,7 @@ class ZenLauncherPreferences {
             empty.className = 'program-browser-empty';
             empty.append(
                 this.#createStaticElement('div', '', '아직 스캔된 프로그램이 없습니다.'),
-                this.#createStaticElement('div', '', '환경설정 상단의 "프로그램 스캔" 버튼이나 아래 버튼을 눌러 목록을 가져오세요.')
+                this.#createStaticElement('div', '', '아래 버튼을 눌러 설치된 프로그램과 시작 메뉴 항목을 가져오세요.')
             );
 
             const button = document.createElement('button');
@@ -2654,14 +3177,24 @@ class ZenLauncherPreferences {
         }
 
         if (filteredPrograms.length === 0) {
-            list.appendChild(this.#createStaticElement('div', 'program-browser-empty', '검색 결과가 없습니다. 다른 이름이나 경로로 찾아보세요.'));
+            list.appendChild(this.#createStaticElement(
+                'div',
+                'program-browser-empty',
+                this.#programBrowserShowHidden
+                    ? '검색 결과가 없습니다. 다른 이름이나 경로로 찾아보세요.'
+                    : '표시할 프로그램이 없습니다. 숨긴 프로그램 보기를 켜 보세요.'
+            ));
             return;
         }
 
         filteredPrograms.forEach((program) => {
+            const visibility = this.#getProgramVisibility(program);
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'program-browser-item';
+            if (visibility.isHidden) {
+                button.classList.add('is-hidden-program');
+            }
             button.addEventListener('click', () => {
                 if (!this.#programBrowserContext) {
                     return;
@@ -2676,9 +3209,16 @@ class ZenLauncherPreferences {
             });
 
             const info = document.createElement('div');
+            const metaBits = [this.#getProgramSourceLabel(program.source)];
+            if (visibility.isSystem) {
+                metaBits.push('시스템');
+            }
+            if (visibility.isAssigned) {
+                metaBits.push('이미 추가됨');
+            }
             info.append(
                 this.#createStaticElement('div', 'program-browser-item-title', program.name),
-                this.#createStaticElement('div', 'program-browser-item-meta', `${this.#getProgramSourceLabel(program.source)}\n${program.link}`)
+                this.#createStaticElement('div', 'program-browser-item-meta', `${metaBits.join(' · ')}\n${program.link}`)
             );
 
             const badge = this.#createStaticElement('div', 'program-browser-item-source', this.#getProgramSourceShortLabel(program.source));
@@ -2765,7 +3305,7 @@ class ZenLauncherPreferences {
             return 'direct';
         }
 
-        if (preferredMode === 'direct' || preferredMode === 'program') {
+        if (preferredMode === 'direct' || preferredMode === 'program' || preferredMode === 'recommend') {
             return preferredMode;
         }
 
@@ -2789,7 +3329,11 @@ class ZenLauncherPreferences {
     }
 
     #getTabButtons() {
-        return Array.from(document.querySelectorAll('#setting-category [data-tab]'));
+        return Array.from(document.querySelectorAll('#setting-nav-tabs [data-tab]'));
+    }
+
+    #getNavGroupButtons() {
+        return Array.from(document.querySelectorAll('#setting-nav-groups [data-group]'));
     }
 
     #getCategoryMeta() {

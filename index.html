@@ -2780,110 +2780,136 @@
         }
 
         #setting-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: 188px minmax(0, 1fr);
+            gap: 0;
             min-height: 0;
             flex: 1;
             min-width: 0;
-            padding: 14px 26px 12px;
+            padding: 0;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
-        #setting-topbar {
+        #setting-nav {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr);
+            min-height: 0;
+            border-right: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        #setting-nav-groups,
+        #setting-nav-tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-top: 0;
-            padding: 20px 6px 10px;
-            border-bottom: none;
-        }
-
-        #setting-category {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-            flex: 0 1 auto;
-            width: max-content;
-            max-width: min(100%, 760px);
+            flex-direction: column;
+            gap: 4px;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 14px 8px;
             box-sizing: border-box;
-            overflow-x: auto;
-            padding: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 18px;
-            background: linear-gradient(180deg, rgba(21, 21, 21, 0.96), rgba(15, 15, 15, 0.98));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-            scrollbar-width: none;
+            scrollbar-width: thin;
         }
 
-        #setting-category::-webkit-scrollbar {
-            display: none;
+        #setting-nav-groups {
+            border-right: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
+            padding-right: 6px;
         }
 
+        #setting-nav-tabs {
+            padding-left: 6px;
+        }
+
+        .setting-nav-group,
         .setting-category-button {
             position: relative;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 0;
-            flex: 0 0 auto;
-            min-width: 92px;
-            height: 40px;
-            padding: 0 16px;
+            width: 100%;
+            min-height: var(--control-h, 32px);
+            padding: 0 10px;
             border: 1px solid transparent;
-            border-radius: 12px;
+            border-radius: var(--radius-control, 8px);
             background: transparent;
             color: #8d8d8d;
-            text-align: center;
+            text-align: left;
             cursor: pointer;
-            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
             box-sizing: border-box;
             appearance: none;
             white-space: nowrap;
+            font-size: 12px;
+            font-weight: 700;
         }
 
+        .setting-nav-group {
+            justify-content: center;
+            padding: 0 4px;
+            font-size: 11px;
+            letter-spacing: -0.02em;
+        }
+
+        .setting-nav-group:hover,
         .setting-category-button:hover {
-            border-color: rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.04);
-            color: #cfcfcf;
-            transform: translateY(-1px);
+            background: var(--hover-fill, rgba(255, 255, 255, 0.08));
+            color: #d8d8d8;
         }
 
+        .setting-nav-group[aria-selected="true"],
         .setting-category-button.select-category {
-            background: linear-gradient(180deg, rgba(72, 72, 72, 0.96), rgba(44, 44, 44, 0.98));
+            background: var(--hover-fill, rgba(255, 255, 255, 0.08));
             color: #f3f3f3;
-            border-color: rgba(255, 255, 255, 0.14);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.03);
         }
 
         .setting-category-button[data-dirty="true"]::after {
             content: '';
             position: absolute;
-            top: 7px;
-            right: 7px;
+            top: 8px;
+            right: 8px;
             width: 6px;
             height: 6px;
             border-radius: 50%;
             background: #f6c65b;
         }
 
-        .setting-category-button[data-coming-soon="true"] {
-            color: #8d8d8d;
-            border-style: dashed;
+        .setting-category-button[hidden] {
+            display: none !important;
         }
 
         .setting-category-label {
             font-size: 12px;
-            font-weight: 900;
-            line-height: 1;
+            font-weight: 700;
+            line-height: 1.2;
         }
 
         .setting-category-caption {
             display: none;
+        }
+
+        #setting-main {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            padding: 12px 18px 10px;
+            box-sizing: border-box;
+        }
+
+        #setting-main > #setting-content {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        #setting-topbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            margin-top: 0;
+            padding: 0 0 10px;
+            border-bottom: 1px solid var(--hairline, rgba(255, 255, 255, 0.08));
         }
 
         #setting-content {
@@ -2892,7 +2918,7 @@
             min-width: 0;
             min-height: 0;
             flex-direction: column;
-            padding: 0 8px 0 6px;
+            padding: 0;
             position: relative;
         }
 
@@ -3157,16 +3183,17 @@
             position: relative;
             width: 54px;
             height: 100%;
-            padding: 5px;
+            padding: 12px;
             box-sizing: border-box;
-            background: linear-gradient(180deg, rgba(58, 58, 58, 0.96), rgba(36, 36, 36, 0.98));
-            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
+            border-radius: var(--radius-control, 8px);
         }
 
         .setting-grid[data-category="GALLERY"] .setting-preview-gallery-shell {
             width: 100%;
-            padding: 7px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: var(--radius-control, 8px);
         }
 
         .setting-preview-gallery-media {
@@ -3289,20 +3316,62 @@
 
         .setting-card-preview.folder-preview {
             justify-content: flex-start;
-            padding: 0 10px;
+            gap: 10px;
+            padding: 0 12px;
             color: #cfcfcf;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 700;
-            background: linear-gradient(45deg, #262626 25%, #2f2f2f 0, #2f2f2f 50%, #262626 0, #262626 75%, #2f2f2f 0);
-            background-size: 5px 5px;
+            background: var(--hover-fill, rgba(255, 255, 255, 0.04));
+            border: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
             box-sizing: border-box;
         }
 
+        .setting-card-preview.folder-preview img {
+            width: 16px;
+            height: 16px;
+            opacity: 0.72;
+            filter: brightness(0) invert(1);
+            flex: 0 0 auto;
+        }
+
+        body[data-theme="light"] .setting-card-preview.folder-preview {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #303030;
+        }
+
+        body[data-theme="light"] .setting-card-preview.folder-preview img {
+            filter: none;
+            opacity: 0.6;
+        }
+
+        .setting-preview-folder-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .setting-grid[data-category="FOLDER"] .setting-card-preview.folder-preview {
-            height: 136px;
-            border-radius: 13px;
+            height: 44px;
+            border-radius: var(--radius-control, 8px);
             padding: 0 12px;
-            font-size: 11px;
+            font-size: 12px;
+        }
+
+        .setting-grid[data-category="FOLDER"] {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 6px;
+        }
+
+        .setting-grid[data-category="GALLERY"] .setting-add-card.zen-slot-add-preview,
+        .setting-grid[data-category="FOLDER"] .setting-add-card.zen-slot-add-preview {
+            min-height: 44px;
+            height: auto;
+        }
+
+        .setting-grid[data-category="GALLERY"] .setting-add-card.zen-slot-add-preview {
+            min-height: 132px;
         }
 
         .setting-card-preview-empty {
@@ -3395,6 +3464,14 @@
             flex-direction: column;
             gap: 16px;
             min-height: 100%;
+        }
+
+        #setting-nav[data-collapsed="true"] {
+            display: none;
+        }
+
+        #setting-container:has(#slot-editor.open) {
+            grid-template-columns: minmax(0, 1fr);
         }
 
         #setting-container:has(#slot-editor.open) #setting-topbar,
@@ -3716,6 +3793,7 @@
             background: linear-gradient(180deg, rgba(59, 43, 47, 0.92), rgba(43, 33, 35, 0.96));
         }
 
+        .setting-nav-group:focus-visible,
         .setting-category-button:focus-visible,
         .setting-item-card:focus-visible,
         .setting-add-card:focus-visible,
@@ -6640,18 +6718,31 @@
                 <div id="editor-widget-body"></div>
             </div>
         <div id="setting-container">
-            <div id="setting-topbar">
-	                <div id="setting-category">
-	                    <button id="btn-preference-gallery" data-tab="gallery" data-category="GALLERY" type="button">갤러리</button>
-	                    <button id="btn-preference-icon" data-tab="icon" data-category="ICON" type="button">아이콘</button>
-	                    <button id="btn-preference-folder" data-tab="folder" data-category="FOLDER" type="button">폴더</button>
-	                    <button id="btn-preference-transparency" data-tab="transparency" data-label="투명도" type="button">투명도</button>
-	                    <button id="btn-preference-theme" data-tab="theme" data-label="테마" type="button">테마</button>
-	                    <button id="btn-preference-shortcut" data-tab="shortcut" data-label="단축키" type="button">단축키</button>
-	                    <button id="btn-preference-credit" data-tab="credit" data-label="제작자" type="button">제작자</button>
-	                </div>
-	            </div>
-            <div id="setting-row"></div>
+            <aside id="setting-nav" aria-label="설정 탐색">
+                <div id="setting-nav-groups" role="tablist" aria-orientation="vertical">
+                    <button type="button" class="setting-nav-group" data-group="items" aria-selected="true">항목</button>
+                    <button type="button" class="setting-nav-group" data-group="appearance">모양</button>
+                    <button type="button" class="setting-nav-group" data-group="behavior">동작</button>
+                    <button type="button" class="setting-nav-group" data-group="data">데이터</button>
+                </div>
+                <div id="setting-nav-tabs" role="tablist" aria-orientation="vertical">
+                    <button id="btn-preference-gallery" data-group="items" data-tab="gallery" data-category="GALLERY" data-label="갤러리" type="button">갤러리</button>
+                    <button id="btn-preference-icon" data-group="items" data-tab="icon" data-category="ICON" data-label="아이콘" type="button">아이콘</button>
+                    <button id="btn-preference-folder" data-group="items" data-tab="folder" data-category="FOLDER" data-label="폴더" type="button">폴더</button>
+                    <button id="btn-preference-theme" data-group="appearance" data-tab="theme" data-label="테마" type="button">테마</button>
+                    <button id="btn-preference-transparency" data-group="appearance" data-tab="transparency" data-label="투명도" type="button">투명도</button>
+                    <button id="btn-preference-layout" data-group="appearance" data-tab="layout" data-label="배치" type="button">배치</button>
+                    <button id="btn-preference-shortcut" data-group="behavior" data-tab="shortcut" data-label="단축키" type="button">단축키</button>
+                    <button id="btn-preference-fullscreen" data-group="behavior" data-tab="fullscreen" data-label="전체 화면" type="button">전체 화면</button>
+                    <button id="btn-preference-startup" data-group="behavior" data-tab="startup" data-label="시작" type="button">시작</button>
+                    <button id="btn-preference-backup" data-group="data" data-tab="backup" data-label="백업" type="button">백업</button>
+                    <button id="btn-preference-credit" data-group="data" data-tab="credit" data-label="정보" type="button">정보</button>
+                </div>
+            </aside>
+            <div id="setting-main">
+                <div id="setting-topbar"></div>
+                <div id="setting-row"></div>
+            </div>
         </div>
         <div class="btn-row">
             <div>

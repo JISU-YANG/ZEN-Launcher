@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const {
+    isSystemProgram,
+    normalizeLinkKey
+} = require('./src/main/domain/program/programVisibility');
 
 contextBridge.exposeInMainWorld('zenLauncher', {
+    isSystemProgram(program) {
+        return isSystemProgram(program);
+    },
+    normalizeLinkKey(link) {
+        return normalizeLinkKey(link);
+    },
     onResourceSaver(handler) {
         if (typeof handler !== 'function') {
             return () => {};
@@ -43,6 +53,12 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     },
     saveAppearanceSettings(settings) {
         return ipcRenderer.invoke('zen-launcher:save-appearance-settings', settings);
+    },
+    exportSettings() {
+        return ipcRenderer.invoke('zen-launcher:export-settings');
+    },
+    importSettings() {
+        return ipcRenderer.invoke('zen-launcher:import-settings');
     },
     clearData() {
         return ipcRenderer.invoke('zen-launcher:clear-data');
