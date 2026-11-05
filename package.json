@@ -1,7 +1,7 @@
 {
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "releaseDate": "2026-11-06",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
@@ -40,8 +40,8 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseName": "v2.3.1",
-      "releaseNotes": "런처를 고른 여백으로 다시 배치했습니다. 검색, 폴더, 이름, 설정은 사이드바에 있고 하단 바는 본문 아래에서 끝납니다.\n\n갤러리 이름은 마우스를 올렸을 때만 올라옵니다. 빈 칸은 평소에 보이지 않고, 마우스를 올리면 테두리와 +가 나타납니다."
+      "releaseName": "v2.3.2",
+      "releaseNotes": "갤러리와 아이콘은 개수가 적어도 칸 크기가 늘어나지 않습니다. 직접 넣은 아이콘 이미지는 원래 색을 유지합니다.\n\n런처 바탕을 밝히고, 이름보다 검색 안내, 온도, 강수량, 하단 버튼, 설정 아이콘을 한 단계 어둡게 맞췄습니다."
     },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",

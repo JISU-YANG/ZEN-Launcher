@@ -1545,7 +1545,7 @@ class ZenLauncherPreferences {
                 date.textContent = String(info.releaseDate).replace(/-/g, '.');
             }
         }).catch(() => {
-            version.textContent = 'v2.3.1';
+            version.textContent = 'v2.3.2';
         });
 
         return panel;
