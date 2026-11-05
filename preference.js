@@ -507,7 +507,7 @@ class ZenLauncherPreferences {
             .program-browser-caption { margin-top:4px; color:#8f8f8f; font-size:11px; line-height:1.45; }
             .program-browser-search {
                 margin:0 2px; height:44px; padding:0 14px; border:1px solid rgba(255,255,255,0.08); border-radius:14px;
-                background:rgba(255,255,255,0.03); color:#f1f1f1; font-family:'Noto Sans KR', sans-serif; font-size:12px; box-sizing:border-box;
+                background:rgba(255,255,255,0.03); color:#f1f1f1; font-family:"Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif; font-size:12px; box-sizing:border-box;
                 position:relative; z-index:2;
             }
             .program-browser-search::placeholder { color:#727272; }
