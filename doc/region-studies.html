@@ -134,7 +134,7 @@
         .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
         .note { margin-top: 28px; color: #8d8d8d; font-size: 13px; }
 
-        /* 01 선 */
+        /* 01 선: 채움 없이 1px만. 폴더 줄, 하단 묶음, 호버도 선이다. */
         .s1 .folder { border-left: 1px solid var(--line); }
         .s1 .footer { border-top: 1px solid var(--line); }
         .s1 .icons {
@@ -144,8 +144,32 @@
             border-bottom: 1px solid var(--line);
         }
         .s1 .search { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+        .s1 .vbar, .s1 .split { background: var(--line); }
+        .s1 .folder-row i { display: none; }
+        .s1 .folder-row, .s1 .folder-add,
+        .s1 .cluster, .s1 .weather, .s1 .gear, .s1 .brand {
+            background: transparent;
+            border-radius: 0;
+        }
+        .s1 .folder-row, .s1 .folder-add {
+            min-height: 40px;
+            padding: 0 2px;
+            border-bottom: 1px solid var(--line);
+        }
+        .s1 .folder-row:hover, .s1 .folder-row.on, .s1 .folder-add:hover {
+            background: transparent;
+            color: #fff;
+            box-shadow: inset 2px 0 0 #fff;
+        }
+        .s1 .i-item, .s1 .i-item:hover, .s1 .i-item.on { background: transparent; color: var(--muted); border-radius: 0; }
+        .s1 .i-item:hover, .s1 .i-item.on { color: #fff; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line); }
+        .s1 .g-name { height: 40px; background: transparent; border-top: 1px solid var(--line); }
+        .s1 .tool:hover, .s1 .gear:hover, .s1 .brand:hover { background: transparent; }
+        .s1 .gear { width: 28px; height: 28px; }
 
-        /* 02 단 */
+        /* 02 단: 선은 없다. 모든 면이 같은 계단이다. 모서리는 12. */
+        .s2 .g-item, .s2 .search, .s2 .folder-row, .s2 .folder-add,
+        .s2 .cluster, .s2 .weather, .s2 .gear, .s2 .brand, .s2 .i-item { border-radius: 12px; }
         .s2 .icons {
             margin: 0 -18px 0 calc(var(--inset) * -1);
             padding: 10px 18px 10px var(--inset);
@@ -153,79 +177,95 @@
         }
         .s2 .folder { background: #111111; }
         .s2 .footer { background: #171717; }
-        .s2 .search { height: 40px; padding: 0 12px; border-radius: 10px; background: #1e1e1e; }
-        .s2 .folder-row, .s2 .folder-add { background: #1a1a1a; }
+        .s2 .g-name { background: #111111; }
+        .s2 .i-item:hover, .s2 .i-item.on { background: #161616; }
+        .s2 .search { height: 44px; padding: 0 14px; background: #1e1e1e; }
+        .s2 .folder-row, .s2 .folder-add { min-height: 44px; background: #1a1a1a; }
         .s2 .folder-row:hover, .s2 .folder-row.on, .s2 .folder-add:hover { background: #242424; }
-        .s2 .cluster, .s2 .weather, .s2 .gear, .s2 .brand { background: #222; }
+        .s2 .folder-row i { background: #3a3a3a; }
+        .s2 .cluster, .s2 .weather, .s2 .gear, .s2 .brand { background: #222222; }
         .s2 .tool:hover, .s2 .gear:hover, .s2 .brand:hover { background: #2c2c2c; }
 
-        /* 03 칸 */
-        .s3 {
-            padding: var(--inset);
-            gap: 16px;
-            grid-template-rows: auto auto;
-        }
+        /* 03 칸: 큰 판 16, 그 안의 칸 10. 간격은 밖 16, 안 12. */
+        .s3 { padding: var(--inset); gap: 16px; grid-template-rows: auto auto; }
         .s3 .main { padding: 0; gap: 16px; }
-        .s3 .icons { padding: 8px 10px; border-radius: 16px; background: #101010; }
-        .s3 .folder { margin: 0; padding: 16px 14px; border-radius: 16px; background: #0e0e0e; }
-        .s3 .search { height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); }
-        .s3 .folder-row, .s3 .folder-add { background: #1a1a1a; }
-        .s3 .folder-row:hover, .s3 .folder-row.on, .s3 .folder-add:hover { background: #242424; }
-        .s3 .footer { height: 64px; border-radius: 16px; background: #121212; }
+        .s3 .g-item { border-radius: 16px; }
+        .s3 .g-name { background: #101010; }
+        .s3 .icons { gap: 12px; padding: 12px; border-radius: 16px; background: #101010; }
+        .s3 .i-item { height: 64px; border-radius: 10px; }
+        .s3 .i-item:hover, .s3 .i-item.on { background: #1c1c1c; }
+        .s3 .folder { gap: 12px; margin: 0; padding: 16px; border-radius: 16px; background: #101010; }
+        .s3 .search, .s3 .folder-row, .s3 .folder-add,
+        .s3 .cluster, .s3 .weather, .s3 .gear, .s3 .brand { border-radius: 10px; background: #1a1a1a; }
+        .s3 .search { height: 44px; padding: 0 14px; border: none; }
+        .s3 .folder-row, .s3 .folder-add { min-height: 44px; }
+        .s3 .folder-row:hover, .s3 .folder-row.on, .s3 .folder-add:hover { background: #262626; }
+        .s3 .footer { height: 76px; border-radius: 16px; background: #101010; }
         .s3 .footer-main, .s3 .footer-folder { align-items: center; }
-        .s3 .cluster, .s3 .weather, .s3 .gear, .s3 .brand { background: #1c1c1c; }
+        .s3 .cluster, .s3 .weather, .s3 .brand { height: 44px; }
+        .s3 .gear { width: 44px; height: 44px; }
+        .s3 .tool:hover, .s3 .gear:hover, .s3 .brand:hover { background: #262626; }
 
-        /* 04 홈 */
+        /* 04 홈: 우물만 어둡다. 안의 줄과 아이콘은 판을 두지 않는다. */
         .s4 { grid-template-rows: auto auto; padding-bottom: var(--inset); }
         .s4 .main { padding-bottom: 16px; }
-        .s4 .icons {
-            padding: 8px 10px;
-            border-radius: 14px;
+        .s4 .icons, .s4 .folder, .s4 .footer, .s4 .search {
             background: #000;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
         }
-        .s4 .i-item:hover, .s4 .i-item.on { background: #161616; }
-        .s4 .folder {
-            margin: var(--inset) var(--inset) 0 0;
-            padding: 16px;
-            border-radius: 14px;
-            background: #000;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+        .s4 .icons { padding: 8px 12px; border-radius: 14px; }
+        .s4 .i-item:hover, .s4 .i-item.on { background: #1a1a1a; border-radius: 10px; }
+        .s4 .folder { margin: var(--inset) var(--inset) 0 0; padding: 16px 14px; border-radius: 14px; gap: 0; }
+        .s4 .search { height: 36px; margin-bottom: 8px; padding: 0 12px; border-radius: 8px; }
+        .s4 .folder-row i { display: none; }
+        .s4 .folder-row, .s4 .folder-add {
+            min-height: 40px; padding: 0 4px; border-radius: 0; background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .s4 .footer {
-            height: 64px;
-            margin: 0 var(--inset);
-            border-radius: 14px;
-            background: #000;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+        .s4 .folder-row:hover, .s4 .folder-row.on, .s4 .folder-add:hover {
+            background: #141414; border-radius: 8px; border-bottom-color: transparent; color: #fff;
         }
+        .s4 .footer { height: 64px; margin: 0 var(--inset); border-radius: 14px; }
         .s4 .footer-main, .s4 .footer-folder { align-items: center; }
-        .s4 .search { height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.22); background: #000; }
-        .s4 .folder-row, .s4 .folder-add { background: #121212; }
-        .s4 .cluster, .s4 .weather, .s4 .gear, .s4 .brand { background: #161616; }
+        .s4 .cluster, .s4 .weather, .s4 .gear, .s4 .brand { background: transparent; border-radius: 0; }
+        .s4 .gear { width: 28px; height: 28px; }
+        .s4 .tool:hover, .s4 .gear:hover, .s4 .brand:hover { background: transparent; }
+        .s4 .g-name { background: #000; }
 
-        /* 05 띠 */
+        /* 05 띠: 띠 위에 또 판을 올리지 않는다. 호버도 알약이다. */
         .s5 { padding-bottom: var(--inset); grid-template-rows: auto auto; }
         .s5 .main { padding-bottom: 16px; }
-        .s5 .icons { padding: 0 12px; border-radius: 999px; background: #101010; }
-        .s5 .folder { box-shadow: inset 10px 0 0 #1c1c1c; }
-        .s5 .search { padding-bottom: 10px; border-bottom: 2px solid #2a2a2a; }
+        .s5 .icons {
+            height: 60px; align-items: center; padding: 0 8px;
+            border-radius: 999px; background: #141414;
+        }
+        .s5 .i-item { height: 48px; border-radius: 999px; }
+        .s5 .i-item:hover, .s5 .i-item.on { background: #242424; border-radius: 999px; }
+        .s5 .folder { box-shadow: inset 10px 0 0 #141414; padding-left: 24px; }
+        .s5 .folder-row i { display: none; }
+        .s5 .folder-row, .s5 .folder-add {
+            min-height: 36px; padding: 0 4px; border-radius: 0; background: transparent;
+        }
+        .s5 .folder-row:hover, .s5 .folder-row.on, .s5 .folder-add:hover {
+            background: transparent; color: #fff; box-shadow: inset 2px 0 0 #fff;
+        }
+        .s5 .search { padding-bottom: 10px; border-bottom: 2px solid #141414; }
         .s5 .footer {
-            height: 56px;
-            margin: 0 var(--inset);
-            border-radius: 999px;
-            background: #101010;
+            height: 52px; margin: 0 var(--inset); border-radius: 999px; background: #141414;
         }
         .s5 .footer-main, .s5 .footer-folder { align-items: center; }
-        .s5 .cluster, .s5 .weather, .s5 .gear, .s5 .brand { background: #1a1a1a; }
+        .s5 .cluster, .s5 .weather, .s5 .gear, .s5 .brand { background: transparent; border-radius: 0; }
+        .s5 .gear { width: 28px; height: 28px; }
+        .s5 .tool:hover, .s5 .gear:hover, .s5 .brand:hover { background: transparent; }
+        .s5 .g-name { height: 32px; background: rgba(0, 0, 0, 0.78); }
     </style>
 </head>
 <body>
     <div class="page">
         <h1>영역을 나누는 다섯 가지</h1>
         <div class="intro">
-            <p>지금 맞춘 런처를 기준으로, 하단 바, 사이드바, 아이콘 바, 검색만 나누는 방식을 바꿨다. 갤러리, 이름, 아이콘, 폴더, 하단 묶음은 그대로다. 바깥 여백 36px과 모서리 18px도 유지한다.</p>
-            <p>참고, 시계, 폴더의 참고는 올려 둔 상태다. 런처 화면에는 아직 반영하지 않았다.</p>
+            <p>다섯 장은 영역을 나누는 방식이 다르고, 그 방식에 폴더 줄, 하단 묶음, 호버, 이름 띠까지 맞춰 두었다. 바깥 여백 36px과 모서리 18px은 같다.</p>
+            <p>참고, 시계, 폴더의 참고는 그 시안의 호버다. 런처 화면에는 아직 반영하지 않았다.</p>
         </div>
         <nav>
             <a href="#s1">01 선</a>
@@ -240,7 +280,7 @@
                 <div class="num">01</div>
                 <div>
                     <h2>선</h2>
-                    <p>색은 그대로다. 사이드바는 왼쪽 1px, 하단 바는 위 1px, 아이콘 바는 위아래 1px, 검색은 아래 1px로만 갈린다.</p>
+                    <p>구분은 1px 선뿐이다. 폴더 줄과 하단 묶음은 판을 벗겼다. 고른 줄은 왼쪽 2px, 아이콘 호버와 갤러리 이름은 같은 1px 선이다.</p>
                 </div>
             </div>
             <div class="dock s1"></div>
@@ -250,7 +290,7 @@
                 <div class="num">02</div>
                 <div>
                     <h2>단</h2>
-                    <p>선 없이 면의 밝기로 나눈다. 아이콘 바 #0c0c0c, 사이드바 #111111, 하단 바 #171717, 검색 #1e1e1e. 한 단씩만 올라간다.</p>
+                    <p>선은 없다. 아이콘 바 #0c0c0c, 사이드바 #111111, 하단 바 #171717이고, 그 위의 검색, 폴더 줄, 묶음은 한 단 더 밝다. 모서리는 모두 12다.</p>
                 </div>
             </div>
             <div class="dock s2"></div>
@@ -260,7 +300,7 @@
                 <div class="num">03</div>
                 <div>
                     <h2>칸</h2>
-                    <p>네 영역이 각각 둥근 판이다. 판 사이 16px에는 런처 배경이 남는다. 검색은 사이드바 판 안의 테두리 칸이다.</p>
+                    <p>큰 판의 모서리는 16, 그 안 칸은 10이다. 판 사이는 16px, 칸 사이는 12px이다. 검색, 폴더 줄, 하단 묶음은 같은 안쪽 칸이다.</p>
                 </div>
             </div>
             <div class="dock s3"></div>
@@ -270,7 +310,7 @@
                 <div class="num">04</div>
                 <div>
                     <h2>홈</h2>
-                    <p>영역이 배경보다 어두운 둥근 우물이다. 아이콘 바, 사이드바, 하단 바는 #000이고 가장자리에 얇은 선이 있다. 검색은 그 안의 테두리 홈이다.</p>
+                    <p>아이콘 바, 사이드바, 하단 바, 검색이 검은 우물이다. 우물 안의 폴더 줄과 하단 아이콘은 판 없이 놓인다. 고른 줄만 우물 안에서 한 단 떠오른다.</p>
                 </div>
             </div>
             <div class="dock s4"></div>
@@ -280,12 +320,12 @@
                 <div class="num">05</div>
                 <div>
                     <h2>띠</h2>
-                    <p>아이콘 바와 하단 바는 알약 띠다. 사이드바는 왼쪽 10px 띠, 검색은 2px 밑줄이다. 면 전체를 칠하지 않는다.</p>
+                    <p>아이콘 바와 하단 바는 알약 띠이고, 그 위 묶음 판은 걷어 냈다. 사이드바는 왼쪽 10px 띠, 검색은 같은 색의 2px 밑줄이다. 아이콘 호버도 알약이다.</p>
                 </div>
             </div>
             <div class="dock s5"></div>
         </section>
-        <p class="note">다섯 장 모두 같은 내용이다. 달라진 것은 하단 바, 사이드바, 아이콘 바, 검색을 가르는 방식뿐이다.</p>
+        <p class="note">내용물은 같다. 각 장의 줄, 묶음, 호버는 그 장이 영역을 나누는 방식과 같다.</p>
     </div>
     <template id="dock-body">
         <div class="main">
