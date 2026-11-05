@@ -1,7 +1,7 @@
 {
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "releaseDate": "2026-11-06",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
@@ -40,8 +40,8 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseName": "v2.3.3",
-      "releaseNotes": "갤러리와 아이콘 이미지는 기본적으로 흑백이고, 마우스를 올리면 원래 색이 보입니다. 테마 설정에서 끌 수 있습니다.\n\n갤러리 이미지는 칸을 꽉 채우지 않고, 사이드바 안의 검색바처럼 12px 여백 안에 앉습니다."
+      "releaseName": "v2.3.4",
+      "releaseNotes": "갤러리 세로를 32px 줄이고, 아이콘 바를 52px에서 84px로 키웠습니다. 런처 전체 높이는 그대로입니다."
     },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
