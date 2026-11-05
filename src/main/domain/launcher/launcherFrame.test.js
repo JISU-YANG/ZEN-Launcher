@@ -67,6 +67,30 @@ test('sizes peek, panel, and workspace from the space above the dock', () => {
     assert.equal(sheetHeightForFit('closed', 620), 0);
 });
 
+test('applies pixel offsets and clamps them inside the work area', () => {
+    const frame = computeLauncherFrame(
+        { x: 0, y: 0, width: 1920, height: 1080 },
+        null,
+        { x: 24, y: -40 }
+    );
+
+    assert.equal(frame.autoX, 360);
+    assert.equal(frame.x, 384);
+    assert.equal(frame.y, 488);
+    assert.equal(frame.positionOffsetX, 24);
+    assert.equal(frame.positionOffsetY, -40);
+    assert.equal(frame.displayWidth, 1920);
+    assert.equal(frame.displayHeight, 1080);
+
+    const clamped = computeLauncherFrame(
+        { x: 0, y: 0, width: 1920, height: 1080 },
+        null,
+        { x: 99999, y: -99999 }
+    );
+    assert.equal(clamped.x, 1920 - 1200);
+    assert.equal(clamped.y, 0);
+});
+
 test('seeds six default tools once and does not overwrite an existing icon row', () => {
     const seeded = resolveInitialIcons({ iconsSeeded: false, items: [] });
     assert.equal(seeded.replaceItems, true);
