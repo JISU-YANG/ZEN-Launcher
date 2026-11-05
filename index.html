@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZEN Launcher</title>
+    <link rel="stylesheet" href="src/fonts/pretendard.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
-
         html,
         body {
             margin: 0;
@@ -25,7 +24,7 @@
             --launcher-overlay-alpha: 0.2;
             --launcher-surface-opacity: 1;
             --editor-surface-opacity: 1;
-            font-family: 'Noto Sans KR', sans-serif;
+            font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
             font-size: 14px;
             font-weight: 700;
         }
@@ -36,6 +35,12 @@
 
         button {
             font: inherit;
+        }
+
+        input,
+        textarea,
+        select {
+            font-family: inherit;
         }
 
         html[data-resource-saver="active"] *,
@@ -777,7 +782,7 @@
         }
 
         #input-search::placeholder {
-            font-family: 'Noto Sans KR', sans-serif;
+            font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
             font-size: 12px;
             font-weight: 400;
         }
@@ -3555,7 +3560,7 @@
             background: rgba(255, 255, 255, 0.03);
             color: #f1f1f1;
             font-size: 12px;
-            font-family: 'Noto Sans KR', sans-serif;
+            font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
             font-weight: 600;
             box-sizing: border-box;
             transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
