@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>같은 판, 면과 하단과 폴더</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page: #0e0e0e;
+            --hairline: rgba(255, 255, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            background: var(--page);
+            color: #ececec;
+            font-family: "Noto Sans KR", sans-serif;
+            line-height: 1.5;
+        }
+        a { color: inherit; text-decoration: none; }
+
+        .page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 80px; }
+        .intro h1 { margin: 0 0 12px; font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+        .intro p { max-width: 74ch; margin: 0 0 10px; color: #bdbdbd; font-size: 15px; }
+
+        nav {
+            position: sticky; top: 0; z-index: 5;
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin: 22px 0 8px; padding: 10px 0;
+            background: linear-gradient(180deg, var(--page) 70%, transparent);
+        }
+        nav a {
+            padding: 6px 10px; border: 1px solid var(--hairline); border-radius: 8px;
+            background: #161616; color: #cfcfcf; font-size: 13px; font-weight: 700;
+        }
+        nav a:hover { background: #222; }
+
+        .study { margin-top: 36px; }
+        .study-head { display: grid; grid-template-columns: 52px 1fr; gap: 8px; margin-bottom: 14px; }
+        .num { padding-top: 6px; color: #8d8d8d; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; }
+        .study-head h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.03em; }
+        .study-head p { margin: 4px 0 0; max-width: 78ch; color: #a3a3a3; font-size: 14px; }
+
+        .dock {
+            --shell: #1c1c1c;
+            --plate: #101010;
+            --folder: #262626;
+            --foot: #101010;
+            --foot-h: 50px;
+            --ink: #d7d7d7;
+            --muted: #9a9a9a;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            grid-template-rows: 450px var(--foot-h);
+            background: var(--shell);
+            color: var(--ink);
+            overflow: hidden;
+        }
+
+        .main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 28px 28px 22px;
+        }
+        .row { display: flex; align-items: stretch; gap: 18px; min-width: 0; }
+
+        .g-item, .i-item, .search, .folder-row {
+            background: var(--plate);
+            border-radius: 12px;
+        }
+        .g-item, .i-item {
+            display: flex; flex-direction: column; flex: 1 1 0; min-width: 0; overflow: hidden;
+        }
+        .g-item { height: 128px; }
+        .i-item { height: 108px; }
+        .media { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+        .poster { width: 100%; height: 100%; }
+        .p1 { background: radial-gradient(90px 60px at 72% 28%, rgba(255,255,255,0.22), transparent 70%), linear-gradient(165deg, #6a625c, #2c2926 46%, #141312); }
+        .p2 { background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.35)), linear-gradient(125deg, #4e5963, #243039 42%, #14181b); }
+        .p3 { background: radial-gradient(120px 40px at 50% 62%, rgba(255,255,255,0.12), transparent 70%), linear-gradient(200deg, #5c5348, #2a241e 50%, #161310); }
+        .p4 { background: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 18px 100%, linear-gradient(180deg, #3c3c3c, #1a1a1a); }
+        .g-name, .i-name {
+            flex: 0 0 30px; display: flex; align-items: center; justify-content: center;
+            min-width: 0; padding: 0 8px; color: var(--muted); font-size: 12px; font-weight: 700;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .glyph { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+        .slot img { width: 18px; height: 18px; filter: brightness(0) invert(0.62); }
+        .g-item:hover, .i-item:hover, .g-item.on, .i-item.on,
+        .folder-row:hover, .folder-row.on { background: color-mix(in srgb, var(--plate) 86%, white); }
+        .g-item:hover .g-name, .i-item:hover .i-name, .g-item.on .g-name, .i-item.on .i-name { color: #f3f3f3; }
+
+        .search {
+            align-self: center; display: flex; align-items: center;
+            width: 520px; max-width: 100%; height: 60px; border: none;
+        }
+        .engine, .query { padding: 0 24px; font-size: 13px; font-weight: 700; }
+        .engine { color: var(--ink); }
+        .query { flex: 1; min-width: 0; color: #8d8d8d; }
+        .vbar { width: 1px; height: 18px; background: var(--hairline); flex: 0 0 auto; }
+
+        .folder {
+            background: var(--folder);
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 16px 12px;
+        }
+        .folder-row, .folder-add {
+            display: flex; align-items: center; min-height: 44px; padding: 0 14px;
+            color: #c8c8c8; font-size: 13px; font-weight: 700;
+        }
+        .folder-add { justify-content: center; color: var(--muted); border: 1px dashed rgba(255,255,255,0.16); background: transparent; }
+        .add-mark { display: none; }
+
+        .footer { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 220px; background: var(--foot); }
+        .footer-main, .footer-folder { display: flex; align-items: center; min-width: 0; height: 100%; }
+        .footer-main { position: relative; justify-content: space-between; padding: 0 16px 0 10px; }
+        .footer-folder { justify-content: space-between; padding: 0 10px 0 18px; }
+        .tools { display: flex; align-items: center; gap: 2px; }
+        .tool, .gear { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
+        .tools img, .gear img, .weather img { filter: brightness(0) invert(1); }
+        .tools img, .gear img { width: 16px; height: 16px; }
+        .split { width: 1px; height: 16px; margin: 0 6px; background: var(--hairline); }
+        .weather {
+            position: absolute; left: 50%; top: calc(50% - 1px);
+            display: flex; align-items: center; gap: 7px;
+            font-size: 13px; font-weight: 700; transform: translate(-50%, -50%);
+        }
+        .weather img { width: 14px; height: 14px; }
+        .weather b { font-weight: 900; }
+        .brand { color: var(--muted); font-size: 13px; font-weight: 900; line-height: 1; }
+        .brand span { letter-spacing: 0.06em; margin-right: -0.06em; }
+
+        /* 01 한 면 */
+        .s1 { --shell: #1a1a1a; --plate: #101010; --folder: #1a1a1a; --foot: #1a1a1a; }
+        .s1 .folder { border-left: 1px solid var(--hairline); padding: 18px 14px; gap: 10px; }
+        .s1 .footer { border-top: 1px solid var(--hairline); }
+        .s1 .folder-add { background: var(--plate); border: none; }
+
+        /* 02 단 */
+        .s2 { --shell: #2a2a2a; --plate: #161616; --folder: #202020; --foot: #0e0e0e; --foot-h: 56px; }
+        .s2 .footer { border-top: 1px solid rgba(255,255,255,0.08); }
+        .s2 .folder { padding: 18px 14px; gap: 10px; }
+        .s2 .footer-main { padding-left: 14px; padding-right: 18px; }
+        .s2 .tools { gap: 4px; }
+
+        /* 03 묶음 */
+        .s3 { --shell: #1e1e1e; --plate: #111111; --folder: #1e1e1e; --foot: #1e1e1e; --foot-h: 62px; }
+        .s3 .folder { padding: 18px 14px; gap: 8px; }
+        .s3 .folder-add { background: var(--plate); border: none; }
+        .s3 .footer-main { display: grid; grid-template-columns: auto 1fr auto; align-items: center; padding: 0 12px; }
+        .s3 .cluster { display: flex; align-items: center; height: 40px; padding: 0 6px; border-radius: 10px; background: var(--plate); }
+        .s3 .weather {
+            position: static; transform: none; justify-self: center;
+            height: 40px; padding: 0 16px; border-radius: 10px; background: var(--plate);
+        }
+        .s3 .footer-folder { padding-left: 14px; }
+        .s3 .gear { width: 36px; height: 36px; border-radius: 10px; background: var(--plate); }
+
+        /* 04 선 */
+        .s4 { --shell: #0e0e0e; --plate: #1c1c1c; --folder: #0e0e0e; --foot: #0e0e0e; --foot-h: 58px; }
+        .s4 .folder { gap: 0; padding: 8px 0; border-left: 1px solid var(--hairline); }
+        .s4 .folder-row, .s4 .folder-add {
+            border-radius: 0; background: transparent; min-height: 48px; padding: 0 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .s4 .folder-add { justify-content: flex-start; gap: 8px; border-style: none; color: var(--muted); }
+        .s4 .add-mark { display: inline; }
+        .s4 .folder-row.on, .s4 .folder-row:hover { background: rgba(255,255,255,0.06); }
+        .s4 .footer { border-top: 1px solid var(--hairline); }
+        .s4 .footer-main { padding: 0 22px; }
+        .s4 .footer-folder { padding: 0 16px 0 22px; }
+        .s4 .tools { gap: 6px; }
+
+        /* 05 온기 */
+        .s5 { --shell: #2a2420; --plate: #1a1613; --folder: #221e1a; --foot: #120f0d; --foot-h: 56px; --ink: #e6dfd8; --muted: #b3a89f; }
+        .s5 .query { color: #8d8278; }
+        .s5 .folder { padding: 18px 14px; gap: 10px; }
+        .s5 .footer { border-top: 1px solid rgba(255, 236, 214, 0.08); }
+        .s5 .p1 { background: radial-gradient(90px 60px at 72% 28%, rgba(255,236,214,0.18), transparent 70%), linear-gradient(165deg, #6a5c52, #2c241f 46%, #161210); }
+        .s5 .p2 { background: linear-gradient(125deg, #5c534c, #2a241e 46%, #161310); }
+        .s5 .p3 { background: linear-gradient(200deg, #6a5848, #2a221c 50%, #161210); }
+        .s5 .p4 { background: linear-gradient(90deg, rgba(255,236,214,0.06) 1px, transparent 1px) 0 0 / 18px 100%, linear-gradient(180deg, #3c342e, #1a1613); }
+
+        .note { margin-top: 28px; color: #8d8d8d; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="intro">
+            <h1>같은 판에서 면까지</h1>
+            <p>4번 시안은 검색도 갤러리와 같은 판으로 두는 안이다. 면은 하단 바보다 어두운 한 색, 모서리는 12, 높이는 60, 안쪽 여백은 24px이다. 쉬고 있을 때는 테두리가 없다.</p>
+            <p>이번 다섯 장은 그 판을 유지한 채 런처 배경, 하단 바, 폴더 열을 같이 정리한다. 이미지, 이름, 아이콘, 추가 칸, 검색의 엔진과 구분선과 입력칸, 폴더, 하단의 종료·소리·날씨·설정·이름은 그대로다. 둘째 칸과 폴더의 둘째 줄이 호버 상태다.</p>
+        </header>
+        <nav>
+            <a href="#s1">01 한 면</a>
+            <a href="#s2">02 단</a>
+            <a href="#s3">03 묶음</a>
+            <a href="#s4">04 선</a>
+            <a href="#s5">05 온기</a>
+        </nav>
+
+        <section class="study" id="s1">
+            <div class="study-head">
+                <div class="num">01</div>
+                <div>
+                    <h2>한 면</h2>
+                    <p>배경, 폴더, 하단 바를 #1a1a1a 하나로 둔다. 갈라짐은 색이 아니라 1px 선이다. 갤러리, 아이콘, 검색, 폴더 줄은 그보다 어두운 #101010 판이다. 폴더 추가도 점선 대신 같은 판이다.</p>
+                </div>
+            </div>
+            <div class="dock s1"></div>
+        </section>
+
+        <section class="study" id="s2">
+            <div class="study-head">
+                <div class="num">02</div>
+                <div>
+                    <h2>단</h2>
+                    <p>면을 세 단으로 나눈다. 배경 #2a2a2a, 폴더 #202020, 하단 바 #0e0e0e. 판은 #161616이라 배경 위에 놓인다. 하단 바는 56px로 조금 높고, 아이콘 사이는 4px이다.</p>
+                </div>
+            </div>
+            <div class="dock s2"></div>
+        </section>
+
+        <section class="study" id="s3">
+            <div class="study-head">
+                <div class="num">03</div>
+                <div>
+                    <h2>묶음</h2>
+                    <p>배경과 폴더와 하단 바는 같은 #1e1e1e다. 그 위의 물건만 판이다. 종료와 소리, 날씨, 설정, 런처 설정이 각각 높이 40px 판이 된다. 폴더 줄도 같은 판이고 8px씩 떨어져 있다.</p>
+                </div>
+            </div>
+            <div class="dock s3"></div>
+        </section>
+
+        <section class="study" id="s4">
+            <div class="study-head">
+                <div class="num">04</div>
+                <div>
+                    <h2>선</h2>
+                    <p>배경, 폴더, 하단 바는 가장 어두운 #0e0e0e다. 판만 #1c1c1c로 한 단 밝다. 폴더는 카드가 아니라 48px 줄이고, 줄 사이는 1px 선이다. 하단 바는 58px, 좌우 여백은 22px이다.</p>
+                </div>
+            </div>
+            <div class="dock s4"></div>
+        </section>
+
+        <section class="study" id="s5">
+            <div class="study-head">
+                <div class="num">05</div>
+                <div>
+                    <h2>온기</h2>
+                    <p>단의 관계를 따뜻한 검정으로 옮긴다. 배경 #2a2420, 판 #1a1613, 폴더 #221e1a, 하단 바 #120f0d. 구조는 같고, 세 면이 한 재료처럼 이어진다.</p>
+                </div>
+            </div>
+            <div class="dock s5"></div>
+        </section>
+        <p class="note">4번 시안을 이어서 본 것이다. 런처 화면에는 아직 반영하지 않았다. 검색은 쉰 상태라 테두리가 없다.</p>
+    </div>
+
+    <template id="dock-body">
+        <div class="main">
+            <div class="row gallery"></div>
+            <div class="search"><span class="engine">Google</span><span class="vbar"></span><span class="query">검색</span></div>
+            <div class="row icons"></div>
+        </div>
+        <aside class="folder">
+            <div class="folder-row">작업</div>
+            <div class="folder-row on">참고</div>
+            <div class="folder-add"><span class="add-mark">+</span>폴더 추가</div>
+        </aside>
+        <footer class="footer">
+            <div class="footer-main">
+                <div class="tools cluster">
+                    <span class="tool"><img src="../src/icon/icon-power-off.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-rotate-right.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-alarm-clock.svg" alt=""></span>
+                    <span class="split"></span>
+                    <span class="tool"><img src="../src/icon/icon-volume-low.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-volume-high.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-volume.svg" alt=""></span>
+                </div>
+                <div class="weather"><b>18°</b><span>맑음</span><img src="../src/icon/icon-cloud.svg" alt=""><b>0%</b></div>
+                <div class="tools cluster">
+                    <span class="tool"><img src="../src/icon/icon-display.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-mouse.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-keyboard.svg" alt=""></span>
+                    <span class="tool"><img src="../src/icon/icon-audio.svg" alt=""></span>
+                </div>
+            </div>
+            <div class="footer-folder">
+                <div class="brand"><span>ZEN</span> Launcher</div>
+                <span class="gear"><img src="../src/icon/icon-system.svg" alt=""></span>
+            </div>
+        </footer>
+    </template>
+    <script>
+        const galleries = [["p1", "작업"], ["p2", "참고", true], ["p3", "회의"], ["p4", "자료"]];
+        const icons = [
+            ["icon-tool-calculator.svg", "계산기"],
+            ["icon-tool-clock.svg", "시계", true],
+            ["icon-tool-notepad.svg", "메모장"],
+            ["icon-tool-snipping.svg", "캡처도구"],
+            ["icon-tool-paint.svg", "그림판"],
+            ["icon-tool-keyboard.svg", "화상 키보드"]
+        ];
+        const plate = (kind, media, name, on) => {
+            const item = document.createElement("article");
+            item.className = `${kind}-item${on ? " on" : ""}`;
+            const face = document.createElement("div");
+            face.className = "media";
+            face.append(media);
+            const label = document.createElement("span");
+            label.className = `${kind}-name`;
+            label.textContent = name;
+            item.append(face, label);
+            return item;
+        };
+        const plus = (kind) => {
+            const img = document.createElement("img");
+            img.src = "../src/icon/icon-plus.svg";
+            img.alt = "";
+            const item = plate(kind, img, "", false);
+            item.classList.add("slot");
+            return item;
+        };
+        document.querySelectorAll(".dock").forEach((dock) => {
+            dock.append(document.getElementById("dock-body").content.cloneNode(true));
+            const gallery = dock.querySelector(".gallery");
+            const iconRow = dock.querySelector(".icons");
+            galleries.forEach(([tone, name, on]) => {
+                const poster = document.createElement("div");
+                poster.className = `poster ${tone}`;
+                gallery.append(plate("g", poster, name, on));
+            });
+            gallery.append(plus("g"));
+            icons.forEach(([file, name, on]) => {
+                const img = document.createElement("img");
+                img.className = "glyph";
+                img.src = `../src/icon/${file}`;
+                img.alt = "";
+                iconRow.append(plate("i", img, name, on));
+            });
+            iconRow.append(plus("i"), plus("i"));
+        });
+    </script>
+</body>
+</html>
