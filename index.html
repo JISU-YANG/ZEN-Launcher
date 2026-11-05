@@ -6109,11 +6109,11 @@
             z-index: auto;
             width: 28px;
             height: 28px;
-            opacity: 1;
+            opacity: 0;
             border-radius: 999px;
             background: var(--zen-plate);
             pointer-events: none;
-            transition: background-color 0.18s ease;
+            transition: opacity 0.18s ease, background-color 0.18s ease;
         }
 
         body[data-theme="light"] #gallery-area > button.zen-slot-add::before,
@@ -6138,7 +6138,7 @@
             padding: 0;
             transform: translate(-50%, -50%);
             filter: brightness(0) invert(1);
-            opacity: 0.92;
+            opacity: 0;
             transition: opacity 0.18s ease;
         }
 
@@ -6148,31 +6148,36 @@
             filter: brightness(0);
         }
 
-        #gallery-area > button.zen-slot-add:hover,
-        #icon-area > button.zen-slot-add:hover,
-        #folder-area > button.zen-slot-add:hover,
-        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover,
-        body[data-theme="light"] #icon-area > button.zen-slot-add:hover,
-        body[data-theme="light"] #folder-area > button.zen-slot-add:hover {
-            border-color: transparent;
-            background: var(--zen-tile);
-            background-image: none;
-            box-shadow: none;
-        }
-
         #gallery-area > button.zen-slot-add:hover::before,
+        #gallery-area > button.zen-slot-add:focus-visible::before,
         #icon-area > button.zen-slot-add:hover::before,
+        #icon-area > button.zen-slot-add:focus-visible::before,
         #folder-area > button.zen-slot-add:hover::before,
+        #folder-area > button.zen-slot-add:focus-visible::before,
         body[data-theme="light"] #gallery-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:focus-visible::before,
         body[data-theme="light"] #icon-area > button.zen-slot-add:hover::before,
-        body[data-theme="light"] #folder-area > button.zen-slot-add:hover::before {
+        body[data-theme="light"] #icon-area > button.zen-slot-add:focus-visible::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:focus-visible::before {
+            opacity: 1;
             background: var(--zen-hover);
         }
 
         #gallery-area > button.zen-slot-add:hover img,
+        #gallery-area > button.zen-slot-add:focus-visible img,
         #icon-area > button.zen-slot-add:hover img,
-        #folder-area > button.zen-slot-add:hover img {
+        #icon-area > button.zen-slot-add:focus-visible img,
+        #folder-area > button.zen-slot-add:hover img,
+        #folder-area > button.zen-slot-add:focus-visible img {
             opacity: 1;
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:focus-visible::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:focus-visible::before {
+            background: var(--zen-tile);
         }
 
         #footer,
