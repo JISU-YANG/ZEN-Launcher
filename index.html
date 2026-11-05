@@ -6067,6 +6067,114 @@
             white-space: nowrap;
         }
 
+        #gallery-area > button.zen-slot-add,
+        #icon-area > button.zen-slot-add,
+        #folder-area > button.zen-slot-add,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add,
+        body[data-theme="light"] #icon-area > button.zen-slot-add,
+        body[data-theme="light"] #folder-area > button.zen-slot-add {
+            position: relative;
+            gap: 0;
+            padding: 0;
+            border: 1px solid var(--hairline);
+            background: transparent;
+            background-image: none;
+            box-shadow: none;
+            transition: background-color 0.18s ease, border-color 0.18s ease;
+        }
+
+        #gallery-area > button.zen-slot-add {
+            border-radius: 16px;
+        }
+
+        #icon-area > button.zen-slot-add {
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        #folder-area > button.zen-slot-add {
+            height: 40px;
+            min-height: 40px;
+            border-radius: 10px;
+        }
+
+        #gallery-area > button.zen-slot-add::before,
+        #icon-area > button.zen-slot-add::before,
+        #folder-area > button.zen-slot-add::before {
+            content: '';
+            display: block;
+            position: static;
+            left: auto;
+            top: auto;
+            z-index: auto;
+            width: 28px;
+            height: 28px;
+            opacity: 1;
+            border-radius: 999px;
+            background: var(--zen-plate);
+            pointer-events: none;
+            transition: background-color 0.18s ease;
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add::before {
+            background: var(--zen-plate);
+        }
+
+        #folder-area > button.zen-slot-add::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add::before {
+            background: var(--zen-tile);
+        }
+
+        #gallery-area > button.zen-slot-add img,
+        #icon-area > button.zen-slot-add img,
+        #folder-area > button.zen-slot-add img {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            padding: 0;
+            transform: translate(-50%, -50%);
+            filter: brightness(0) invert(1);
+            opacity: 0.92;
+            transition: opacity 0.18s ease;
+        }
+
+        body[data-theme="light"] #gallery-area > button.zen-slot-add img,
+        body[data-theme="light"] #icon-area > button.zen-slot-add img,
+        body[data-theme="light"] #folder-area > button.zen-slot-add img {
+            filter: brightness(0);
+        }
+
+        #gallery-area > button.zen-slot-add:hover,
+        #icon-area > button.zen-slot-add:hover,
+        #folder-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:hover {
+            border-color: transparent;
+            background: var(--zen-tile);
+            background-image: none;
+            box-shadow: none;
+        }
+
+        #gallery-area > button.zen-slot-add:hover::before,
+        #icon-area > button.zen-slot-add:hover::before,
+        #folder-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover::before,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:hover::before {
+            background: var(--zen-hover);
+        }
+
+        #gallery-area > button.zen-slot-add:hover img,
+        #icon-area > button.zen-slot-add:hover img,
+        #folder-area > button.zen-slot-add:hover img {
+            opacity: 1;
+        }
+
         #footer,
         body[data-theme="light"] #footer {
             position: relative;
