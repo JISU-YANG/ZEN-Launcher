@@ -5958,7 +5958,7 @@
         #input-search::placeholder,
         body[data-theme="light"] #search-area input::placeholder,
         body[data-theme="light"] #input-search::placeholder {
-            color: var(--zen-muted);
+            color: var(--zen-soft);
         }
 
         .list-view {
@@ -6357,10 +6357,6 @@
         body[data-theme="light"] #launcher-brand,
         #search-area > div:first-child > a,
         body[data-theme="light"] #search-area > div:first-child > a,
-        #weather-bar .weather-temp,
-        body[data-theme="light"] #weather-bar .weather-temp,
-        .weather-precip strong,
-        body[data-theme="light"] .weather-precip strong,
         .weather-hover-card .weather-bar-stat strong,
         body[data-theme="light"] .weather-hover-card .weather-bar-stat strong {
             color: var(--zen-ink);
@@ -6368,8 +6364,12 @@
 
         #icon-area .icon-name,
         body[data-theme="light"] #icon-area .icon-name,
+        #weather-bar .weather-temp,
+        body[data-theme="light"] #weather-bar .weather-temp,
         #weather-bar .weather-condition,
         body[data-theme="light"] #weather-bar .weather-condition,
+        .weather-precip strong,
+        body[data-theme="light"] .weather-precip strong,
         #weather-bar .weather-location,
         body[data-theme="light"] #weather-bar .weather-location {
             color: var(--zen-soft);
@@ -6388,29 +6388,29 @@
         }
 
         #icon-area .icon-img.icon-glyph,
-        #icon-area > .icon-entry:hover .icon-img.icon-glyph,
-        #folder-area .list-item img,
-        #footer .zen-icon-button img,
-        #footer-folder .zen-icon-button img,
-        .weather-precip img {
+        #icon-area > .icon-entry:hover .icon-img.icon-glyph {
             filter: brightness(0) invert(1);
         }
 
         body[data-theme="light"] #icon-area .icon-img.icon-glyph,
-        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img.icon-glyph,
-        body[data-theme="light"] #folder-area .list-item img,
-        body[data-theme="light"] #footer .zen-icon-button img,
-        body[data-theme="light"] #footer-folder .zen-icon-button img,
-        body[data-theme="light"] .weather-precip img {
+        body[data-theme="light"] #icon-area > .icon-entry:hover .icon-img.icon-glyph {
             filter: brightness(0);
         }
 
+        #folder-area .list-item img,
+        #footer .zen-icon-button img,
+        #footer-folder .zen-icon-button img,
+        .weather-precip img,
         #gallery-area > button.zen-slot-add img,
         #icon-area > button.zen-slot-add img,
         #folder-area > button.zen-slot-add img {
             filter: brightness(0) invert(0.78);
         }
 
+        body[data-theme="light"] #folder-area .list-item img,
+        body[data-theme="light"] #footer .zen-icon-button img,
+        body[data-theme="light"] #footer-folder .zen-icon-button img,
+        body[data-theme="light"] .weather-precip img,
         body[data-theme="light"] #gallery-area > button.zen-slot-add img,
         body[data-theme="light"] #icon-area > button.zen-slot-add img,
         body[data-theme="light"] #folder-area > button.zen-slot-add img {
