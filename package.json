@@ -1,13 +1,13 @@
 {
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
-  "version": "2.3.4",
+  "version": "2.3.6",
   "releaseDate": "2026-11-06",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test zenDialog.test.js src/main/domain/launcher/launcherFrame.test.js src/main/infrastructure/tray/appTray.test.js src/main/infrastructure/windows/foregroundFullscreen.test.js src/main/infrastructure/windows/masterMute.test.js",
+    "test": "node --test zenDialog.test.js src/main/domain/program/programVisibility.test.js src/main/domain/launcher/launcherFrame.test.js src/main/infrastructure/tray/appTray.test.js src/main/infrastructure/windows/foregroundFullscreen.test.js src/main/infrastructure/windows/masterMute.test.js",
     "build:win32": "electron-builder --win nsis --ia32 --publish never",
     "build:win64": "electron-builder --win nsis --x64 --publish never",
     "build:win": "electron-builder --win nsis --ia32 --x64 --publish never",
@@ -40,8 +40,8 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseName": "v2.3.4",
-      "releaseNotes": "갤러리 세로를 32px 줄이고, 아이콘 바를 52px에서 84px로 키웠습니다. 아이콘 그림은 26px입니다. 런처 전체 높이는 그대로입니다."
+      "releaseName": "v2.3.6",
+      "releaseNotes": "환경설정을 왼쪽 계층 탐색으로 바꿨습니다. 항목·모양·동작·데이터로 나뉘고, 단축키와 전체 화면, 시작이 분리됩니다.\n\n화면 위치를 픽셀 단위로 보정하고, 설정을 JSON으로 내보내거나 불러올 수 있습니다. 프로그램 탐색은 시스템 항목과 이미 추가된 항목을 숨깁니다.\n\n갤러리·아이콘 편집에서 이미지를 올리고 링크, 프로그램, 추천을 고릅니다. 닫기·초기화·삭제·실행 실패·업데이트 안내는 런처 안 대화상자로 엽니다."
     },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
