@@ -6076,7 +6076,7 @@
             position: relative;
             gap: 0;
             padding: 0;
-            border: 1px solid var(--hairline);
+            border: 1px solid transparent;
             background: transparent;
             background-image: none;
             box-shadow: none;
@@ -6146,6 +6146,24 @@
         body[data-theme="light"] #icon-area > button.zen-slot-add img,
         body[data-theme="light"] #folder-area > button.zen-slot-add img {
             filter: brightness(0);
+        }
+
+        #gallery-area > button.zen-slot-add:hover,
+        #gallery-area > button.zen-slot-add:focus-visible,
+        #icon-area > button.zen-slot-add:hover,
+        #icon-area > button.zen-slot-add:focus-visible,
+        #folder-area > button.zen-slot-add:hover,
+        #folder-area > button.zen-slot-add:focus-visible,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #gallery-area > button.zen-slot-add:focus-visible,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #icon-area > button.zen-slot-add:focus-visible,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:hover,
+        body[data-theme="light"] #folder-area > button.zen-slot-add:focus-visible {
+            border-color: var(--hairline);
+            background: transparent;
+            background-image: none;
+            box-shadow: none;
         }
 
         #gallery-area > button.zen-slot-add:hover::before,

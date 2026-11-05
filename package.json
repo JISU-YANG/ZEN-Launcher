@@ -1,8 +1,8 @@
 {
   "name": "zen-launcher",
   "productName": "ZEN Launcher",
-  "version": "2.3.0",
-  "releaseDate": "2026-11-05",
+  "version": "2.3.1",
+  "releaseDate": "2026-11-06",
   "description": "![](./doc/thumbnail-01.png)",
   "main": "main.js",
   "scripts": {
@@ -40,8 +40,8 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseName": "v2.3.0",
-      "releaseNotes": "아이콘 줄은 처음 실행 시 계산기, 시계, 메모장, 캡처도구, 그림판, 화상 키보드로 채워지고, 이후에는 빈 칸부터 직접 바꿀 수 있습니다.\n\n푸터 왼쪽에는 종료, 재시작, 예약, 볼륨이 있고 오른쪽에는 화면, 마우스, 키보드, 소리와 런처 설정이 있습니다. 제작자 이름은 설정 화면에 있습니다.\n\n런처 크기는 작업 영역과 배율에 맞춰 바닥 중앙에 붙고, 확장 시트는 열림, 닫힘, 높이 변경을 따로 움직입니다."
+      "releaseName": "v2.3.1",
+      "releaseNotes": "런처를 고른 여백으로 다시 배치했습니다. 검색, 폴더, 이름, 설정은 사이드바에 있고 하단 바는 본문 아래에서 끝납니다.\n\n갤러리 이름은 마우스를 올렸을 때만 올라옵니다. 빈 칸은 평소에 보이지 않고, 마우스를 올리면 테두리와 +가 나타납니다."
     },
     "win": {
       "icon": "src/app/ZEN-Launcher.png",
