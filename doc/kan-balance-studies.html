@@ -163,7 +163,7 @@
         .s2 .g-item { border-radius: 16px; }
         .s2 .g-item.slot { background: var(--plate); }
         .s2 .g-item.slot:hover { background: var(--tile); }
-        .s2 .icons { gap: 12px; padding: 12px; border-radius: 16px; background: var(--plate); }
+        .s2 .icons { gap: 12px; padding: 0; border-radius: 0; background: transparent; }
         .s2 .i-item { height: 52px; }
         .s2 .folder {
             gap: 12px; padding: 12px; border-radius: 16px; background: var(--plate);
@@ -172,7 +172,7 @@
         .s2 .side-top { display: contents; }
         .s2 .list { gap: 8px; }
         .s2 .side-foot { margin-top: 0; }
-        .s2 .footer { height: 64px; padding: 12px; }
+        .s2 .footer { height: auto; padding: 0; border-radius: 0; background: transparent; }
 
         /* 03 두 판: 목록 판은 내용만큼, 이름 판은 하단 바와 같은 줄. 사이는 배경. */
         .s3 { padding: 28px; gap: 16px; }
@@ -265,7 +265,7 @@
                 <div class="num">02</div>
                 <div>
                     <h2>고른 여백</h2>
-                    <p>런처 밖, 판과 판 사이, 포스터 사이가 모두 24다. 판 안쪽은 12로 한 단계 좁아서 판이 틈보다 무겁지 않다. 폴더 목록은 붙여 두고, 검색과 그 목록과 이름 사이에만 남는 높이를 나눈다.</p>
+                    <p>런처 밖, 판과 판 사이, 포스터 사이가 모두 24다. 아이콘 바와 하단 바는 전체를 감싼 판이 없고, 칸만 12 간격으로 놓인다. 사이드바 판 안은 12다. 폴더 목록은 붙여 두고, 검색과 그 목록과 이름 사이에만 남는 높이를 나눈다.</p>
                 </div>
             </div>
             <div class="dock s2"></div>
