@@ -3770,17 +3770,18 @@
             padding: 10px 12px;
             border: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
             border-radius: var(--radius-control, 8px);
-            background: transparent;
-            color: #d8d8d8;
+            background: var(--zen-plate, #262626);
+            color: var(--zen-soft, #c8c8c8);
             text-align: left;
             cursor: pointer;
             box-sizing: border-box;
+            box-shadow: none;
         }
 
         .editor-choice strong {
             font-size: 13px;
             font-weight: 700;
-            color: #f3f3f3;
+            color: var(--zen-ink, #f3f3f3);
         }
 
         .editor-choice span {
@@ -3792,11 +3793,12 @@
 
         .editor-choice:hover,
         .editor-choice.active {
-            background: var(--hover-fill, rgba(255, 255, 255, 0.08));
+            background: var(--zen-hover, #3a3a3a);
+            border-color: var(--hairline, rgba(255, 255, 255, 0.12));
         }
 
         .editor-choice.active {
-            border-color: rgba(255, 255, 255, 0.28);
+            background: var(--zen-tile, #303030);
         }
 
         .slot-editor-panel-header {
@@ -3877,11 +3879,11 @@
             align-self: flex-start;
             min-width: 88px;
             height: var(--control-h, 32px);
-            padding: 0 12px;
+            padding: 0 14px;
             border: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
             border-radius: var(--radius-control, 8px);
-            background: transparent;
-            color: #f1f1f1;
+            background: var(--zen-plate, #262626);
+            color: var(--zen-ink, #f3f3f3);
             cursor: pointer;
             box-sizing: border-box;
             text-align: center;
@@ -3889,10 +3891,11 @@
             appearance: none;
             font-size: 12px;
             font-weight: 600;
+            box-shadow: none;
         }
 
         .file-item:hover {
-            background: var(--hover-fill, rgba(255, 255, 255, 0.08));
+            background: var(--zen-hover, #3a3a3a);
         }
 
         .slot-editor-actions {
@@ -3923,24 +3926,24 @@
             justify-content: center;
             align-items: center;
             min-width: 64px;
-            height: 34px;
-            padding: 0 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: linear-gradient(180deg, rgba(54, 54, 54, 0.9), rgba(34, 34, 34, 0.94));
-            color: #f1f1f1;
+            height: var(--control-h, 32px);
+            padding: 0 14px;
+            border-radius: var(--radius-control, 8px);
+            border: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
+            background: var(--zen-plate, #262626);
+            color: var(--zen-ink, #f3f3f3);
             cursor: pointer;
             appearance: none;
             box-sizing: border-box;
-            font-size: 11px;
-            font-weight: 800;
-            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: none;
         }
 
         .slot-secondary-button.danger-button {
-            color: #dfc1c7;
-            border-color: rgba(95, 36, 48, 0.28);
-            background: linear-gradient(180deg, rgba(59, 43, 47, 0.92), rgba(43, 33, 35, 0.96));
+            color: var(--zen-danger-ink, #f3e6e8);
+            border-color: transparent;
+            background: var(--zen-danger-plate, #342628);
         }
 
         @media (max-width: 1120px) {
@@ -3984,11 +3987,7 @@
         }
 
         .btn-row .setting-action-button {
-            min-width: 64px;
-            height: var(--control-h, 32px);
-            padding: 0 12px;
-            border-radius: var(--radius-control, 8px);
-            box-shadow: none;
+            min-width: 72px;
         }
 
         .setting-action-button {
@@ -3997,11 +3996,11 @@
             align-items: center;
             min-width: 72px;
             height: var(--control-h, 32px);
-            padding: 0 12px;
+            padding: 0 14px;
             border-radius: var(--radius-control, 8px);
-            border: 1px solid transparent;
-            background: transparent;
-            color: #f1f1f1;
+            border: 1px solid var(--hairline, rgba(255, 255, 255, 0.12));
+            background: var(--zen-plate, #262626);
+            color: var(--zen-ink, #f3f3f3);
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 0;
@@ -4014,31 +4013,38 @@
             box-shadow: none;
         }
 
-        .setting-action-button:hover {
-            background: var(--hover-fill, rgba(255, 255, 255, 0.08));
-            border-color: transparent;
+        .setting-action-button:hover,
+        .file-item:hover,
+        .slot-secondary-button:hover {
+            background: var(--zen-hover, #3a3a3a);
+            border-color: var(--hairline, rgba(255, 255, 255, 0.12));
             transform: none;
             box-shadow: none;
         }
 
         .setting-action-button.primary-button {
-            background: #f2f2f2;
-            color: #171717;
+            background: var(--zen-ink, #f3f3f3);
+            color: var(--zen-shell, #161616);
             border-color: transparent;
         }
 
         .setting-action-button.primary-button:hover {
             background: #ffffff;
-        }
-
-        .setting-action-button.danger-button {
-            color: #e7c5cb;
+            color: #161616;
             border-color: transparent;
-            background: transparent;
         }
 
-        .setting-action-button.danger-button:hover {
-            background: var(--hover-fill, rgba(255, 255, 255, 0.08));
+        .setting-action-button.danger-button,
+        .slot-secondary-button.danger-button {
+            color: var(--zen-danger-ink, #f3e6e8);
+            border-color: transparent;
+            background: var(--zen-danger-plate, #342628);
+        }
+
+        .setting-action-button.danger-button:hover,
+        .slot-secondary-button.danger-button:hover {
+            background: color-mix(in srgb, var(--zen-danger-plate, #342628) 78%, var(--zen-ink, #ffffff));
+            border-color: transparent;
         }
 
         #editor[data-panel="settings"] #editor-s-surface,
@@ -4060,7 +4066,7 @@
         body[data-theme="light"] .editor-choice.active,
         body[data-theme="light"] .editor-choice:hover,
         body[data-theme="light"] .slot-editor-back:hover {
-            background: rgba(0, 0, 0, 0.06);
+            background: var(--zen-hover, #e4e9ef);
         }
 
         .setting-nav-group:focus-visible,
@@ -5425,58 +5431,88 @@
         }
 
         .setting-action-button,
-        .btn-row .setting-action-button {
+        .btn-row .setting-action-button,
+        .file-item,
+        .slot-secondary-button {
             height: var(--control-h);
             min-height: var(--control-h);
             border-radius: var(--radius-control);
-            background: transparent;
-            border-color: transparent;
+            background: var(--zen-plate);
+            border: 1px solid var(--hairline);
+            color: var(--zen-ink);
             box-shadow: none;
             font-weight: 600;
             transform: none;
         }
 
         .setting-action-button:hover,
-        .btn-row .setting-action-button:hover {
-            background: var(--hover-fill);
+        .btn-row .setting-action-button:hover,
+        .file-item:hover,
+        .slot-secondary-button:hover {
+            background: var(--zen-hover);
+            border-color: var(--hairline);
             transform: none;
             box-shadow: none;
         }
 
         .setting-action-button.primary-button,
         .setting-action-button.primary-button:hover {
-            background: #f2f2f2;
-            color: #171717;
+            background: var(--zen-ink);
+            color: var(--zen-shell);
+            border-color: transparent;
         }
 
         .setting-action-button.primary-button:hover {
             background: #ffffff;
+            color: #161616;
         }
 
-        .setting-action-button.danger-button {
-            background: transparent;
-            color: #e7c5cb;
-        }
-
-        body[data-theme="light"] .setting-action-button {
-            background: transparent;
-            color: #1c1c1c;
+        .setting-action-button.danger-button,
+        .setting-action-button.danger-button:hover,
+        .slot-secondary-button.danger-button,
+        .slot-secondary-button.danger-button:hover {
+            background: var(--zen-danger-plate);
+            color: var(--zen-danger-ink);
             border-color: transparent;
         }
 
-        body[data-theme="light"] .setting-action-button:hover {
-            background: rgba(0, 0, 0, 0.06);
+        .setting-action-button.danger-button:hover,
+        .slot-secondary-button.danger-button:hover {
+            background: color-mix(in srgb, var(--zen-danger-plate) 78%, var(--zen-ink));
+        }
+
+        body[data-theme="light"] .setting-action-button,
+        body[data-theme="light"] .file-item,
+        body[data-theme="light"] .slot-secondary-button {
+            background: var(--zen-plate);
+            color: var(--zen-ink);
+            border-color: var(--hairline);
+            box-shadow: none;
+        }
+
+        body[data-theme="light"] .setting-action-button:hover,
+        body[data-theme="light"] .file-item:hover,
+        body[data-theme="light"] .slot-secondary-button:hover {
+            background: var(--zen-hover);
         }
 
         body[data-theme="light"] .setting-action-button.primary-button,
         body[data-theme="light"] .setting-action-button.primary-button:hover {
-            background: #1f1f1f;
+            background: #1c1c1c;
             color: #f5f5f5;
+            border-color: transparent;
         }
 
-        body[data-theme="light"] .setting-action-button.danger-button {
-            background: transparent;
-            color: #8a3d49;
+        body[data-theme="light"] .setting-action-button.primary-button:hover {
+            background: #000000;
+        }
+
+        body[data-theme="light"] .setting-action-button.danger-button,
+        body[data-theme="light"] .setting-action-button.danger-button:hover,
+        body[data-theme="light"] .slot-secondary-button.danger-button {
+            background: var(--zen-danger-plate);
+            color: var(--zen-danger-ink);
+            border-color: transparent;
         }
 
         body[data-theme="light"] #setting-credit,
@@ -6028,7 +6064,8 @@
             #setting-container,
             .btn-row,
             .zen-icon-button,
-            .setting-action-button {
+            .setting-action-button,
+            #zen-dialog {
                 transition: none;
                 animation: none;
             }
@@ -6042,6 +6079,8 @@
             --zen-ink: #ffffff;
             --zen-soft: #c8c8c8;
             --zen-muted: #8c8c8c;
+            --zen-danger-plate: #342628;
+            --zen-danger-ink: #f3e6e8;
             --zen-gap: 24px;
             --zen-side: 240px;
         }
@@ -6054,6 +6093,80 @@
             --zen-ink: #1c1c1c;
             --zen-soft: #3d4650;
             --zen-muted: #6a7380;
+            --zen-danger-plate: #f3e7e9;
+            --zen-danger-ink: #7a3c46;
+        }
+
+        #zen-dialog {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        #zen-dialog[hidden] {
+            display: none;
+        }
+
+        .zen-dialog-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.46);
+        }
+
+        .zen-dialog-card {
+            position: relative;
+            width: min(420px, 100%);
+            padding: 20px 20px 16px;
+            border: 1px solid var(--hairline);
+            border-radius: var(--radius-control);
+            background: var(--zen-shell);
+            color: var(--zen-ink);
+            box-sizing: border-box;
+            box-shadow: none;
+        }
+
+        .zen-dialog-kicker {
+            margin: 0 0 8px;
+            color: var(--zen-muted);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .zen-dialog-message {
+            margin: 0;
+            color: var(--zen-ink);
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .zen-dialog-detail {
+            margin: 8px 0 0;
+            color: var(--zen-soft);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .zen-dialog-detail:empty {
+            display: none;
+        }
+
+        .zen-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        body[data-theme="light"] .zen-dialog-backdrop {
+            background: rgba(28, 32, 38, 0.28);
         }
 
         #launcher-shell,
@@ -7046,6 +7159,7 @@
             </div>
         </div>
     </div>
+    <script src="./zenDialog.js"></script>
     <script src="./sheetMotion.js"></script>
     <script src="./preference.js"></script>
     <script src="./renderer.js"></script>

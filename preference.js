@@ -1205,37 +1205,41 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .setting-offset-input,
             body[data-theme="light"] .program-browser-search,
             body[data-theme="light"] .theme-control-value,
-            body[data-theme="light"] .theme-transparency-range,
-            body[data-theme="light"] .slot-secondary-button,
-            body[data-theme="light"] .slot-editor-close,
-            body[data-theme="light"] .file-item,
-            body[data-theme="light"] .setting-action-button {
+            body[data-theme="light"] .theme-transparency-range {
                 border-color:rgba(84,92,104,0.1);
-                background:linear-gradient(180deg, var(--light-surface-top), var(--light-surface-bottom));
+                background:var(--zen-tile, #ffffff);
                 color:var(--light-text-default);
-                box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), var(--light-shadow-soft);
+                box-shadow:none;
             }
             body[data-theme="light"] .setting-field input::placeholder,
             body[data-theme="light"] .program-browser-search::placeholder {
                 color:var(--light-text-subtle);
             }
             body[data-theme="light"] .slot-secondary-button.danger-button,
-            body[data-theme="light"] .setting-action-button.danger-button {
-                border-color:rgba(176,110,124,0.2);
-                background:linear-gradient(180deg, rgba(252,243,245,0.98), rgba(244,226,231,0.96));
-                color:#9b5e6b;
+            body[data-theme="light"] .setting-action-button.danger-button,
+            body[data-theme="light"] .setting-action-button.danger-button:hover {
+                border-color:transparent;
+                background:var(--zen-danger-plate);
+                color:var(--zen-danger-ink);
+                box-shadow:none;
             }
-            body[data-theme="light"] .setting-action-button.primary-button {
-                border-color:rgba(84,92,104,0.14);
-                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-active-bottom));
-                color:var(--light-text-strong);
+            body[data-theme="light"] .setting-action-button.primary-button,
+            body[data-theme="light"] .setting-action-button.primary-button:hover {
+                border-color:transparent;
+                background:#1c1c1c;
+                color:#f5f5f5;
+                box-shadow:none;
+            }
+            body[data-theme="light"] .setting-action-button.primary-button:hover {
+                background:#000000;
             }
             body[data-theme="light"] .slot-secondary-button:hover,
             body[data-theme="light"] .slot-editor-close:hover,
             body[data-theme="light"] .file-item:hover,
             body[data-theme="light"] .setting-action-button:hover {
-                border-color:rgba(84,92,104,0.16);
-                background:linear-gradient(180deg, var(--light-surface-hover-top), var(--light-surface-hover-bottom));
+                border-color:var(--hairline);
+                background:var(--zen-hover);
+                box-shadow:none;
             }
             body[data-theme="light"] .program-picker-card.empty {
                 background:rgba(255,255,255,0.58);

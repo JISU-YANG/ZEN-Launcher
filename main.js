@@ -31,7 +31,7 @@ const { readMasterMute } = require('./src/main/infrastructure/windows/masterMute
 const store = new Store();
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
 const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
-const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js', 'sheetMotion.js'];
+const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js', 'sheetMotion.js', 'zenDialog.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
 const APPEARANCE_SETTINGS_KEY = 'ZENL.Appearance';
@@ -983,7 +983,8 @@ app.whenReady().then(() => {
         getWindow: () => mainWindow,
         onStateChange: () => {
             appTray?.update();
-        }
+        },
+        presentMessage: presentLauncherMessage
     });
     stopAutoUpdater = () => autoUpdaterController.stop();
     try {
@@ -1161,16 +1162,50 @@ ipcMain.handle('zen-launcher:apply-sheet-fit', (_event, fit) => {
     return applyLauncherLayout();
 });
 
-ipcMain.handle('zen-launcher:show-message', async (_event, options) => {
-    const result = await dialog.showMessageBox({
-        type: typeof options?.type === 'string' ? options.type : 'info',
-        title: 'ZEN Launcher',
-        message: typeof options?.message === 'string' ? options.message : '',
-        buttons: Array.isArray(options?.buttons) && options.buttons.length > 0 ? options.buttons : ['\uD655\uC778'],
-        defaultId: Number.isInteger(options?.defaultId) ? options.defaultId : 0,
-        cancelId: Number.isInteger(options?.cancelId) ? options.cancelId : 0
-    });
+async function presentLauncherMessage(parent, options = {}) {
+    const payload = {
+        type: typeof options.type === 'string' ? options.type : 'info',
+        message: typeof options.message === 'string' ? options.message : '',
+        detail: typeof options.detail === 'string' ? options.detail : '',
+        buttons: Array.isArray(options.buttons) && options.buttons.length > 0 ? options.buttons : ['확인'],
+        defaultId: Number.isInteger(options.defaultId) ? options.defaultId : 0,
+        cancelId: Number.isInteger(options.cancelId) ? options.cancelId : 0
+    };
+    const windowReady = parent && !parent.isDestroyed() && parent.webContents && !parent.webContents.isDestroyed();
 
+    if (windowReady) {
+        try {
+            const response = await parent.webContents.executeJavaScript(
+                `window.zenDialog && window.zenDialog.show(${JSON.stringify(payload)})`,
+                true
+            );
+            if (Number.isInteger(response)) {
+                return { response };
+            }
+        } catch (error) {
+            console.warn('In-app dialog failed:', error?.message || error);
+        }
+    }
+
+    const nativeOptions = {
+        type: payload.type,
+        title: 'ZEN Launcher',
+        message: payload.message,
+        detail: payload.detail,
+        buttons: payload.buttons,
+        defaultId: payload.defaultId,
+        cancelId: payload.cancelId,
+        noLink: true
+    };
+    if (windowReady) {
+        return dialog.showMessageBox(parent, nativeOptions);
+    }
+    return dialog.showMessageBox(nativeOptions);
+}
+
+ipcMain.handle('zen-launcher:show-message', async (event, options) => {
+    const parent = BrowserWindow.fromWebContents(event.sender);
+    const result = await presentLauncherMessage(parent, options);
     return result.response;
 });
 
