@@ -2,7 +2,7 @@ const { app, dialog } = require('electron');
 
 const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
-function showUpdateReadyDialog(parent, version) {
+function showUpdateReadyDialog(parent, version, presentMessage) {
     const message = version
         ? `${version} 버전을 설치할 수 있습니다.`
         : '새 버전을 설치할 수 있습니다.';
@@ -17,6 +17,10 @@ function showUpdateReadyDialog(parent, version) {
         detail: '지금 재시작하면 설치가 진행된 뒤 런처가 다시 열립니다. 나중에를 선택해도 런처를 종료하면 업데이트가 설치됩니다.'
     };
 
+    if (typeof presentMessage === 'function') {
+        return presentMessage(parent, options);
+    }
+
     if (parent && !parent.isDestroyed()) {
         return dialog.showMessageBox(parent, options);
     }
@@ -24,7 +28,7 @@ function showUpdateReadyDialog(parent, version) {
     return dialog.showMessageBox(options);
 }
 
-function setupGitHubAutoUpdater({ getWindow, onStateChange } = {}) {
+function setupGitHubAutoUpdater({ getWindow, onStateChange, presentMessage } = {}) {
     const state = {
         status: app.isPackaged ? 'idle' : 'unsupported',
         currentVersion: app.getVersion(),
@@ -112,7 +116,7 @@ function setupGitHubAutoUpdater({ getWindow, onStateChange } = {}) {
         }
 
         promptedVersion = version;
-        const result = await showUpdateReadyDialog(getWindow?.(), version);
+        const result = await showUpdateReadyDialog(getWindow?.(), version, presentMessage);
         if (result.response === 0) {
             autoUpdater.quitAndInstall(true, true);
         }

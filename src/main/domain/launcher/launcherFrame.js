@@ -4,13 +4,23 @@ const FRAME_MARGIN = 16;
 const PANEL_SHEET_HEIGHT = 400;
 const SHEET_FITS = new Set(['peek', 'panel', 'workspace']);
 
-function computeLauncherFrame(workArea, screenBounds = null) {
+function normalizePositionOffset(offset = {}) {
+    const rawX = Number.parseInt(offset?.x ?? offset?.positionOffsetX, 10);
+    const rawY = Number.parseInt(offset?.y ?? offset?.positionOffsetY, 10);
+    return {
+        x: Number.isFinite(rawX) ? rawX : 0,
+        y: Number.isFinite(rawY) ? rawY : 0
+    };
+}
+
+function computeLauncherFrame(workArea, screenBounds = null, positionOffset = null) {
     const areaWidth = Math.max(0, Number(workArea?.width) || 0);
     const areaHeight = Math.max(0, Number(workArea?.height) || 0);
     const areaX = Number(workArea?.x) || 0;
     const areaY = Number(workArea?.y) || 0;
     const screenY = Number(screenBounds?.y ?? areaY) || 0;
     const screenHeight = Math.max(0, Number(screenBounds?.height ?? areaHeight) || 0);
+    const screenWidth = Math.max(0, Number(screenBounds?.width ?? areaWidth) || 0);
     const availableWidth = Math.max(0, areaWidth - (FRAME_MARGIN * 2));
     const width = Math.round(Math.min(DESIGN_WIDTH, availableWidth || areaWidth));
     const scale = width > 0 ? Math.min(1, width / DESIGN_WIDTH) : 1;
@@ -18,10 +28,18 @@ function computeLauncherFrame(workArea, screenBounds = null) {
     const dockHeight = Math.min(DOCK_HEIGHT, dockLimit || DOCK_HEIGHT);
     const workBottom = areaY + areaHeight;
     const liftedBottom = screenY + Math.round((screenHeight - dockHeight) * 0.8) + dockHeight;
-    const dockBottom = Math.min(workBottom, Math.max(areaY + dockHeight, liftedBottom));
-    const y = dockBottom - dockHeight;
+    const autoDockBottom = Math.min(workBottom, Math.max(areaY + dockHeight, liftedBottom));
+    const offset = normalizePositionOffset(positionOffset);
+    const autoX = areaX + Math.round((areaWidth - width) / 2);
+    const autoY = autoDockBottom - dockHeight;
+    const minX = areaX;
+    const maxX = Math.max(minX, areaX + areaWidth - width);
+    const minY = areaY;
+    const maxY = Math.max(minY, workBottom - dockHeight);
+    const x = Math.min(maxX, Math.max(minX, autoX + offset.x));
+    const y = Math.min(maxY, Math.max(minY, autoY + offset.y));
+    const dockBottom = y + dockHeight;
     const availableAbove = Math.max(0, y - areaY - FRAME_MARGIN);
-    const x = areaX + Math.round((areaWidth - width) / 2);
 
     return {
         x,
@@ -31,10 +49,16 @@ function computeLauncherFrame(workArea, screenBounds = null) {
         availableAbove,
         scale,
         dockBottom,
+        autoX,
+        autoY,
+        positionOffsetX: offset.x,
+        positionOffsetY: offset.y,
         workAreaX: areaX,
         workAreaY: areaY,
         workAreaWidth: areaWidth,
-        workAreaHeight: areaHeight
+        workAreaHeight: areaHeight,
+        displayWidth: screenWidth || areaWidth,
+        displayHeight: screenHeight || areaHeight
     };
 }
 
@@ -87,6 +111,7 @@ module.exports = {
     DOCK_HEIGHT,
     FRAME_MARGIN,
     PANEL_SHEET_HEIGHT,
+    normalizePositionOffset,
     computeLauncherFrame,
     sheetHeightForFit,
     boundsForSheet,
