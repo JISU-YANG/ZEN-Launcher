@@ -5176,9 +5176,9 @@
 
         #gallery-area > .gallery-entry {
             width: auto;
-            flex: 0 1 calc(132px * var(--layout-scale));
-            max-width: calc(132px * var(--layout-scale));
-            min-width: calc(96px * var(--layout-scale));
+            flex: 1 1 0;
+            max-width: none;
+            min-width: 0;
             background: #101010;
         }
 
@@ -6246,7 +6246,9 @@
         }
 
         #gallery-area {
+            display: flex;
             flex: 1 1 auto;
+            flex-wrap: nowrap;
             height: auto;
             min-height: 0;
             gap: var(--zen-gap);
@@ -6254,9 +6256,9 @@
 
         #gallery-area > .gallery-entry {
             position: relative;
-            flex: 0 0 calc((100% - (var(--zen-gap) * 5)) / 6);
-            width: calc((100% - (var(--zen-gap) * 5)) / 6);
-            max-width: calc((100% - (var(--zen-gap) * 5)) / 6);
+            flex: 1 1 0;
+            width: auto;
+            max-width: none;
             min-width: 0;
             height: 100%;
             padding: 0;
@@ -7189,6 +7191,7 @@
     </div>
     <script src="./zenDialog.js"></script>
     <script src="./sheetMotion.js"></script>
+    <script src="./src/main/domain/launcher/launcherSlots.js"></script>
     <script src="./preference.js"></script>
     <script src="./renderer.js"></script>
 </body>
