@@ -3484,16 +3484,42 @@ class ZenLauncherPreferences {
         return this.#getRecommendedIcons().find((item) => item.link.trim().toLowerCase() === key) || null;
     }
 
-    #getRecommendedGalleries() {
-        const galleries = window.zenLauncher?.getRecommendedGalleries?.();
-        if (!Array.isArray(galleries)) {
-            return [];
+    #readRecommendationList(readPageList, readBridgeList) {
+        const readers = [readPageList, readBridgeList];
+        for (const read of readers) {
+            try {
+                const value = read?.();
+                const list = Array.isArray(value)
+                    ? value
+                    : (value && typeof value.length === 'number' ? Array.from(value) : null);
+                if (!list) {
+                    continue;
+                }
+
+                const items = list.filter((item) => item && typeof item.name === 'string' && typeof item.link === 'string' && item.link.trim());
+                if (items.length > 0) {
+                    return items;
+                }
+            } catch (_error) {
+                continue;
+            }
         }
 
-        return galleries.filter((item) => item && typeof item.name === 'string' && typeof item.link === 'string' && item.link.trim());
+        return [];
+    }
+
+    #getRecommendedGalleries() {
+        return this.#readRecommendationList(
+            () => (typeof listRecommendedGalleries === 'function' ? listRecommendedGalleries() : null),
+            () => window.zenLauncher?.getRecommendedGalleries?.()
+        );
     }
 
     #findRecommendedGallery(link) {
+        if (typeof findRecommendedGallery === 'function') {
+            return findRecommendedGallery(link);
+        }
+
         if (typeof window.zenLauncher?.findRecommendedGallery === 'function') {
             return window.zenLauncher.findRecommendedGallery(link);
         }

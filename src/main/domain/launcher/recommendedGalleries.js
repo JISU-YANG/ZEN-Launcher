@@ -68,8 +68,10 @@ function findRecommendedGallery(link) {
     return match ? copyRecommendedGallery(match) : null;
 }
 
-module.exports = {
-    RECOMMENDED_GALLERIES,
-    listRecommendedGalleries,
-    findRecommendedGallery
-};
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        RECOMMENDED_GALLERIES,
+        listRecommendedGalleries,
+        findRecommendedGallery
+    };
+}
