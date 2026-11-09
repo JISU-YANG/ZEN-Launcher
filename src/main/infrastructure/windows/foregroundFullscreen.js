@@ -24,6 +24,22 @@ function shouldReduceResourcesDuringFullscreen(enabled, otherAppFullscreen, laun
     return enabled === true && otherAppFullscreen === true && launcherFocused !== true;
 }
 
+function shouldPassSearchShortcutThrough(suppressEnabled, otherAppFullscreen) {
+    return suppressEnabled === true && otherAppFullscreen === true;
+}
+
+function resolveSearchShortcutRegistration({ passThrough, holdRegistration } = {}) {
+    if (passThrough === true) {
+        return 'unregister';
+    }
+
+    if (holdRegistration === true) {
+        return 'hold';
+    }
+
+    return 'register';
+}
+
 function readNativeWindowHandle(buffer) {
     if (!buffer || typeof buffer.length !== 'number' || buffer.length < 4) {
         return 0n;
@@ -89,8 +105,8 @@ function createProbeStreamDecoder() {
 }
 
 function parseProbeLine(line) {
-    if (line === 'ready') {
-        return { type: 'ready' };
+    if (line === 'ready' || line === 'forwarded' || line === 'skipped' || line === 'failed') {
+        return { type: line };
     }
 
     try {
@@ -143,12 +159,14 @@ class WindowsForegroundFullscreenProbe {
         powershellPath,
         scriptPath,
         requestTimeoutMs = 1500,
-        startTimeoutMs = 8000
+        startTimeoutMs = 8000,
+        spawnProcess = spawn
     } = {}) {
         this.powershellPath = powershellPath;
         this.scriptPath = scriptPath;
         this.requestTimeoutMs = requestTimeoutMs;
         this.startTimeoutMs = startTimeoutMs;
+        this.spawnProcess = spawnProcess;
         this.child = null;
         this.decoder = createProbeStreamDecoder();
         this.readyPromise = null;
@@ -194,7 +212,7 @@ class WindowsForegroundFullscreenProbe {
             startTimer = setTimeout(() => {
                 this.stop();
             }, this.startTimeoutMs);
-            const child = spawn(this.powershellPath, [
+            const child = this.spawnProcess(this.powershellPath, [
                 '-NoProfile',
                 '-NonInteractive',
                 '-ExecutionPolicy',
@@ -220,11 +238,11 @@ class WindowsForegroundFullscreenProbe {
                         return;
                     }
 
-                    if (message.type === 'sample' && this.pending) {
+                    if (this.pending) {
                         clearTimeout(this.pending.timeout);
                         const pending = this.pending;
                         this.pending = null;
-                        pending.resolve(message.sample);
+                        pending.resolve(message);
                     }
                 });
             });
@@ -274,6 +292,16 @@ class WindowsForegroundFullscreenProbe {
         return isOtherAppFullscreenSample(sample, ownHwnd);
     }
 
+    async forwardSearchShortcut() {
+        await this.start();
+        const message = await this.#requestCommand('forward\n');
+        if (!message || (message.type !== 'forwarded' && message.type !== 'skipped')) {
+            throw new Error('Fullscreen probe did not forward the shortcut.');
+        }
+
+        return message.type;
+    }
+
     #rejectPending(error) {
         if (!this.pending) {
             return;
@@ -286,6 +314,16 @@ class WindowsForegroundFullscreenProbe {
     }
 
     #requestSample() {
+        return this.#requestCommand('\n').then((message) => {
+            if (!message || message.type !== 'sample') {
+                throw new Error('Fullscreen probe returned an unexpected response.');
+            }
+
+            return message.sample;
+        });
+    }
+
+    #requestCommand(command) {
         const request = () => new Promise((resolve, reject) => {
             if (!this.child || !this.isReady) {
                 reject(new Error('Fullscreen probe is not running.'));
@@ -299,7 +337,7 @@ class WindowsForegroundFullscreenProbe {
             }, this.requestTimeoutMs);
 
             this.pending = { resolve, reject, timeout };
-            this.child.stdin.write('\n');
+            this.child.stdin.write(command);
         });
         const queued = this.queue.catch(() => {}).then(request);
         this.queue = queued;
@@ -315,5 +353,7 @@ module.exports = {
     isOtherAppFullscreenSample,
     parseProbeLine,
     readNativeWindowHandle,
+    resolveSearchShortcutRegistration,
+    shouldPassSearchShortcutThrough,
     shouldReduceResourcesDuringFullscreen
 };

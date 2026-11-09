@@ -1,11 +1,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
 const {
+    WindowsForegroundFullscreenProbe,
     coversMonitor,
     createProbeStreamDecoder,
     isOtherAppFullscreenSample,
     parseProbeLine,
     readNativeWindowHandle,
+    resolveSearchShortcutRegistration,
+    shouldPassSearchShortcutThrough,
     shouldReduceResourcesDuringFullscreen
 } = require('./foregroundFullscreen');
 
@@ -61,6 +65,19 @@ test('a failed probe sample does not block the shortcut', () => {
     assert.equal(isOtherAppFullscreenSample({ ok: false }, 42n), false);
     assert.equal(parseProbeLine('not-json'), null);
     assert.deepEqual(parseProbeLine('ready'), { type: 'ready' });
+    assert.deepEqual(parseProbeLine('forwarded'), { type: 'forwarded' });
+    assert.deepEqual(parseProbeLine('skipped'), { type: 'skipped' });
+    assert.deepEqual(parseProbeLine('failed'), { type: 'failed' });
+});
+
+test('fullscreen Ctrl+Space is released even when the launcher window still looks focused', () => {
+    assert.equal(shouldPassSearchShortcutThrough(true, true), true);
+    assert.equal(shouldPassSearchShortcutThrough(true, false), false);
+    assert.equal(shouldPassSearchShortcutThrough(false, true), false);
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: true, holdRegistration: false }), 'unregister');
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: true, holdRegistration: true }), 'unregister');
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: false, holdRegistration: false }), 'register');
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: false, holdRegistration: true }), 'hold');
 });
 
 test('probe output can arrive as utf-8 or utf-16', () => {
@@ -81,6 +98,44 @@ test('resource saving follows the fullscreen state and stays on by default only 
     assert.equal(shouldReduceResourcesDuringFullscreen(true, false, false), false);
     assert.equal(shouldReduceResourcesDuringFullscreen(false, true, false), false);
     assert.equal(shouldReduceResourcesDuringFullscreen(true, true, true), false);
+});
+
+function createFakeProbeChild() {
+    const child = new EventEmitter();
+    child.stdout = new EventEmitter();
+    child.stdin = {
+        write(chunk) {
+            const command = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+            const line = command.startsWith('forward')
+                ? 'forwarded\n'
+                : '{"ok":true,"foregroundHwnd":"7","left":0,"top":0,"right":10,"bottom":10,"monitorLeft":0,"monitorTop":0,"monitorRight":10,"monitorBottom":10}\n';
+            child.stdout.emit('data', Buffer.from(line));
+            return true;
+        }
+    };
+    child.killed = false;
+    child.kill = () => {
+        child.killed = true;
+    };
+    process.nextTick(() => {
+        child.stdout.emit('data', Buffer.from('ready\n'));
+    });
+    return child;
+}
+
+test('a swallowed shortcut is forwarded on its own command', async () => {
+    const probe = new WindowsForegroundFullscreenProbe({
+        powershellPath: 'powershell.exe',
+        scriptPath: 'probe.ps1',
+        spawnProcess: () => createFakeProbeChild()
+    });
+
+    try {
+        assert.equal(await probe.isOtherAppFullscreen(1n), true);
+        assert.equal(await probe.forwardSearchShortcut(), 'forwarded');
+    } finally {
+        probe.stop();
+    }
 });
 
 test('native window handles are read from Electron buffers', () => {
