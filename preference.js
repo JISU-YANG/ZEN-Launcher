@@ -2758,7 +2758,8 @@ class ZenLauncherPreferences {
         this.#renderNav();
         this.#renderCategoryItems(category);
 
-        this.#openItemEditor(category, this.#activeItemIndex, 'direct');
+        const initialMode = category === ZenLauncherPreferences.Category.FOLDER ? 'recommend' : 'direct';
+        this.#openItemEditor(category, this.#activeItemIndex, initialMode);
         this.#refreshStatus();
     }
 
