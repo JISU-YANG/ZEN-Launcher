@@ -8,6 +8,10 @@ const {
     listRecommendedFolders
 } = require('./src/main/domain/launcher/recommendedFolders');
 const {
+    findRecommendedGallery: findRecommendedGalleryRecord,
+    listRecommendedGalleries
+} = require('./src/main/domain/launcher/recommendedGalleries');
+const {
     isSystemProgram,
     normalizeLinkKey
 } = require('./src/main/domain/program/programVisibility');
@@ -24,6 +28,12 @@ contextBridge.exposeInMainWorld('zenLauncher', {
     },
     findRecommendedFolder(link) {
         return findRecommendedFolderRecord(link);
+    },
+    getRecommendedGalleries() {
+        return listRecommendedGalleries();
+    },
+    findRecommendedGallery(link) {
+        return findRecommendedGalleryRecord(link);
     },
     isSystemProgram(program) {
         return isSystemProgram(program);

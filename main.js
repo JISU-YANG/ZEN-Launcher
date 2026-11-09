@@ -30,10 +30,11 @@ const {
 } = require('./src/main/infrastructure/windows/foregroundFullscreen');
 const { readMasterMute } = require('./src/main/infrastructure/windows/masterMute');
 const { expandEnvPath, isShellFolderLink } = require('./src/main/domain/launcher/recommendedFolders');
+const { splitExecutableCommand } = require('./src/main/domain/launcher/executableCommand');
 
 const store = new Store();
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
-const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:'];
+const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'ms-settings:', 'ms-clock:', 'ngm:', 'steam:'];
 const DEV_RELOAD_FILES = ['index.html', 'renderer.js', 'preference.js', 'sheetMotion.js', 'zenDialog.js'];
 const DEV_RESTART_FILES = ['main.js', 'preload.js'];
 const POWERSHELL_PATH = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
@@ -768,6 +769,16 @@ async function runTarget(target) {
                 `Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class KeyboardMedia { [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo); }'; [KeyboardMedia]::keybd_event(${keyCode}, 0, 0, 0); Start-Sleep -Milliseconds 40; [KeyboardMedia]::keybd_event(${keyCode}, 0, 2, 0)`
             ],
             '\uBCFC\uB968 \uC870\uC808\uC744 \uC2E4\uD589\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
+        );
+        return;
+    }
+
+    const executableCommand = splitExecutableCommand(normalizedTarget);
+    if (executableCommand) {
+        await runSystemCommand(
+            executableCommand.file,
+            executableCommand.args,
+            '\uC2E4\uD589 \uD30C\uC77C\uC744 \uC5F4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4'
         );
         return;
     }
