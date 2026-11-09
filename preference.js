@@ -1867,7 +1867,7 @@ class ZenLauncherPreferences {
                 date.textContent = String(info.releaseDate).replace(/-/g, '.');
             }
         }).catch(() => {
-            version.textContent = 'v2.3.6';
+            version.textContent = 'v2.3.7';
         });
 
         return page;

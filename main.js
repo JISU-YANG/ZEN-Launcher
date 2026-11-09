@@ -24,6 +24,8 @@ const { createAppTray } = require('./src/main/infrastructure/tray/appTray');
 const {
     WindowsForegroundFullscreenProbe,
     readNativeWindowHandle,
+    resolveSearchShortcutRegistration,
+    shouldPassSearchShortcutThrough,
     shouldReduceResourcesDuringFullscreen
 } = require('./src/main/infrastructure/windows/foregroundFullscreen');
 const { readMasterMute } = require('./src/main/infrastructure/windows/masterMute');
@@ -74,6 +76,8 @@ let activeSheetFit = 'closed';
 let foregroundProbe = null;
 let shortcutWatchTimer = null;
 let searchShortcutInFlight = false;
+let searchShortcutHold = false;
+let lastOtherAppFullscreen = false;
 let resourceSaverActive = false;
 let appTray = null;
 let autoUpdaterController = null;
@@ -224,13 +228,31 @@ function getForegroundProbe() {
 }
 
 function registerSearchShortcut() {
-    if (globalShortcut.isRegistered(SEARCH_SHORTCUT)) {
+    if (searchShortcutHold || globalShortcut.isRegistered(SEARCH_SHORTCUT)) {
         return;
     }
 
-    globalShortcut.register(SEARCH_SHORTCUT, () => {
+    const registered = globalShortcut.register(SEARCH_SHORTCUT, () => {
         handleSearchShortcut();
     });
+    if (!registered) {
+        console.warn('Search shortcut registration failed.');
+    }
+}
+
+function applySearchShortcutRegistration(passThrough) {
+    const registration = resolveSearchShortcutRegistration({
+        passThrough,
+        holdRegistration: searchShortcutHold
+    });
+    if (registration === 'unregister') {
+        globalShortcut.unregister(SEARCH_SHORTCUT);
+        return;
+    }
+
+    if (registration === 'register') {
+        registerSearchShortcut();
+    }
 }
 
 function stopShortcutWatch() {
@@ -265,6 +287,7 @@ function isLauncherFocused() {
 async function refreshFullscreenMode() {
     const settings = loadAppearanceSettings();
     if (!shouldWatchFullscreen(settings)) {
+        lastOtherAppFullscreen = false;
         registerSearchShortcut();
         setResourceSaverActive(false);
         return;
@@ -275,22 +298,24 @@ async function refreshFullscreenMode() {
         otherAppFullscreen = await isAnotherAppFullscreen();
     } catch (error) {
         console.warn('Fullscreen check failed:', error?.message || error);
+        lastOtherAppFullscreen = false;
         registerSearchShortcut();
         setResourceSaverActive(false);
         return;
     }
 
+    lastOtherAppFullscreen = otherAppFullscreen;
+
     const latestSettings = loadAppearanceSettings();
     const launcherFocused = isLauncherFocused();
-    const suppressShortcut = latestSettings.suppressShortcutDuringFullscreen === true
-        && otherAppFullscreen
-        && !launcherFocused;
-
-    if (suppressShortcut) {
-        globalShortcut.unregister(SEARCH_SHORTCUT);
-    } else {
-        registerSearchShortcut();
-    }
+    // RegisterHotKey swallows Ctrl+Space. Electron can still report this
+    // window as focused after another app goes fullscreen, and that used to
+    // re-arm the hotkey. The probe already ignores our own window, so pass
+    // the key through whenever the foreground app covers its monitor.
+    applySearchShortcutRegistration(shouldPassSearchShortcutThrough(
+        latestSettings.suppressShortcutDuringFullscreen === true,
+        otherAppFullscreen
+    ));
 
     setResourceSaverActive(shouldReduceResourcesDuringFullscreen(
         latestSettings.minimizeResourcesDuringFullscreen === true,
@@ -303,6 +328,7 @@ function syncFullscreenMode(settings = loadAppearanceSettings()) {
     if (!shouldWatchFullscreen(settings)) {
         stopShortcutWatch();
         foregroundProbe?.stop();
+        lastOtherAppFullscreen = false;
         registerSearchShortcut();
         setResourceSaverActive(false);
         return;
@@ -320,26 +346,43 @@ function syncFullscreenMode(settings = loadAppearanceSettings()) {
 
 async function handleSearchShortcut() {
     if (searchShortcutInFlight) {
+        if (lastOtherAppFullscreen) {
+            globalShortcut.unregister(SEARCH_SHORTCUT);
+        }
         return;
     }
 
     const settings = loadAppearanceSettings();
-    if (!settings.suppressShortcutDuringFullscreen || process.platform !== 'win32') {
+    if (settings.suppressShortcutDuringFullscreen !== true || process.platform !== 'win32') {
         focusLauncherSearch();
         return;
     }
 
     searchShortcutInFlight = true;
+    searchShortcutHold = true;
+    let passedThrough = false;
     try {
-        const blocked = await isAnotherAppFullscreen();
-        if (blocked) {
+        // Release the hotkey only. Replaying the swallowed press with
+        // keybd_event would mark the input as injected, which anti-cheat
+        // can treat as a macro. The physical press that hit RegisterHotKey
+        // is lost; the next one is a normal OS keystroke.
+        const blocked = lastOtherAppFullscreen === true
+            ? true
+            : await isAnotherAppFullscreen();
+        if (shouldPassSearchShortcutThrough(true, blocked)) {
             globalShortcut.unregister(SEARCH_SHORTCUT);
-            return;
+            passedThrough = true;
         }
     } catch (error) {
         console.warn('Fullscreen shortcut check failed:', error?.message || error);
     } finally {
         searchShortcutInFlight = false;
+        searchShortcutHold = false;
+    }
+
+    if (passedThrough) {
+        refreshFullscreenMode();
+        return;
     }
 
     focusLauncherSearch();
@@ -908,6 +951,11 @@ function createWindow() {
 
     win.removeMenu();
     mainWindow = win;
+    const refreshShortcutOnFocusChange = () => {
+        refreshFullscreenMode();
+    };
+    win.on('focus', refreshShortcutOnFocusChange);
+    win.on('blur', refreshShortcutOnFocusChange);
     applyLauncherLayout();
     win.loadFile('index.html');
     win.webContents.on('did-finish-load', () => {
