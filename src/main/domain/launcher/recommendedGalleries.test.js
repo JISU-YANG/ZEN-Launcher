@@ -16,11 +16,11 @@ test('offers the six gallery games with their poster and launch target', () => {
         'Sudden Attack',
         'League of Legends',
         'VALORANT',
-        'PUBG: BATTLEGROUNDS',
+        'BATTLEGROUNDS',
         'Mabinogi'
     ]);
 
-    assert.equal(findRecommendedGallery('steam://rungameid/578080')?.name, 'PUBG: BATTLEGROUNDS');
+    assert.equal(findRecommendedGallery('steam://rungameid/578080')?.name, 'BATTLEGROUNDS');
     const posters = listRecommendedGalleries().map((item) => item.img);
     assert.deepEqual(posters, [
         'src/gallery/maplestory.gif',

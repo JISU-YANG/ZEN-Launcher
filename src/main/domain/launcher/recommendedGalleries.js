@@ -28,7 +28,7 @@ const RECOMMENDED_GALLERIES = Object.freeze([
         img: 'src/gallery/valorant.gif'
     }),
     Object.freeze({
-        name: 'PUBG: BATTLEGROUNDS',
+        name: 'BATTLEGROUNDS',
         link: 'steam://rungameid/578080',
         detail: 'Steam',
         img: 'src/gallery/pubg-battlegrounds.gif'
