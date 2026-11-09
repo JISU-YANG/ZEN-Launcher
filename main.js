@@ -343,23 +343,11 @@ function syncFullscreenMode(settings = loadAppearanceSettings()) {
     refreshFullscreenMode();
 }
 
-async function forwardSwallowedSearchShortcut() {
-    searchShortcutHold = true;
-    globalShortcut.unregister(SEARCH_SHORTCUT);
-    try {
-        const probe = getForegroundProbe();
-        if (!probe) {
-            return;
-        }
-
-        await probe.forwardSearchShortcut();
-    } catch (error) {
-        console.warn('Shortcut forward failed:', error?.message || error);
-    }
-}
-
 async function handleSearchShortcut() {
     if (searchShortcutInFlight) {
+        if (lastOtherAppFullscreen) {
+            globalShortcut.unregister(SEARCH_SHORTCUT);
+        }
         return;
     }
 
@@ -373,14 +361,15 @@ async function handleSearchShortcut() {
     searchShortcutHold = true;
     let passedThrough = false;
     try {
-        // The poll already saw a fullscreen app, so this press was swallowed
-        // by a hotkey that should not have been armed. Replay it before
-        // another probe round-trip lets Ctrl go up.
+        // Release the hotkey only. Replaying the swallowed press with
+        // keybd_event would mark the input as injected, which anti-cheat
+        // can treat as a macro. The physical press that hit RegisterHotKey
+        // is lost; the next one is a normal OS keystroke.
         const blocked = lastOtherAppFullscreen === true
             ? true
             : await isAnotherAppFullscreen();
         if (shouldPassSearchShortcutThrough(true, blocked)) {
-            await forwardSwallowedSearchShortcut();
+            globalShortcut.unregister(SEARCH_SHORTCUT);
             passedThrough = true;
         }
     } catch (error) {

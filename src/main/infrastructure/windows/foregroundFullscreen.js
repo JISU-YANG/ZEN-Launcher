@@ -105,8 +105,8 @@ function createProbeStreamDecoder() {
 }
 
 function parseProbeLine(line) {
-    if (line === 'ready' || line === 'forwarded' || line === 'skipped' || line === 'failed') {
-        return { type: line };
+    if (line === 'ready') {
+        return { type: 'ready' };
     }
 
     try {
@@ -159,14 +159,12 @@ class WindowsForegroundFullscreenProbe {
         powershellPath,
         scriptPath,
         requestTimeoutMs = 1500,
-        startTimeoutMs = 8000,
-        spawnProcess = spawn
+        startTimeoutMs = 8000
     } = {}) {
         this.powershellPath = powershellPath;
         this.scriptPath = scriptPath;
         this.requestTimeoutMs = requestTimeoutMs;
         this.startTimeoutMs = startTimeoutMs;
-        this.spawnProcess = spawnProcess;
         this.child = null;
         this.decoder = createProbeStreamDecoder();
         this.readyPromise = null;
@@ -212,7 +210,7 @@ class WindowsForegroundFullscreenProbe {
             startTimer = setTimeout(() => {
                 this.stop();
             }, this.startTimeoutMs);
-            const child = this.spawnProcess(this.powershellPath, [
+            const child = spawn(this.powershellPath, [
                 '-NoProfile',
                 '-NonInteractive',
                 '-ExecutionPolicy',
@@ -238,11 +236,11 @@ class WindowsForegroundFullscreenProbe {
                         return;
                     }
 
-                    if (this.pending) {
+                    if (message.type === 'sample' && this.pending) {
                         clearTimeout(this.pending.timeout);
                         const pending = this.pending;
                         this.pending = null;
-                        pending.resolve(message);
+                        pending.resolve(message.sample);
                     }
                 });
             });
@@ -292,16 +290,6 @@ class WindowsForegroundFullscreenProbe {
         return isOtherAppFullscreenSample(sample, ownHwnd);
     }
 
-    async forwardSearchShortcut() {
-        await this.start();
-        const message = await this.#requestCommand('forward\n');
-        if (!message || (message.type !== 'forwarded' && message.type !== 'skipped')) {
-            throw new Error('Fullscreen probe did not forward the shortcut.');
-        }
-
-        return message.type;
-    }
-
     #rejectPending(error) {
         if (!this.pending) {
             return;
@@ -314,16 +302,6 @@ class WindowsForegroundFullscreenProbe {
     }
 
     #requestSample() {
-        return this.#requestCommand('\n').then((message) => {
-            if (!message || message.type !== 'sample') {
-                throw new Error('Fullscreen probe returned an unexpected response.');
-            }
-
-            return message.sample;
-        });
-    }
-
-    #requestCommand(command) {
         const request = () => new Promise((resolve, reject) => {
             if (!this.child || !this.isReady) {
                 reject(new Error('Fullscreen probe is not running.'));
@@ -337,7 +315,7 @@ class WindowsForegroundFullscreenProbe {
             }, this.requestTimeoutMs);
 
             this.pending = { resolve, reject, timeout };
-            this.child.stdin.write(command);
+            this.child.stdin.write('\n');
         });
         const queued = this.queue.catch(() => {}).then(request);
         this.queue = queued;
