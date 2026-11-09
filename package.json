@@ -7,7 +7,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test zenDialog.test.js src/main/domain/program/programVisibility.test.js src/main/domain/launcher/launcherFrame.test.js src/main/infrastructure/tray/appTray.test.js src/main/infrastructure/windows/foregroundFullscreen.test.js src/main/infrastructure/windows/masterMute.test.js",
+    "test": "node --test zenDialog.test.js src/main/domain/program/programVisibility.test.js src/main/domain/launcher/launcherFrame.test.js src/main/domain/launcher/recommendedFolders.test.js src/main/infrastructure/tray/appTray.test.js src/main/infrastructure/windows/foregroundFullscreen.test.js src/main/infrastructure/windows/masterMute.test.js",
     "build:win32": "electron-builder --win nsis --ia32 --publish never",
     "build:win64": "electron-builder --win nsis --x64 --publish never",
     "build:win": "electron-builder --win nsis --ia32 --x64 --publish never",

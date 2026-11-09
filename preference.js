@@ -608,6 +608,9 @@ class ZenLauncherPreferences {
             #editor[data-size="l"] .recommend-list {
                 display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); align-content:start;
             }
+            #editor[data-size="l"] .recommend-list.recommend-list-stack {
+                grid-template-columns:minmax(0, 1fr);
+            }
             .recommend-item {
                 display:flex; align-items:center; gap:10px; width:100%; min-width:0; padding:8px 10px;
                 border:1px solid var(--hairline, rgba(255,255,255,0.12)); border-radius:var(--radius-control, 8px);
@@ -1737,6 +1740,7 @@ class ZenLauncherPreferences {
         const editingWideItem = slotOpen && (
             category === ZenLauncherPreferences.Category.GALLERY
             || category === ZenLauncherPreferences.Category.ICON
+            || category === ZenLauncherPreferences.Category.FOLDER
         );
         return this.#isProgramBrowserOpen() || editingWideItem;
     }
@@ -2306,16 +2310,24 @@ class ZenLauncherPreferences {
         ];
 
         if (category === ZenLauncherPreferences.Category.FOLDER) {
-            form.push(this.#createEditorField({
-                category,
-                index,
-                key: 'link',
-                label: meta.linkLabel,
-                value: item.link,
-                placeholder: meta.linkPlaceholder,
-                withPicker: true,
-                pickerLabel: meta.selectButtonLabel
-            }));
+            form.push(this.#createSourceModeField([
+                ['direct', '폴더', '경로를 직접 넣거나 고릅니다'],
+                ['recommend', '추천', '자주 여는 폴더에서 고릅니다']
+            ]));
+            if (this.#currentEditorMode === 'recommend') {
+                form.push(this.#createRecommendPanel(category, index, item));
+            } else {
+                form.push(this.#createEditorField({
+                    category,
+                    index,
+                    key: 'link',
+                    label: meta.linkLabel,
+                    value: item.link,
+                    placeholder: meta.linkPlaceholder,
+                    withPicker: true,
+                    pickerLabel: meta.selectButtonLabel
+                }));
+            }
         } else {
             stage.push(this.#createImageTools(category, index, item));
             form.push(this.#createSourceModeField());
@@ -2413,8 +2425,9 @@ class ZenLauncherPreferences {
         wrapper.className = 'setting-field-group';
         wrapper.appendChild(this.#createStaticElement('span', 'setting-field-label', '추천'));
 
-        const icons = this.#getRecommendedIcons();
-        if (icons.length === 0) {
+        const isFolder = category === ZenLauncherPreferences.Category.FOLDER;
+        const recommendations = isFolder ? this.#getRecommendedFolders() : this.#getRecommendedIcons();
+        if (recommendations.length === 0) {
             const panel = document.createElement('div');
             panel.className = 'recommend-empty-panel';
             panel.append(
@@ -2422,7 +2435,7 @@ class ZenLauncherPreferences {
                 this.#createStaticElement(
                     'div',
                     'recommend-empty-copy',
-                    '기본 도구 목록을 불러오지 못했습니다.'
+                    isFolder ? '추천 폴더를 불러오지 못했습니다.' : '기본 도구 목록을 불러오지 못했습니다.'
                 )
             );
             wrapper.appendChild(panel);
@@ -2430,14 +2443,15 @@ class ZenLauncherPreferences {
         }
 
         const list = document.createElement('div');
-        list.className = 'recommend-list';
-        const selectedKey = String(item?.link || '').trim().toLowerCase();
+        list.className = isFolder ? 'recommend-list recommend-list-stack' : 'recommend-list';
+        const selected = isFolder ? this.#findRecommendedFolder(item?.link) : this.#findRecommendedIcon(item?.link);
+        const selectedKey = this.#recommendationLinkKey(selected?.link);
 
-        icons.forEach((recommended) => {
+        recommendations.forEach((recommended) => {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'recommend-item';
-            const isCurrent = String(recommended.link || '').trim().toLowerCase() === selectedKey;
+            const isCurrent = this.#recommendationLinkKey(recommended.link) === selectedKey && selectedKey !== '';
             if (isCurrent) {
                 button.setAttribute('aria-current', 'true');
             }
@@ -2456,9 +2470,10 @@ class ZenLauncherPreferences {
 
             const copy = document.createElement('span');
             copy.className = 'recommend-item-copy';
+            const detail = recommended.detail || recommended.link;
             const meta = this.#isLinkUsedElsewhere(category, index, recommended.link)
-                ? `${recommended.link} · 이미 추가됨`
-                : recommended.link;
+                ? `${detail} · 이미 추가됨`
+                : detail;
             copy.append(
                 this.#createStaticElement('strong', '', recommended.name),
                 this.#createStaticElement('span', '', meta)
@@ -2530,7 +2545,7 @@ class ZenLauncherPreferences {
         return wrapper;
     }
 
-    #createSourceModeField() {
+    #createSourceModeField(modes = null) {
         const wrapper = document.createElement('div');
         wrapper.className = 'setting-field-group';
         wrapper.append(this.#createStaticElement('span', 'setting-field-label', '여는 방법'));
@@ -2540,11 +2555,12 @@ class ZenLauncherPreferences {
         row.setAttribute('role', 'listbox');
         row.setAttribute('aria-label', '여는 방법');
 
-        [
+        const choices = modes || [
             ['direct', '링크', '웹 주소나 파일을 직접 넣습니다'],
             ['program', '프로그램', '설치된 프로그램에서 고릅니다'],
             ['recommend', '추천', '아이콘 바 기본 도구에서 고릅니다']
-        ].forEach(([mode, label, caption]) => {
+        ];
+        choices.forEach(([mode, label, caption]) => {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = `editor-choice${this.#currentEditorMode === mode ? ' active' : ''}`;
@@ -2673,12 +2689,15 @@ class ZenLauncherPreferences {
             return;
         }
 
-        items[index] = {
+        const next = {
             ...current,
             name: recommended.name || current.name,
-            link: recommended.link,
-            img: typeof recommended.img === 'string' ? recommended.img : current.img
+            link: recommended.link
         };
+        if (category !== ZenLauncherPreferences.Category.FOLDER && typeof recommended.img === 'string') {
+            next.img = recommended.img;
+        }
+        items[index] = next;
 
         this.#drafts.set(category, items);
         this.#updateDirtyState(category);
@@ -3379,7 +3398,11 @@ class ZenLauncherPreferences {
 
     #resolveEditorMode(category, item, preferredMode = null) {
         if (category === ZenLauncherPreferences.Category.FOLDER) {
-            return 'direct';
+            if (preferredMode === 'direct' || preferredMode === 'recommend') {
+                return preferredMode;
+            }
+
+            return this.#findRecommendedFolder(item.link) ? 'recommend' : 'direct';
         }
 
         if (preferredMode === 'direct' || preferredMode === 'program' || preferredMode === 'recommend') {
@@ -3415,18 +3438,44 @@ class ZenLauncherPreferences {
         return this.#getRecommendedIcons().find((item) => item.link.trim().toLowerCase() === key) || null;
     }
 
+    #getRecommendedFolders() {
+        const folders = window.zenLauncher?.getRecommendedFolders?.();
+        if (!Array.isArray(folders)) {
+            return [];
+        }
+
+        return folders.filter((item) => item && typeof item.name === 'string' && typeof item.link === 'string' && item.link.trim());
+    }
+
+    #findRecommendedFolder(link) {
+        if (typeof window.zenLauncher?.findRecommendedFolder === 'function') {
+            return window.zenLauncher.findRecommendedFolder(link);
+        }
+
+        const key = this.#recommendationLinkKey(link);
+        if (!key) {
+            return null;
+        }
+
+        return this.#getRecommendedFolders().find((item) => this.#recommendationLinkKey(item.link) === key) || null;
+    }
+
+    #recommendationLinkKey(link) {
+        return String(link || '').trim().replace(/\//g, '\\').replace(/\\+/g, '\\').toLowerCase();
+    }
+
     #isBundledIcon(img) {
         return /(^|[\\/])src[\\/]icon[\\/]/i.test(String(img || ''));
     }
 
     #isLinkUsedElsewhere(category, index, link) {
-        const key = String(link || '').trim().toLowerCase();
+        const key = this.#recommendationLinkKey(link);
         if (!key) {
             return false;
         }
 
         return (this.#drafts.get(category) || []).some((item, itemIndex) => {
-            return itemIndex !== index && String(item?.link || '').trim().toLowerCase() === key;
+            return itemIndex !== index && this.#recommendationLinkKey(item?.link) === key;
         });
     }
 
@@ -3488,6 +3537,10 @@ class ZenLauncherPreferences {
 
     #getItemMetaText(category, item) {
         if (category === ZenLauncherPreferences.Category.FOLDER) {
+            const recommended = this.#findRecommendedFolder(item.link);
+            if (recommended?.detail) {
+                return this.#summarizeLinkTail(recommended.detail, 18);
+            }
             return this.#summarizeLinkTail(item.link, 14);
         }
 
