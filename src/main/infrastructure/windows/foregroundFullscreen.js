@@ -24,6 +24,22 @@ function shouldReduceResourcesDuringFullscreen(enabled, otherAppFullscreen, laun
     return enabled === true && otherAppFullscreen === true && launcherFocused !== true;
 }
 
+function shouldPassSearchShortcutThrough(suppressEnabled, otherAppFullscreen) {
+    return suppressEnabled === true && otherAppFullscreen === true;
+}
+
+function resolveSearchShortcutRegistration({ passThrough, holdRegistration } = {}) {
+    if (passThrough === true) {
+        return 'unregister';
+    }
+
+    if (holdRegistration === true) {
+        return 'hold';
+    }
+
+    return 'register';
+}
+
 function readNativeWindowHandle(buffer) {
     if (!buffer || typeof buffer.length !== 'number' || buffer.length < 4) {
         return 0n;
@@ -315,5 +331,7 @@ module.exports = {
     isOtherAppFullscreenSample,
     parseProbeLine,
     readNativeWindowHandle,
+    resolveSearchShortcutRegistration,
+    shouldPassSearchShortcutThrough,
     shouldReduceResourcesDuringFullscreen
 };

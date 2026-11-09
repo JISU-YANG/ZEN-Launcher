@@ -6,6 +6,8 @@ const {
     isOtherAppFullscreenSample,
     parseProbeLine,
     readNativeWindowHandle,
+    resolveSearchShortcutRegistration,
+    shouldPassSearchShortcutThrough,
     shouldReduceResourcesDuringFullscreen
 } = require('./foregroundFullscreen');
 
@@ -61,6 +63,16 @@ test('a failed probe sample does not block the shortcut', () => {
     assert.equal(isOtherAppFullscreenSample({ ok: false }, 42n), false);
     assert.equal(parseProbeLine('not-json'), null);
     assert.deepEqual(parseProbeLine('ready'), { type: 'ready' });
+});
+
+test('fullscreen Ctrl+Space is released even when the launcher window still looks focused', () => {
+    assert.equal(shouldPassSearchShortcutThrough(true, true), true);
+    assert.equal(shouldPassSearchShortcutThrough(true, false), false);
+    assert.equal(shouldPassSearchShortcutThrough(false, true), false);
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: true, holdRegistration: false }), 'unregister');
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: true, holdRegistration: true }), 'unregister');
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: false, holdRegistration: false }), 'register');
+    assert.equal(resolveSearchShortcutRegistration({ passThrough: false, holdRegistration: true }), 'hold');
 });
 
 test('probe output can arrive as utf-8 or utf-16', () => {
