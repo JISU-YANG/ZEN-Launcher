@@ -1,10 +1,30 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const {
+    findDefaultIcon: findDefaultIconRecord,
+    listDefaultIcons
+} = require('./src/main/domain/launcher/defaultIcons');
+const {
+    findRecommendedFolder: findRecommendedFolderRecord,
+    listRecommendedFolders
+} = require('./src/main/domain/launcher/recommendedFolders');
+const {
     isSystemProgram,
     normalizeLinkKey
 } = require('./src/main/domain/program/programVisibility');
 
 contextBridge.exposeInMainWorld('zenLauncher', {
+    getDefaultIcons() {
+        return listDefaultIcons();
+    },
+    findDefaultIcon(link) {
+        return findDefaultIconRecord(link);
+    },
+    getRecommendedFolders() {
+        return listRecommendedFolders();
+    },
+    findRecommendedFolder(link) {
+        return findRecommendedFolderRecord(link);
+    },
     isSystemProgram(program) {
         return isSystemProgram(program);
     },

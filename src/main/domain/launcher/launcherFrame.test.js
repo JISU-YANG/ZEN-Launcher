@@ -7,7 +7,7 @@ const {
     shapeForSheet,
     PANEL_SHEET_HEIGHT
 } = require('./launcherFrame');
-const { resolveInitialIcons, DEFAULT_ICONS } = require('./defaultIcons');
+const { resolveInitialIcons, DEFAULT_ICONS, listDefaultIcons, findDefaultIcon } = require('./defaultIcons');
 
 test('places a 1080p dock with the previous bottom gap', () => {
     const frame = computeLauncherFrame({ x: 0, y: 0, width: 1920, height: 1080 });
@@ -89,6 +89,19 @@ test('applies pixel offsets and clamps them inside the work area', () => {
     );
     assert.equal(clamped.x, 1920 - 1200);
     assert.equal(clamped.y, 0);
+});
+
+test('finds a default icon bar tool by its launch target', () => {
+    assert.equal(findDefaultIcon('calc.exe')?.name, '계산기');
+    assert.equal(findDefaultIcon('SNIPPINGTOOL.EXE')?.name, '캡처도구');
+    assert.equal(findDefaultIcon(' ms-clock: ')?.img, 'src/icon/icon-tool-clock.svg');
+    assert.equal(findDefaultIcon(''), null);
+    assert.equal(findDefaultIcon('notion.exe'), null);
+
+    const listed = listDefaultIcons();
+    assert.deepEqual(listed.map((item) => item.name), DEFAULT_ICONS.map((item) => item.name));
+    listed[0].name = '바뀐 이름';
+    assert.equal(DEFAULT_ICONS[0].name, '계산기');
 });
 
 test('seeds six default tools once and does not overwrite an existing icon row', () => {

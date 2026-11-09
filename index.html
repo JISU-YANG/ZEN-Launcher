@@ -3416,6 +3416,15 @@
             border-radius: 8px;
         }
 
+        .setting-preview-icon-media img.icon-glyph {
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        body[data-theme="light"] .setting-preview-icon-media img.icon-glyph {
+            filter: brightness(0);
+        }
+
         .setting-grid[data-category="ICON"] .setting-preview-icon-media img {
             width: 38px;
             height: 38px;

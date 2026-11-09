@@ -29,6 +29,7 @@ const {
     shouldReduceResourcesDuringFullscreen
 } = require('./src/main/infrastructure/windows/foregroundFullscreen');
 const { readMasterMute } = require('./src/main/infrastructure/windows/masterMute');
+const { expandEnvPath, isShellFolderLink } = require('./src/main/domain/launcher/recommendedFolders');
 
 const store = new Store();
 const APP_ICON_PATH = path.join(__dirname, 'src', 'app', 'ZEN-Launcher.png');
@@ -801,7 +802,21 @@ async function runTarget(target) {
         return;
     }
 
-    const openResult = await shell.openPath(normalizedTarget);
+    const expandedTarget = expandEnvPath(normalizedTarget);
+    if (isShellFolderLink(expandedTarget)) {
+        if (process.platform !== 'win32') {
+            throw new Error('이 폴더는 Windows에서만 열 수 있습니다.');
+        }
+
+        await runSystemCommand(
+            'explorer.exe',
+            [expandedTarget],
+            '폴더를 열지 못했습니다'
+        );
+        return;
+    }
+
+    const openResult = await shell.openPath(expandedTarget);
     if (openResult) {
         throw new Error(`\uB300\uC0C1\uC744 \uC5F4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4: ${openResult}`);
     }
