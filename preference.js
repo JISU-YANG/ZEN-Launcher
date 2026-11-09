@@ -604,6 +604,32 @@ class ZenLauncherPreferences {
             }
             .recommend-empty-title { color:#f1f1f1; font-size:14px; font-weight:800; }
             .recommend-empty-copy { color:#9a9a9a; font-size:12px; line-height:1.5; }
+            .recommend-list { display:flex; flex-direction:column; gap:8px; }
+            #editor[data-size="l"] .recommend-list {
+                display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); align-content:start;
+            }
+            .recommend-item {
+                display:flex; align-items:center; gap:10px; width:100%; min-width:0; padding:8px 10px;
+                border:1px solid var(--hairline, rgba(255,255,255,0.12)); border-radius:var(--radius-control, 8px);
+                background:var(--zen-plate, #262626); color:var(--zen-ink, #f3f3f3); text-align:left; cursor:pointer;
+                box-sizing:border-box; box-shadow:none;
+            }
+            .recommend-item:hover { background:var(--zen-hover, #3a3a3a); }
+            .recommend-item[aria-current="true"] {
+                background:var(--zen-hover, #3a3a3a);
+                border-color:var(--zen-soft, #c8c8c8);
+            }
+            .recommend-item:active { background:var(--press-fill, rgba(255,255,255,0.12)); }
+            .recommend-item:focus-visible { outline:2px solid var(--focus-ring, rgba(220,220,220,0.85)); outline-offset:2px; }
+            .recommend-item-icon {
+                display:flex; align-items:center; justify-content:center; width:28px; height:28px; flex:0 0 auto;
+            }
+            .recommend-item-icon img { width:var(--icon-size, 16px); height:var(--icon-size, 16px); filter:brightness(0) invert(1); }
+            .recommend-item-copy { display:flex; flex-direction:column; gap:2px; min-width:0; }
+            .recommend-item-copy strong { font-size:13px; font-weight:700; color:var(--zen-ink, #f3f3f3); }
+            .recommend-item-copy span {
+                color:var(--zen-muted, #8c8c8c); font-size:11px; font-weight:500; line-height:1.35; word-break:break-all;
+            }
             .layout-metric-card {
                 display:grid; grid-template-columns:120px minmax(0, 1fr); gap:8px 12px; padding:14px 16px;
                 border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-control, 8px);
@@ -639,6 +665,7 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .recommend-empty-copy,
             body[data-theme="light"] .layout-metric-label,
             body[data-theme="light"] .program-browser-show-hidden { color:var(--light-text-muted); }
+            body[data-theme="light"] .recommend-item-icon img { filter:brightness(0); }
             body[data-theme="light"] .setting-category-button:hover,
             body[data-theme="light"] .setting-nav-group:hover {
                 background:rgba(0,0,0,0.06);
@@ -2219,6 +2246,9 @@ class ZenLauncherPreferences {
                 const image = document.createElement('img');
                 image.src = item.img;
                 image.alt = item.name || '';
+                if (this.#isBundledIcon(item.img)) {
+                    image.classList.add('icon-glyph');
+                }
                 media.appendChild(image);
             } else {
                 media.appendChild(this.#createStaticElement('div', 'setting-card-preview-empty', this.#getItemInitial(item)));
@@ -2293,7 +2323,7 @@ class ZenLauncherPreferences {
             if (this.#currentEditorMode === 'program') {
                 form.push(this.#createProgramPickerField(category, index, item));
             } else if (this.#currentEditorMode === 'recommend') {
-                form.push(this.#createRecommendPanel());
+                form.push(this.#createRecommendPanel(category, index, item));
             } else {
                 form.push(this.#createEditorField({
                     category,
@@ -2309,6 +2339,7 @@ class ZenLauncherPreferences {
         }
 
         fields.replaceChildren(this.#createEditorLayout({ stage, form }));
+        fields.querySelector('.recommend-item[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
 
         editor.classList.add('open');
         document.getElementById('setting-nav')?.setAttribute('data-collapsed', 'true');
@@ -2377,18 +2408,67 @@ class ZenLauncherPreferences {
         return wrapper;
     }
 
-    #createRecommendPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'recommend-empty-panel';
-        panel.append(
-            this.#createStaticElement('div', 'recommend-empty-title', '추천'),
-            this.#createStaticElement(
-                'div',
-                'recommend-empty-copy',
-                '추천 목록은 추후 등록될 예정입니다.'
-            )
-        );
-        return panel;
+    #createRecommendPanel(category, index, item) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'setting-field-group';
+        wrapper.appendChild(this.#createStaticElement('span', 'setting-field-label', '추천'));
+
+        const icons = this.#getRecommendedIcons();
+        if (icons.length === 0) {
+            const panel = document.createElement('div');
+            panel.className = 'recommend-empty-panel';
+            panel.append(
+                this.#createStaticElement('div', 'recommend-empty-title', '추천'),
+                this.#createStaticElement(
+                    'div',
+                    'recommend-empty-copy',
+                    '기본 도구 목록을 불러오지 못했습니다.'
+                )
+            );
+            wrapper.appendChild(panel);
+            return wrapper;
+        }
+
+        const list = document.createElement('div');
+        list.className = 'recommend-list';
+        const selectedKey = String(item?.link || '').trim().toLowerCase();
+
+        icons.forEach((recommended) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'recommend-item';
+            const isCurrent = String(recommended.link || '').trim().toLowerCase() === selectedKey;
+            if (isCurrent) {
+                button.setAttribute('aria-current', 'true');
+            }
+            button.addEventListener('click', () => {
+                this.#applyRecommendedIcon(category, index, recommended);
+            });
+
+            const icon = document.createElement('span');
+            icon.className = 'recommend-item-icon';
+            if (recommended.img) {
+                const image = document.createElement('img');
+                image.src = recommended.img;
+                image.alt = '';
+                icon.appendChild(image);
+            }
+
+            const copy = document.createElement('span');
+            copy.className = 'recommend-item-copy';
+            const meta = this.#isLinkUsedElsewhere(category, index, recommended.link)
+                ? `${recommended.link} · 이미 추가됨`
+                : recommended.link;
+            copy.append(
+                this.#createStaticElement('strong', '', recommended.name),
+                this.#createStaticElement('span', '', meta)
+            );
+            button.append(icon, copy);
+            list.appendChild(button);
+        });
+
+        wrapper.appendChild(list);
+        return wrapper;
     }
 
     #createEditorLayout(sections) {
@@ -2463,7 +2543,7 @@ class ZenLauncherPreferences {
         [
             ['direct', '링크', '웹 주소나 파일을 직접 넣습니다'],
             ['program', '프로그램', '설치된 프로그램에서 고릅니다'],
-            ['recommend', '추천', '목록은 추후 등록됩니다']
+            ['recommend', '추천', '아이콘 바 기본 도구에서 고릅니다']
         ].forEach(([mode, label, caption]) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -2584,6 +2664,32 @@ class ZenLauncherPreferences {
         this.#refreshStatus();
         this.#updateItemCardDom(category, index);
         this.#openItemEditor(category, index, 'program');
+    }
+
+    #applyRecommendedIcon(category, index, recommended) {
+        const items = [...(this.#drafts.get(category) || [])];
+        const current = items[index];
+        if (!current || !recommended?.link) {
+            return;
+        }
+
+        items[index] = {
+            ...current,
+            name: recommended.name || current.name,
+            link: recommended.link,
+            img: typeof recommended.img === 'string' ? recommended.img : current.img
+        };
+
+        this.#drafts.set(category, items);
+        this.#updateDirtyState(category);
+        this.#statusOverride = {
+            tone: 'success',
+            message: `"${recommended.name}" 적용됨`
+        };
+        this.#renderNav();
+        this.#refreshStatus();
+        this.#updateItemCardDom(category, index);
+        this.#openItemEditor(category, index, 'recommend');
     }
 
     #updateItemCardDom(category, index) {
@@ -2841,7 +2947,7 @@ class ZenLauncherPreferences {
             image.className = `${category}-img`;
             image.src = item.img;
             image.alt = item.name || '';
-            if (category === ZenLauncherPreferences.Category.ICON && /(^|[\\/])src[\\/]icon[\\/]/.test(String(item.img))) {
+            if (category === ZenLauncherPreferences.Category.ICON && this.#isBundledIcon(item.img)) {
                 image.classList.add('icon-glyph');
             }
             return image;
@@ -3280,7 +3386,48 @@ class ZenLauncherPreferences {
             return preferredMode;
         }
 
+        if (this.#findRecommendedIcon(item.link)) {
+            return 'recommend';
+        }
+
         return this.#isScannedProgramLink(item.link) ? 'program' : 'direct';
+    }
+
+    #getRecommendedIcons() {
+        const icons = window.zenLauncher?.getDefaultIcons?.();
+        if (!Array.isArray(icons)) {
+            return [];
+        }
+
+        return icons.filter((item) => item && typeof item.name === 'string' && typeof item.link === 'string' && item.link.trim());
+    }
+
+    #findRecommendedIcon(link) {
+        if (typeof window.zenLauncher?.findDefaultIcon === 'function') {
+            return window.zenLauncher.findDefaultIcon(link);
+        }
+
+        const key = String(link || '').trim().toLowerCase();
+        if (!key) {
+            return null;
+        }
+
+        return this.#getRecommendedIcons().find((item) => item.link.trim().toLowerCase() === key) || null;
+    }
+
+    #isBundledIcon(img) {
+        return /(^|[\\/])src[\\/]icon[\\/]/i.test(String(img || ''));
+    }
+
+    #isLinkUsedElsewhere(category, index, link) {
+        const key = String(link || '').trim().toLowerCase();
+        if (!key) {
+            return false;
+        }
+
+        return (this.#drafts.get(category) || []).some((item, itemIndex) => {
+            return itemIndex !== index && String(item?.link || '').trim().toLowerCase() === key;
+        });
     }
 
     #isScannedProgramLink(link) {
@@ -3346,6 +3493,10 @@ class ZenLauncherPreferences {
 
         if (this.#isExternalLink(item.link)) {
             return '외부 링크';
+        }
+
+        if (this.#findRecommendedIcon(item.link)) {
+            return '기본 도구';
         }
 
         if (this.#isScannedProgramLink(item.link)) {

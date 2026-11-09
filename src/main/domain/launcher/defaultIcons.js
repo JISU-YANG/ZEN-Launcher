@@ -9,6 +9,28 @@ const DEFAULT_ICONS = Object.freeze([
     Object.freeze({ name: '화상 키보드', link: 'osk.exe', img: 'src/icon/icon-tool-keyboard.svg' })
 ]);
 
+function copyDefaultIcon(item) {
+    return {
+        name: item.name,
+        link: item.link,
+        img: item.img
+    };
+}
+
+function listDefaultIcons() {
+    return DEFAULT_ICONS.map((item) => copyDefaultIcon(item));
+}
+
+function findDefaultIcon(link) {
+    const key = String(link || '').trim().toLowerCase();
+    if (!key) {
+        return null;
+    }
+
+    const match = DEFAULT_ICONS.find((item) => item.link.trim().toLowerCase() === key);
+    return match ? copyDefaultIcon(match) : null;
+}
+
 function resolveInitialIcons({ iconsSeeded = false, items = [] } = {}) {
     const list = Array.isArray(items) ? items.filter(Boolean) : [];
 
@@ -31,12 +53,14 @@ function resolveInitialIcons({ iconsSeeded = false, items = [] } = {}) {
     return {
         changed: true,
         replaceItems: true,
-        items: DEFAULT_ICONS.map((item) => ({ ...item }))
+        items: listDefaultIcons()
     };
 }
 
 module.exports = {
     ICONS_SEEDED_KEY,
     DEFAULT_ICONS,
+    listDefaultIcons,
+    findDefaultIcon,
     resolveInitialIcons
 };
