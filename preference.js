@@ -628,6 +628,12 @@ class ZenLauncherPreferences {
                 display:flex; align-items:center; justify-content:center; width:28px; height:28px; flex:0 0 auto;
             }
             .recommend-item-icon img { width:var(--icon-size, 16px); height:var(--icon-size, 16px); filter:brightness(0) invert(1); }
+            .recommend-item-icon.recommend-item-thumb {
+                width:42px; height:56px; border-radius:8px; overflow:hidden; background:rgba(0,0,0,0.25);
+            }
+            .recommend-item-icon.recommend-item-thumb img {
+                width:100%; height:100%; object-fit:cover; filter:none;
+            }
             .recommend-item-copy { display:flex; flex-direction:column; gap:2px; min-width:0; }
             .recommend-item-copy strong { font-size:13px; font-weight:700; color:var(--zen-ink, #f3f3f3); }
             .recommend-item-copy span {
@@ -669,6 +675,7 @@ class ZenLauncherPreferences {
             body[data-theme="light"] .layout-metric-label,
             body[data-theme="light"] .program-browser-show-hidden { color:var(--light-text-muted); }
             body[data-theme="light"] .recommend-item-icon img { filter:brightness(0); }
+            body[data-theme="light"] .recommend-item-icon.recommend-item-thumb img { filter:none; }
             body[data-theme="light"] .setting-category-button:hover,
             body[data-theme="light"] .setting-nav-group:hover {
                 background:rgba(0,0,0,0.06);
@@ -1867,7 +1874,7 @@ class ZenLauncherPreferences {
                 date.textContent = String(info.releaseDate).replace(/-/g, '.');
             }
         }).catch(() => {
-            version.textContent = 'v2.3.7';
+            version.textContent = 'v2.3.8';
         });
 
         return page;
@@ -2330,7 +2337,13 @@ class ZenLauncherPreferences {
             }
         } else {
             stage.push(this.#createImageTools(category, index, item));
-            form.push(this.#createSourceModeField());
+            form.push(this.#createSourceModeField(category === ZenLauncherPreferences.Category.GALLERY
+                ? [
+                    ['direct', '링크', '웹 주소나 파일을 직접 넣습니다'],
+                    ['program', '프로그램', '설치된 프로그램에서 고릅니다'],
+                    ['recommend', '추천', '갤러리에 올리기 좋은 게임에서 고릅니다']
+                ]
+                : null));
 
             if (this.#currentEditorMode === 'program') {
                 form.push(this.#createProgramPickerField(category, index, item));
@@ -2426,7 +2439,8 @@ class ZenLauncherPreferences {
         wrapper.appendChild(this.#createStaticElement('span', 'setting-field-label', '추천'));
 
         const isFolder = category === ZenLauncherPreferences.Category.FOLDER;
-        const recommendations = isFolder ? this.#getRecommendedFolders() : this.#getRecommendedIcons();
+        const isGallery = category === ZenLauncherPreferences.Category.GALLERY;
+        const recommendations = this.#getRecommendations(category);
         if (recommendations.length === 0) {
             const panel = document.createElement('div');
             panel.className = 'recommend-empty-panel';
@@ -2435,7 +2449,9 @@ class ZenLauncherPreferences {
                 this.#createStaticElement(
                     'div',
                     'recommend-empty-copy',
-                    isFolder ? '추천 폴더를 불러오지 못했습니다.' : '기본 도구 목록을 불러오지 못했습니다.'
+                    isFolder
+                        ? '추천 폴더를 불러오지 못했습니다.'
+                        : (isGallery ? '추천 게임을 불러오지 못했습니다.' : '기본 도구 목록을 불러오지 못했습니다.')
                 )
             );
             wrapper.appendChild(panel);
@@ -2443,8 +2459,10 @@ class ZenLauncherPreferences {
         }
 
         const list = document.createElement('div');
-        list.className = isFolder ? 'recommend-list recommend-list-stack' : 'recommend-list';
-        const selected = isFolder ? this.#findRecommendedFolder(item?.link) : this.#findRecommendedIcon(item?.link);
+        list.className = isFolder
+            ? 'recommend-list recommend-list-stack'
+            : (isGallery ? 'recommend-list recommend-list-gallery' : 'recommend-list');
+        const selected = this.#findRecommendation(category, item?.link);
         const selectedKey = this.#recommendationLinkKey(selected?.link);
 
         recommendations.forEach((recommended) => {
@@ -2460,7 +2478,7 @@ class ZenLauncherPreferences {
             });
 
             const icon = document.createElement('span');
-            icon.className = 'recommend-item-icon';
+            icon.className = isGallery ? 'recommend-item-icon recommend-item-thumb' : 'recommend-item-icon';
             if (recommended.img) {
                 const image = document.createElement('img');
                 image.src = recommended.img;
@@ -2740,25 +2758,28 @@ class ZenLauncherPreferences {
     async #addItem(category, index = null) {
         const items = [...(this.#drafts.get(category) || [])];
         const maxCount = ZenLauncherPreferences.MaxCount[category];
-        if (items.filter(Boolean).length >= maxCount) {
+        const requestedIndex = Number.isInteger(index) && index >= 0 ? index : null;
+        const resolvedIndex = resolveNextLauncherSlot(items, maxCount, requestedIndex);
+        if (resolvedIndex === null) {
             return;
         }
 
-        const targetIndex = Number.isInteger(index) && index >= 0 ? index : items.findIndex((item) => !item);
-        const resolvedIndex = targetIndex >= 0 ? targetIndex : items.length;
-        if (resolvedIndex >= maxCount) {
-            return;
+        if (!items[resolvedIndex]?.link?.trim()) {
+            items[resolvedIndex] = items[resolvedIndex]?.name
+                ? items[resolvedIndex]
+                : this.#normalizeItem({}, category);
+            this.#drafts.set(category, items);
+            this.#updateDirtyState(category);
         }
-
-        items[resolvedIndex] = this.#normalizeItem({}, category);
-        this.#drafts.set(category, items);
-        this.#updateDirtyState(category);
         this.#activeItemIndex = resolvedIndex;
         this.#statusOverride = null;
         this.#renderNav();
         this.#renderCategoryItems(category);
 
-        const initialMode = category === ZenLauncherPreferences.Category.FOLDER ? 'recommend' : 'direct';
+        const initialMode = category === ZenLauncherPreferences.Category.FOLDER
+            || category === ZenLauncherPreferences.Category.GALLERY
+            ? 'recommend'
+            : 'direct';
         this.#openItemEditor(category, this.#activeItemIndex, initialMode);
         this.#refreshStatus();
     }
@@ -3410,11 +3431,35 @@ class ZenLauncherPreferences {
             return preferredMode;
         }
 
-        if (this.#findRecommendedIcon(item.link)) {
+        if (category === ZenLauncherPreferences.Category.GALLERY && this.#findRecommendedGallery(item.link)) {
+            return 'recommend';
+        }
+
+        if (category !== ZenLauncherPreferences.Category.GALLERY && this.#findRecommendedIcon(item.link)) {
             return 'recommend';
         }
 
         return this.#isScannedProgramLink(item.link) ? 'program' : 'direct';
+    }
+
+    #getRecommendations(category) {
+        if (category === ZenLauncherPreferences.Category.FOLDER) {
+            return this.#getRecommendedFolders();
+        }
+        if (category === ZenLauncherPreferences.Category.GALLERY) {
+            return this.#getRecommendedGalleries();
+        }
+        return this.#getRecommendedIcons();
+    }
+
+    #findRecommendation(category, link) {
+        if (category === ZenLauncherPreferences.Category.FOLDER) {
+            return this.#findRecommendedFolder(link);
+        }
+        if (category === ZenLauncherPreferences.Category.GALLERY) {
+            return this.#findRecommendedGallery(link);
+        }
+        return this.#findRecommendedIcon(link);
     }
 
     #getRecommendedIcons() {
@@ -3437,6 +3482,54 @@ class ZenLauncherPreferences {
         }
 
         return this.#getRecommendedIcons().find((item) => item.link.trim().toLowerCase() === key) || null;
+    }
+
+    #readRecommendationList(readPageList, readBridgeList) {
+        const readers = [readPageList, readBridgeList];
+        for (const read of readers) {
+            try {
+                const value = read?.();
+                const list = Array.isArray(value)
+                    ? value
+                    : (value && typeof value.length === 'number' ? Array.from(value) : null);
+                if (!list) {
+                    continue;
+                }
+
+                const items = list.filter((item) => item && typeof item.name === 'string' && typeof item.link === 'string' && item.link.trim());
+                if (items.length > 0) {
+                    return items;
+                }
+            } catch (_error) {
+                continue;
+            }
+        }
+
+        return [];
+    }
+
+    #getRecommendedGalleries() {
+        return this.#readRecommendationList(
+            () => (typeof listRecommendedGalleries === 'function' ? listRecommendedGalleries() : null),
+            () => window.zenLauncher?.getRecommendedGalleries?.()
+        );
+    }
+
+    #findRecommendedGallery(link) {
+        if (typeof findRecommendedGallery === 'function') {
+            return findRecommendedGallery(link);
+        }
+
+        if (typeof window.zenLauncher?.findRecommendedGallery === 'function') {
+            return window.zenLauncher.findRecommendedGallery(link);
+        }
+
+        const key = this.#recommendationLinkKey(link);
+        if (!key) {
+            return null;
+        }
+
+        return this.#getRecommendedGalleries().find((item) => this.#recommendationLinkKey(item.link) === key) || null;
     }
 
     #getRecommendedFolders() {
