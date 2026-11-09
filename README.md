@@ -62,6 +62,13 @@ npm run build:win32
 
 ## 릴리스 노트
 
+### v2.3.8 (2026-11-09)
+
+- 아이콘을 편집할 때 추천에서 계산기, 시계, 메모장, 캡처도구, 그림판, 화상 키보드를 고를 수 있습니다.
+- 폴더 추천에는 바탕화면, 다운로드, 스크린샷, 휴지통, 카카오톡 받은 파일이 있습니다.
+- 갤러리 추천에는 MapleStory, Sudden Attack, League of Legends, VALORANT, BATTLEGROUNDS, Mabinogi가 있습니다. MapleStory, Sudden Attack, Mabinogi는 넥슨 플러그로, League of Legends와 VALORANT는 Riot Client로, BATTLEGROUNDS는 Steam으로 실행합니다. 포스터는 앱에 들어 있습니다.
+- 갤러리 여섯 번째 칸도 추가할 수 있습니다.
+
 ### v2.3.7 (2026-11-09)
 
 - 하단에 시작프로그램, 프로그램 추가/제거, 컴퓨터 정보를 넣었습니다. 순서는 화면, 소리, 마우스, 키보드, 시작프로그램, 프로그램 추가/제거, 컴퓨터 정보입니다.
